@@ -14,6 +14,7 @@ Hold a hyperkey (Caps Lock, remapped to F24), drag the mouse or press a directio
 - Hyperkey+Enter maximizes, Hyperkey+Backspace minimizes
 - Esc, or releasing with no direction chosen, cancels cleanly
 - Configurable hyperkey trigger: instant (default), a hold delay, or a double-click gesture
+- Optional scroll-to-resize: while a direction is picked and previewing, the mouse wheel cycles the target through a small/normal/large size before you release - edges resize only the one dimension they already control (the other stays full), Maximize shrinks width only, centered (height stays full)
 - Snap to whichever monitor the cursor is on instead of always the active window's own screen (opt-in)
 - Independent colors for the indicator and the outline, each sourced from a manual pick, the live Plasma accent color, or the current wallpaper (reads pywal's output, or a custom hex-color file for matugen/anything similar)
 - Optional blur behind the outline's translucent fill, using KWin's own Blur effect
@@ -81,7 +82,7 @@ While held:
 ## Configuration
 
 All settings live in **System Settings → Desktop Effects → Sirkel** (the configure/gear icon next to the effect), across four tabs:
-- **Behavior** - mouse deadzone (horizontal/vertical), window padding, snap-to-cursor's-monitor toggle, keybind scheme (arrows/WASD/HJKL/none), hyperkey trigger mode (instant/delay/double-click)
+- **Behavior** - mouse deadzone (horizontal/vertical), window padding, snap-to-cursor's-monitor toggle, keybind scheme (arrows/WASD/HJKL/none), hyperkey trigger mode (instant/delay/double-click), scroll-to-resize toggle with configurable smaller/larger percentages
 - **Indicator** - visibility, spawn-at-cursor vs. centered, size, corner radius, ring thickness, pointer length, text label
 - **Outline** - visibility, border thickness, corner radius, fill opacity, blur, glide/grow animation speed
 - **Colors** - independent source per target (outline and indicator): a manual color (hex field or R/G/B/A sliders), the live theme accent color, or a wallpaper-derived color - with a "linked" toggle to keep both matched by default
@@ -90,7 +91,7 @@ Settings changes take effect automatically the next time you hold the hyperkey -
 
 ## Known limitations
 
-- Only one window is placed at a time - no multi-window "thirds" layouts yet
+- Only one window is placed at a time - no multi-window "thirds" layout that's aware of its neighbors; scroll-to-resize lets you build one by hand (e.g. Left at its smaller step + Maximize at its smaller step, centered + Right at its smaller step), but each window is still placed independently
 - Keybind schemes are fixed presets (arrows / WASD / HJKL / none), not arbitrary rebinding
 - No dedicated action to move a window *to* a different monitor - "snap to cursor's monitor" changes which screen a snap targets, but there's no equivalent of Loop's screen-switching gesture yet
 
@@ -113,7 +114,7 @@ How Sirkel stacks up against [Loop](https://github.com/MrKai77/Loop), the macOS 
 | Separate colors for indicator vs. outline | ✅ | ✅ |
 | Thirds (horizontal/vertical, two-thirds variants) | ✅ | ❌ |
 | Per-action custom keybinds (any key → any specific action) | ✅ | ❌ |
-| Cycles (repeated press/click cycles through size variants) | ✅ | ❌ |
+| Cycles (cycles through size variants before committing) | ✅ | ✅ (via scroll wheel, not repeated press) |
 | Stash (hide windows at screen edge, reveal on hover) | ✅ | ❌ |
 | Granular manipulation (Larger/Smaller, Grow/Shrink per edge, nudge) | ✅ | ❌ |
 | Undo last action | ✅ | ❌ |
@@ -125,8 +126,7 @@ How Sirkel stacks up against [Loop](https://github.com/MrKai77/Loop), the macOS 
 ## Roadmap
 
 - **Custom keybinds** - real per-action global shortcuts via `System Settings → Shortcuts` (maximize, minimize, each directional snap, and more), replacing the current fixed arrows/WASD/HJKL preset dropdown
-- **Thirds** - horizontal and vertical third/two-thirds placements, not just halves and quarters
-- **Cycles** - repeatedly pressing/clicking the same direction cycles the window through a small set of size variants (e.g. half → two-thirds → third) instead of re-picking the same geometry
+- **Thirds** - a real multi-window layout that's aware of its neighbors, rather than relying on scroll-to-resize and matching steps by hand
 
 ## License
 
