@@ -173,6 +173,69 @@ ColumnLayout {
                         value: kcm.triggerDelay
                         onValueModified: kcm.triggerDelay = value
                     }
+
+                    Kirigami.Separator {
+                        Kirigami.FormData.isSection: true
+                        Kirigami.FormData.label: "Scroll sizing"
+                    }
+
+                    QQC2.Switch {
+                        Kirigami.FormData.label: "While previewing:"
+                        text: "Scroll to resize before releasing"
+                        checked: kcm.scrollResizeEnabled
+                        onToggled: kcm.scrollResizeEnabled = checked
+
+                        QQC2.ToolTip.text: "Left/right/top/bottom: resizes only the one dimension that direction already controls (e.g. right only changes width). Maximize: shrinks width only, centered horizontally — height stays full. Corners are unaffected. Never carries over — picking a new direction always starts back at the normal size."
+                        QQC2.ToolTip.visible: hovered
+                    }
+
+                    QQC2.SpinBox {
+                        // One decimal place matters here — see
+                        // ScrollResizeSmallPercent's kcfg doc comment (three
+                        // 33% windows side by side leave a visible gap;
+                        // 33.3% doesn't). QQC2.SpinBox is integer-only, so
+                        // this one counts in tenths of a percent internally
+                        // and only formats/parses as a decimal percentage.
+                        Kirigami.FormData.label: "Smaller size (%):"
+                        Layout.preferredWidth: root.fieldWidth
+                        visible: kcm.scrollResizeEnabled
+                        from: 100
+                        to: 499
+                        value: Math.round(kcm.scrollResizeSmallPercent * 10)
+                        onValueModified: kcm.scrollResizeSmallPercent = value / 10
+                        textFromValue: (value) => (value / 10).toFixed(1)
+                        valueFromText: (text) => Math.round(parseFloat(text) * 10)
+                        validator: DoubleValidator {
+                            bottom: 10.0
+                            top: 49.9
+                            decimals: 1
+                            notation: DoubleValidator.StandardNotation
+                        }
+
+                        QQC2.ToolTip.text: "The smallest scroll step for edges, and Maximize's smallest (still centered) step."
+                        QQC2.ToolTip.visible: hovered
+                    }
+
+                    QQC2.SpinBox {
+                        Kirigami.FormData.label: "Larger size (%):"
+                        Layout.preferredWidth: root.fieldWidth
+                        visible: kcm.scrollResizeEnabled
+                        from: 501
+                        to: 900
+                        value: Math.round(kcm.scrollResizeLargePercent * 10)
+                        onValueModified: kcm.scrollResizeLargePercent = value / 10
+                        textFromValue: (value) => (value / 10).toFixed(1)
+                        valueFromText: (text) => Math.round(parseFloat(text) * 10)
+                        validator: DoubleValidator {
+                            bottom: 50.1
+                            top: 90.0
+                            decimals: 1
+                            notation: DoubleValidator.StandardNotation
+                        }
+
+                        QQC2.ToolTip.text: "The largest scroll step for edges only — Maximize has no equivalent, since its own default is already full size."
+                        QQC2.ToolTip.visible: hovered
+                    }
                 }
             }
         }

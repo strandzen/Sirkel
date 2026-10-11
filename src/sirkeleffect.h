@@ -19,6 +19,7 @@ namespace KWin
 class EffectWindow;
 class LogicalOutput;
 struct PointerMotionEvent;
+struct PointerAxisEvent;
 }
 
 // Loop-style directional window snapping. Hold the hyperkey (Caps Lock,
@@ -55,6 +56,7 @@ public:
 protected:
     void grabbedKeyboardEvent(QKeyEvent *event) override;
     void pointerMotion(KWin::PointerMotionEvent *event) override;
+    void pointerAxis(KWin::PointerAxisEvent *event) override;
     void reconfigure(ReconfigureFlags flags) override;
 
 private:
@@ -70,6 +72,15 @@ private:
     void setDirection(SnapDirection direction);
     void applyIndicatorStyle();
     void repositionIndicator();
+    // Pushes the outline's target rect (and blur region) for m_direction at
+    // its current m_sizeStep - shared by setDirection() (a direction just
+    // changed) and pointerAxis() (the same direction's size step changed).
+    void updateOutlineGeometry();
+    // Scroll-resize step away from the normal size for the currently picked
+    // direction, applied via adjustSizeStep()/sizeFractionForStep() - see
+    // ScrollResizeEnabled's kcfg doc comment for the overall behavior.
+    void adjustSizeStep(int delta);
+    qreal sizeFractionForStep(SnapDirection direction, int step) const;
     // Tells KWin's Blur effect which part of m_overlay (in the window's own
     // local coordinates, same as what's pushed to targetX/Y/Width/Height)
     // to blur behind, or turns it off — see OutlineBlur's kcfg doc comment
@@ -137,6 +148,12 @@ private:
     QPointF m_indicatorCenter;
     QPointF m_accumulatedDelta;
     SnapDirection m_direction = SnapDirection::None;
+    // Scroll-resize step for m_direction, relative to its normal size - 0
+    // is always "normal" (today's half-snap / full-maximize size). Reset to
+    // 0 every time m_direction changes to a genuinely different direction,
+    // so a scroll adjustment never carries over to the next pick. See
+    // sizeFractionForStep() for what each step actually maps to.
+    int m_sizeStep = 0;
     bool m_active = false;
     // Holding the hyperkey alone must not show the indicator or grab the
     // screen's attention — only once real input arrives (mouse movement, or

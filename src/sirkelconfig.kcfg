@@ -161,5 +161,38 @@
     <entry name="TriggerDelay" type="Int">
       <default>300</default>
     </entry>
+    <!-- While a direction is picked and the preview is showing, mouse-wheel
+         scrolling resizes the target before release. Edge directions
+         (Left/Right/Top/Bottom) resize only the one dimension that edge
+         already controls (width for left/right, height for top/bottom) -
+         the other stays full, exactly like today's half-snap. Maximize
+         also scales width only, shrinking in from both sides, centered
+         horizontally - height stays full. Corners are unaffected.
+         Never persists between interactions - a fresh direction pick
+         always starts back at the normal size. -->
+    <entry name="ScrollResizeEnabled" type="Bool">
+      <default>false</default>
+    </entry>
+    <!-- The "smaller" scroll step, as a percentage of the normal size: used
+         as an edge direction's smallest step, and as Maximize's smallest
+         (most-shrunk, still centered) step. One decimal place matters here:
+         three "small" windows side by side (e.g. Left+Maximize+Right all
+         scrolled to their smallest step, approximating thirds) sum their
+         widths, and a plain 33% leaves a visible 1%-of-screen-width gap
+         (3 x 33 = 99, not 100) - 33.3% shrinks that shortfall to 0.1%,
+         sub-pixel on any real display. -->
+    <entry name="ScrollResizeSmallPercent" type="Double">
+      <default>33.3</default>
+      <min>10.0</min>
+      <max>49.9</max>
+    </entry>
+    <!-- The "larger" scroll step, as a percentage of the normal size: used
+         only as an edge direction's largest step - Maximize has no equivalent
+         (its own default is already full size, nothing is "larger"). -->
+    <entry name="ScrollResizeLargePercent" type="Double">
+      <default>66.7</default>
+      <min>50.1</min>
+      <max>90.0</max>
+    </entry>
   </group>
 </kcfg>

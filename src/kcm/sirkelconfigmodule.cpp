@@ -390,6 +390,42 @@ void SirkelConfigModule::setTriggerDelay(int value)
     Q_EMIT settingsChanged();
 }
 
+bool SirkelConfigModule::scrollResizeEnabled() const
+{
+    return SirkelConfig::scrollResizeEnabled();
+}
+
+void SirkelConfigModule::setScrollResizeEnabled(bool value)
+{
+    SirkelConfig::setScrollResizeEnabled(value);
+    SirkelConfig::self()->save();
+    Q_EMIT settingsChanged();
+}
+
+qreal SirkelConfigModule::scrollResizeSmallPercent() const
+{
+    return SirkelConfig::scrollResizeSmallPercent();
+}
+
+void SirkelConfigModule::setScrollResizeSmallPercent(qreal value)
+{
+    SirkelConfig::setScrollResizeSmallPercent(value);
+    SirkelConfig::self()->save();
+    Q_EMIT settingsChanged();
+}
+
+qreal SirkelConfigModule::scrollResizeLargePercent() const
+{
+    return SirkelConfig::scrollResizeLargePercent();
+}
+
+void SirkelConfigModule::setScrollResizeLargePercent(qreal value)
+{
+    SirkelConfig::setScrollResizeLargePercent(value);
+    SirkelConfig::self()->save();
+    Q_EMIT settingsChanged();
+}
+
 void SirkelConfigModule::load()
 {
     Q_EMIT settingsChanged();

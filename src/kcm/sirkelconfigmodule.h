@@ -44,6 +44,9 @@ class SirkelConfigModule : public KQuickConfigModule
     Q_PROPERTY(bool snapToCursorScreen READ snapToCursorScreen WRITE setSnapToCursorScreen NOTIFY settingsChanged)
     Q_PROPERTY(QString triggerMode READ triggerMode WRITE setTriggerMode NOTIFY settingsChanged)
     Q_PROPERTY(int triggerDelay READ triggerDelay WRITE setTriggerDelay NOTIFY settingsChanged)
+    Q_PROPERTY(bool scrollResizeEnabled READ scrollResizeEnabled WRITE setScrollResizeEnabled NOTIFY settingsChanged)
+    Q_PROPERTY(qreal scrollResizeSmallPercent READ scrollResizeSmallPercent WRITE setScrollResizeSmallPercent NOTIFY settingsChanged)
+    Q_PROPERTY(qreal scrollResizeLargePercent READ scrollResizeLargePercent WRITE setScrollResizeLargePercent NOTIFY settingsChanged)
 
 public:
     explicit SirkelConfigModule(QObject *parent, const KPluginMetaData &metaData);
@@ -131,6 +134,15 @@ public:
 
     int triggerDelay() const;
     void setTriggerDelay(int value);
+
+    bool scrollResizeEnabled() const;
+    void setScrollResizeEnabled(bool value);
+
+    qreal scrollResizeSmallPercent() const;
+    void setScrollResizeSmallPercent(qreal value);
+
+    qreal scrollResizeLargePercent() const;
+    void setScrollResizeLargePercent(qreal value);
 
     void load() override;
     void save() override;

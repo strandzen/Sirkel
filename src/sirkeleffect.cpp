@@ -28,6 +28,7 @@
 #include <QTimer>
 #include <QUrl>
 
+#include <algorithm>
 #include <array>
 
 Q_LOGGING_CATEGORY(SIRKEL, "sirkel")
@@ -295,6 +296,7 @@ void SirkelEffect::arm()
     }
     m_accumulatedDelta = QPointF();
     m_direction = SnapDirection::None;
+    m_sizeStep = 0;
     m_keyUp = m_keyDown = m_keyLeft = m_keyRight = false;
     m_active = true;
     m_engaged = false;
@@ -373,7 +375,8 @@ void SirkelEffect::finish(bool applyPendingDirection)
     m_active = false;
 
     if (applyPendingDirection && m_targetWindow && m_direction != SnapDirection::None) {
-        const QRectF target = snapTargetGeometry(m_direction, m_outlineArea, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical());
+        const qreal fraction = sizeFractionForStep(m_direction, m_sizeStep);
+        const QRectF target = snapTargetGeometry(m_direction, m_outlineArea, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), fraction);
         if (KWin::Window *window = m_targetWindow->window()) {
             window->setMaximize(false, false);
             window->moveResize(target);
@@ -400,6 +403,10 @@ void SirkelEffect::setDirection(SnapDirection direction)
     }
     qCWarning(SIRKEL) << "setDirection():" << snapDirectionName(m_direction) << "->" << snapDirectionName(direction);
     m_direction = direction;
+    // A scroll-resize step is only meaningful relative to the direction it
+    // was dialed in for - picking a different one always starts back at the
+    // normal size (confirmed: never persists between interactions).
+    m_sizeStep = 0;
 
     if (QQuickItem *indicator = indicatorPart()) {
         indicator->setProperty("direction", snapDirectionName(m_direction));
@@ -415,11 +422,27 @@ void SirkelEffect::setDirection(SnapDirection direction)
         return;
     }
 
+    updateOutlineGeometry();
+    if (SirkelConfig::showOutline()) {
+        m_outlinePartVisible = true;
+        if (QQuickItem *outline = outlinePart()) {
+            outline->setProperty("visible", true);
+        }
+        updateOverlayVisibility();
+    }
+}
+
+void SirkelEffect::updateOutlineGeometry()
+{
+    if (m_direction == SnapDirection::None || !m_targetScreen) {
+        return;
+    }
     // The outline's own target rect, in m_overlay's local coordinates — the
     // window itself stays fixed (covering m_outlineArea), only this rect
     // moves, so QML's Behavior animations can glide/grow it between
-    // directions instead of an instant window move+resize.
-    const QRectF target = snapTargetGeometry(m_direction, m_outlineArea, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical());
+    // directions (or size steps) instead of an instant window move+resize.
+    const qreal fraction = sizeFractionForStep(m_direction, m_sizeStep);
+    const QRectF target = snapTargetGeometry(m_direction, m_outlineArea, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), fraction);
     QRectF local;
     if (QQuickItem *outline = outlinePart()) {
         local = target.translated(-m_outlineArea.topLeft());
@@ -429,13 +452,57 @@ void SirkelEffect::setDirection(SnapDirection direction)
         outline->setProperty("targetHeight", local.height());
     }
     applyOutlineBlur(local);
-    if (SirkelConfig::showOutline()) {
-        m_outlinePartVisible = true;
-        if (QQuickItem *outline = outlinePart()) {
-            outline->setProperty("visible", true);
-        }
-        updateOverlayVisibility();
+}
+
+void SirkelEffect::adjustSizeStep(int delta)
+{
+    if (!m_active || !m_engaged || m_direction == SnapDirection::None || !m_targetScreen) {
+        return;
     }
+    if (!SirkelConfig::scrollResizeEnabled()) {
+        return;
+    }
+    const bool isMaximize = m_direction == SnapDirection::Maximize;
+    const bool isEdge = m_direction == SnapDirection::Left || m_direction == SnapDirection::Right
+        || m_direction == SnapDirection::Top || m_direction == SnapDirection::Bottom;
+    if (!isMaximize && !isEdge) {
+        // Corners don't support scroll resizing.
+        return;
+    }
+
+    // Edges have 3 steps centered on "normal" (-1 small, 0 normal, +1
+    // large). Maximize only has steps *below* its default, since full size
+    // is already the ceiling (-2 small, -1 half, 0 full/normal). Either way
+    // it's 3 steps, and scrolling past either end wraps around to the other
+    // instead of stopping there — a cycle, not a clamp.
+    const int minStep = isMaximize ? -2 : -1;
+    const int maxStep = isMaximize ? 0 : 1;
+    const int rangeSize = maxStep - minStep + 1;
+    const int offset = ((m_sizeStep - minStep + delta) % rangeSize + rangeSize) % rangeSize;
+    const int newStep = minStep + offset;
+    if (newStep == m_sizeStep) {
+        return;
+    }
+    m_sizeStep = newStep;
+    updateOutlineGeometry();
+}
+
+qreal SirkelEffect::sizeFractionForStep(SnapDirection direction, int step) const
+{
+    const qreal small = SirkelConfig::scrollResizeSmallPercent() / 100.0;
+    if (direction == SnapDirection::Maximize) {
+        if (step <= -2) {
+            return small;
+        }
+        return step == -1 ? 0.5 : 1.0;
+    }
+    if (step <= -1) {
+        return small;
+    }
+    if (step >= 1) {
+        return SirkelConfig::scrollResizeLargePercent() / 100.0;
+    }
+    return 0.5;
 }
 
 void SirkelEffect::applyOutlineBlur(const QRectF &localRect)
@@ -547,7 +614,8 @@ void SirkelEffect::actionMaximize()
         // (rather than window->setMaximize(true, true), which bypasses
         // padding entirely) so Hyperkey+Enter and the center/maximize
         // gesture both respect PaddingHorizontal/PaddingVertical.
-        const QRectF target = snapTargetGeometry(SnapDirection::Maximize, m_outlineArea, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical());
+        const qreal fraction = sizeFractionForStep(SnapDirection::Maximize, m_direction == SnapDirection::Maximize ? m_sizeStep : 0);
+        const QRectF target = snapTargetGeometry(SnapDirection::Maximize, m_outlineArea, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), fraction);
         window->setMaximize(false, false);
         window->moveResize(target);
     }
@@ -660,6 +728,18 @@ void SirkelEffect::pointerMotion(KWin::PointerMotionEvent *event)
     // didn't happen to land exactly on the screen's center).
     m_accumulatedDelta = event->position - m_indicatorCenter;
     updateDirectionFromPointer();
+}
+
+void SirkelEffect::pointerAxis(KWin::PointerAxisEvent *event)
+{
+    if (event->orientation != Qt::Vertical) {
+        return;
+    }
+    // Sign convention assumed from libinput/wl_pointer (positive = scrolled
+    // down/toward the user) to match how every other Wayland app treats
+    // wheel direction - not yet live-confirmed on this machine. Flip the
+    // comparison below if a live test shows it's backwards.
+    adjustSizeStep(event->delta < 0 ? +1 : -1);
 }
 
 KWIN_EFFECT_FACTORY(SirkelEffect, "metadata.json")

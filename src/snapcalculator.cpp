@@ -57,7 +57,7 @@ SnapDirection snapDirectionForDelta(const QPointF &delta, qreal horizontalDeadzo
     return movingDown ? SnapDirection::Bottom : SnapDirection::Top;
 }
 
-QRectF snapTargetGeometry(SnapDirection direction, const QRectF &area, qreal paddingHorizontal, qreal paddingVertical)
+QRectF snapTargetGeometry(SnapDirection direction, const QRectF &area, qreal paddingHorizontal, qreal paddingVertical, qreal sizeFraction)
 {
     const qreal x = area.x();
     const qreal y = area.y();
@@ -74,22 +74,30 @@ QRectF snapTargetGeometry(SnapDirection direction, const QRectF &area, qreal pad
 
     QRectF result;
     switch (direction) {
-    case SnapDirection::Left:
-        result = QRectF(x, y, halfW, area.height());
+    case SnapDirection::Left: {
+        const qreal w = area.width() * (sizeFraction < 0.0 ? 0.5 : sizeFraction);
+        result = QRectF(x, y, w, area.height());
         sharedRight = true;
         break;
-    case SnapDirection::Right:
-        result = QRectF(x + halfW, y, halfW, area.height());
+    }
+    case SnapDirection::Right: {
+        const qreal w = area.width() * (sizeFraction < 0.0 ? 0.5 : sizeFraction);
+        result = QRectF(x + area.width() - w, y, w, area.height());
         sharedLeft = true;
         break;
-    case SnapDirection::Top:
-        result = QRectF(x, y, area.width(), halfH);
+    }
+    case SnapDirection::Top: {
+        const qreal h = area.height() * (sizeFraction < 0.0 ? 0.5 : sizeFraction);
+        result = QRectF(x, y, area.width(), h);
         sharedBottom = true;
         break;
-    case SnapDirection::Bottom:
-        result = QRectF(x, y + halfH, area.width(), halfH);
+    }
+    case SnapDirection::Bottom: {
+        const qreal h = area.height() * (sizeFraction < 0.0 ? 0.5 : sizeFraction);
+        result = QRectF(x, y + area.height() - h, area.width(), h);
         sharedTop = true;
         break;
+    }
     case SnapDirection::TopLeft:
         result = QRectF(x, y, halfW, halfH);
         sharedRight = sharedBottom = true;
@@ -106,9 +114,29 @@ QRectF snapTargetGeometry(SnapDirection direction, const QRectF &area, qreal pad
         result = QRectF(x + halfW, y + halfH, halfW, halfH);
         sharedLeft = sharedTop = true;
         break;
-    case SnapDirection::Maximize:
-        result = area;
+    case SnapDirection::Maximize: {
+        // Width only, centered horizontally - height always stays full,
+        // same as today's ordinary maximize. Shrinking in from both sides
+        // this way reads as "maximize getting narrower", not a uniform
+        // zoom toward a smaller box in the middle of the screen.
+        const qreal f = sizeFraction < 0.0 ? 1.0 : sizeFraction;
+        const qreal w = area.width() * f;
+        result = QRectF(x + (area.width() - w) / 2.0, y, w, area.height());
+        // At full size (f == 1.0) the left/right edges are the screen's own
+        // edges, same as an ordinary maximize - full padding, same as
+        // always. Scroll-shrunk narrower than that, though, those edges
+        // are no longer against the screen - they're meant to butt up
+        // against whatever's snapped to either side (e.g. a scroll-shrunk
+        // Maximize used as a centered "middle third" between a Left and a
+        // Right window), so they need the same half-padding treatment
+        // those neighbors already give their own facing edge - otherwise
+        // the gap between them doubles (half from the neighbor + full from
+        // this one, instead of half + half).
+        if (f < 1.0) {
+            sharedLeft = sharedRight = true;
+        }
         break;
+    }
     case SnapDirection::None:
         return QRectF();
     }
