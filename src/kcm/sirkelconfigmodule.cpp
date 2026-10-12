@@ -35,16 +35,36 @@ QColor readWallpaperColor()
     return QColor(QString::fromUtf8(file.readAll()).trimmed());
 }
 
-QColor resolveColor(bool forOutline)
+enum class ColorTarget { Outline, Pointer, Ring };
+
+QColor resolveColor(ColorTarget target)
 {
-    const QString source = forOutline ? SirkelConfig::outlineColorSource() : SirkelConfig::indicatorColorSource();
+    QString source;
+    switch (target) {
+    case ColorTarget::Outline:
+        source = SirkelConfig::outlineColorSource();
+        break;
+    case ColorTarget::Pointer:
+        source = SirkelConfig::indicatorPointerColorSource();
+        break;
+    case ColorTarget::Ring:
+        source = SirkelConfig::indicatorRingColorSource();
+        break;
+    }
     if (source == QStringLiteral("wallpaper")) {
         const QColor wallpaper = readWallpaperColor();
         if (wallpaper.isValid()) {
             return wallpaper;
         }
     } else if (source == QStringLiteral("manual")) {
-        return forOutline ? SirkelConfig::outlineColor() : SirkelConfig::indicatorColor();
+        switch (target) {
+        case ColorTarget::Outline:
+            return SirkelConfig::outlineColor();
+        case ColorTarget::Pointer:
+            return SirkelConfig::indicatorPointerColor();
+        case ColorTarget::Ring:
+            return SirkelConfig::indicatorRingColor();
+        }
     }
     return QGuiApplication::palette().color(QPalette::Highlight);
 }
@@ -164,6 +184,18 @@ void SirkelConfigModule::setShowIndicatorText(bool value)
     Q_EMIT settingsChanged();
 }
 
+int SirkelConfigModule::indicatorRingFillOpacity() const
+{
+    return SirkelConfig::indicatorRingFillOpacity();
+}
+
+void SirkelConfigModule::setIndicatorRingFillOpacity(int value)
+{
+    SirkelConfig::setIndicatorRingFillOpacity(value);
+    SirkelConfig::self()->save();
+    Q_EMIT settingsChanged();
+}
+
 int SirkelConfigModule::outlineBorderWidth() const
 {
     return SirkelConfig::outlineBorderWidth();
@@ -190,7 +222,7 @@ void SirkelConfigModule::setOutlineCornerRadius(int value)
 
 QColor SirkelConfigModule::outlineColor() const
 {
-    return resolveColor(true);
+    return resolveColor(ColorTarget::Outline);
 }
 
 void SirkelConfigModule::setOutlineColor(const QColor &value)
@@ -204,15 +236,28 @@ void SirkelConfigModule::setOutlineColor(const QColor &value)
     Q_EMIT settingsChanged();
 }
 
-QColor SirkelConfigModule::indicatorColor() const
+QColor SirkelConfigModule::indicatorPointerColor() const
 {
-    return SirkelConfig::linkIndicatorOutlineColor() ? resolveColor(true) : resolveColor(false);
+    return SirkelConfig::linkIndicatorColors() ? resolveColor(ColorTarget::Outline) : resolveColor(ColorTarget::Pointer);
 }
 
-void SirkelConfigModule::setIndicatorColor(const QColor &value)
+void SirkelConfigModule::setIndicatorPointerColor(const QColor &value)
 {
-    SirkelConfig::setIndicatorColor(value);
-    SirkelConfig::setIndicatorColorSource(QStringLiteral("manual"));
+    SirkelConfig::setIndicatorPointerColor(value);
+    SirkelConfig::setIndicatorPointerColorSource(QStringLiteral("manual"));
+    SirkelConfig::self()->save();
+    Q_EMIT settingsChanged();
+}
+
+QColor SirkelConfigModule::indicatorRingColor() const
+{
+    return SirkelConfig::linkIndicatorColors() ? resolveColor(ColorTarget::Outline) : resolveColor(ColorTarget::Ring);
+}
+
+void SirkelConfigModule::setIndicatorRingColor(const QColor &value)
+{
+    SirkelConfig::setIndicatorRingColor(value);
+    SirkelConfig::setIndicatorRingColorSource(QStringLiteral("manual"));
     SirkelConfig::self()->save();
     Q_EMIT settingsChanged();
 }
@@ -229,26 +274,38 @@ void SirkelConfigModule::setOutlineColorSource(const QString &value)
     Q_EMIT settingsChanged();
 }
 
-QString SirkelConfigModule::indicatorColorSource() const
+QString SirkelConfigModule::indicatorPointerColorSource() const
 {
-    return SirkelConfig::indicatorColorSource();
+    return SirkelConfig::indicatorPointerColorSource();
 }
 
-void SirkelConfigModule::setIndicatorColorSource(const QString &value)
+void SirkelConfigModule::setIndicatorPointerColorSource(const QString &value)
 {
-    SirkelConfig::setIndicatorColorSource(value);
+    SirkelConfig::setIndicatorPointerColorSource(value);
     SirkelConfig::self()->save();
     Q_EMIT settingsChanged();
 }
 
-bool SirkelConfigModule::linkIndicatorOutlineColor() const
+QString SirkelConfigModule::indicatorRingColorSource() const
 {
-    return SirkelConfig::linkIndicatorOutlineColor();
+    return SirkelConfig::indicatorRingColorSource();
 }
 
-void SirkelConfigModule::setLinkIndicatorOutlineColor(bool value)
+void SirkelConfigModule::setIndicatorRingColorSource(const QString &value)
 {
-    SirkelConfig::setLinkIndicatorOutlineColor(value);
+    SirkelConfig::setIndicatorRingColorSource(value);
+    SirkelConfig::self()->save();
+    Q_EMIT settingsChanged();
+}
+
+bool SirkelConfigModule::linkIndicatorColors() const
+{
+    return SirkelConfig::linkIndicatorColors();
+}
+
+void SirkelConfigModule::setLinkIndicatorColors(bool value)
+{
+    SirkelConfig::setLinkIndicatorColors(value);
     SirkelConfig::self()->save();
     Q_EMIT settingsChanged();
 }
@@ -402,26 +459,52 @@ void SirkelConfigModule::setScrollResizeEnabled(bool value)
     Q_EMIT settingsChanged();
 }
 
-qreal SirkelConfigModule::scrollResizeSmallPercent() const
+QString SirkelConfigModule::easing() const
 {
-    return SirkelConfig::scrollResizeSmallPercent();
+    return SirkelConfig::easing();
 }
 
-void SirkelConfigModule::setScrollResizeSmallPercent(qreal value)
+void SirkelConfigModule::setEasing(const QString &value)
 {
-    SirkelConfig::setScrollResizeSmallPercent(value);
+    SirkelConfig::setEasing(value);
     SirkelConfig::self()->save();
     Q_EMIT settingsChanged();
 }
 
-qreal SirkelConfigModule::scrollResizeLargePercent() const
+bool SirkelConfigModule::outlineConfirmFlash() const
 {
-    return SirkelConfig::scrollResizeLargePercent();
+    return SirkelConfig::outlineConfirmFlash();
 }
 
-void SirkelConfigModule::setScrollResizeLargePercent(qreal value)
+void SirkelConfigModule::setOutlineConfirmFlash(bool value)
 {
-    SirkelConfig::setScrollResizeLargePercent(value);
+    SirkelConfig::setOutlineConfirmFlash(value);
+    SirkelConfig::self()->save();
+    Q_EMIT settingsChanged();
+}
+
+bool SirkelConfigModule::outlineGradientFill() const
+{
+    return SirkelConfig::outlineGradientFill();
+}
+
+void SirkelConfigModule::setOutlineGradientFill(bool value)
+{
+    SirkelConfig::setOutlineGradientFill(value);
+    SirkelConfig::self()->save();
+    Q_EMIT settingsChanged();
+}
+
+void SirkelConfigModule::resetColors()
+{
+    SirkelConfig::self()->outlineColorItem()->setDefault();
+    SirkelConfig::self()->outlineColorSourceItem()->setDefault();
+    SirkelConfig::self()->indicatorPointerColorItem()->setDefault();
+    SirkelConfig::self()->indicatorPointerColorSourceItem()->setDefault();
+    SirkelConfig::self()->indicatorRingColorItem()->setDefault();
+    SirkelConfig::self()->indicatorRingColorSourceItem()->setDefault();
+    SirkelConfig::self()->linkIndicatorColorsItem()->setDefault();
+    SirkelConfig::self()->wallpaperColorPathItem()->setDefault();
     SirkelConfig::self()->save();
     Q_EMIT settingsChanged();
 }

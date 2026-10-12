@@ -4,3 +4,4 @@ Mutators=true
 Singleton=true
 GenerateProperties=true
 Notifiers=true
+ItemAccessors=true

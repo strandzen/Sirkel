@@ -13,12 +13,13 @@ Hold a hyperkey (Caps Lock, remapped to F24), drag the mouse or press a directio
 - Arrow keys, WASD, or HJKL for direction (configurable preset), including combining two keys (e.g. Up+Left) for a corner - or disable direction keys entirely for mouse-only use
 - Hyperkey+Enter maximizes, Hyperkey+Backspace minimizes
 - Esc, or releasing with no direction chosen, cancels cleanly
-- Configurable hyperkey trigger: instant (default), a hold delay, or a double-click gesture
-- Optional scroll-to-resize: while a direction is picked and previewing, the mouse wheel cycles the target through a small/normal/large size before you release - edges resize only the one dimension they already control (the other stays full), Maximize shrinks width only, centered (height stays full)
+- Configurable hyperkey trigger: instant (default) or a hold delay
+- Optional scroll-to-resize: while a direction is picked and previewing, the mouse wheel cycles the target through a small/normal/large size before you release - edges and corners resize only the one dimension they already control (the other stays full), Maximize shrinks width only, centered (height stays full)
 - Snap to whichever monitor the cursor is on instead of always the active window's own screen (opt-in)
-- Independent colors for the indicator and the outline, each sourced from a manual pick, the live Plasma accent color, or the current wallpaper (reads pywal's output, or a custom hex-color file for matugen/anything similar)
+- Independent colors for the outline, the indicator's pointer, and the indicator's ring, each sourced from a manual pick, the live Plasma accent color, or (outline/pointer only) the current wallpaper - with a "linked" toggle to share one color across all three
 - Optional blur behind the outline's translucent fill, using KWin's own Blur effect
-- Extensive, tabbed settings page (System Settings → Desktop Effects → Sirkel): Behavior, Indicator, Outline, and Colors each on their own tab
+- A handful of motion/feedback touches: configurable easing (linear/smooth/overshoot), a pop-in entrance, a confirm flash on release, a gradient fill option, brightness feedback as a drag commits, and a breathing pulse while resting at Maximize
+- Tabbed settings page (System Settings → Desktop Effects → Sirkel): Input, Visuals, and Colors each on their own tab
 
 ## Requirements
 
@@ -81,11 +82,10 @@ While held:
 
 ## Configuration
 
-All settings live in **System Settings → Desktop Effects → Sirkel** (the configure/gear icon next to the effect), across four tabs:
-- **Behavior** - mouse deadzone (horizontal/vertical), window padding, snap-to-cursor's-monitor toggle, keybind scheme (arrows/WASD/HJKL/none), hyperkey trigger mode (instant/delay/double-click), scroll-to-resize toggle with configurable smaller/larger percentages
-- **Indicator** - visibility, spawn-at-cursor vs. centered, size, corner radius, ring thickness, pointer length, text label
-- **Outline** - visibility, border thickness, corner radius, fill opacity, blur, glide/grow animation speed
-- **Colors** - independent source per target (outline and indicator): a manual color (hex field or R/G/B/A sliders), the live theme accent color, or a wallpaper-derived color - with a "linked" toggle to keep both matched by default
+All settings live in **System Settings → Desktop Effects → Sirkel** (the configure/gear icon next to the effect), across three tabs:
+- **Input** - mouse deadzone (horizontal/vertical), window padding, snap-to-cursor's-monitor toggle, keybind scheme (arrows/WASD/HJKL/none), hyperkey trigger mode (instant/delay), scroll-to-resize toggle
+- **Visuals** - indicator and outline, each in their own section (visibility, size/thickness/radius, opacity, text label, blur), plus a shared Motion section (glide/grow animation speed, easing style, confirm flash, gradient fill)
+- **Colors** - independent source per target (outline, pointer, ring): a manual color (hex field or R/G/B/A sliders), the live theme accent color, or (outline/pointer only) a wallpaper-derived color - with a "linked" toggle to share one color across all three, and a reset button scoped to just this tab
 
 Settings changes take effect automatically the next time you hold the hyperkey - no need to log out or restart the effect.
 
@@ -114,7 +114,7 @@ How Sirkel stacks up against [Loop](https://github.com/MrKai77/Loop), the macOS 
 | Separate colors for indicator vs. outline | ✅ | ✅ |
 | Thirds (horizontal/vertical, two-thirds variants) | ✅ | ❌ |
 | Per-action custom keybinds (any key → any specific action) | ✅ | ❌ |
-| Cycles (cycles through size variants before committing) | ✅ | ✅ (via scroll wheel, not repeated press) |
+| Cycles (cycles through size variants before committing) | ✅ | ✅ |
 | Stash (hide windows at screen edge, reveal on hover) | ✅ | ❌ |
 | Granular manipulation (Larger/Smaller, Grow/Shrink per edge, nudge) | ✅ | ❌ |
 | Undo last action | ✅ | ❌ |
@@ -126,7 +126,6 @@ How Sirkel stacks up against [Loop](https://github.com/MrKai77/Loop), the macOS 
 ## Roadmap
 
 - **Custom keybinds** - real per-action global shortcuts via `System Settings → Shortcuts` (maximize, minimize, each directional snap, and more), replacing the current fixed arrows/WASD/HJKL preset dropdown
-- **Thirds** - a real multi-window layout that's aware of its neighbors, rather than relying on scroll-to-resize and matching steps by hand
 
 ## License
 

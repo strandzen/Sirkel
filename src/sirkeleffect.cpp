@@ -22,6 +22,7 @@
 #include <QJsonObject>
 #include <QKeyEvent>
 #include <QLoggingCategory>
+#include <QMetaObject>
 #include <QPalette>
 #include <QQuickItem>
 #include <QQuickView>
@@ -30,6 +31,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 
 Q_LOGGING_CATEGORY(SIRKEL, "sirkel")
 
@@ -59,16 +61,29 @@ QColor readWallpaperColor()
     return QColor(QString::fromUtf8(file.readAll()).trimmed());
 }
 
-// A color's kcfg default (OutlineColor/IndicatorColor) is just a static
-// fallback for "manual" mode, not itself a live source — the live sources
-// ("theme", "wallpaper") are resolved fresh every time instead, per the
-// *Source setting. `forOutline` picks OutlineColor/OutlineColorSource vs.
-// IndicatorColor/IndicatorColorSource; LinkIndicatorOutlineColor (checked
-// by the caller, not here) is what makes the indicator just reuse the
-// outline's resolved color instead of calling this for itself at all.
-QColor resolveColor(bool forOutline)
+// A color's kcfg default (OutlineColor/IndicatorPointerColor/
+// IndicatorRingColor) is just a static fallback for "manual" mode, not
+// itself a live source — the live sources ("theme", "wallpaper") are
+// resolved fresh every time instead, per the *Source setting.
+// LinkIndicatorColors (checked by the caller, not here) is what makes the
+// pointer and ring just reuse the outline's resolved color instead of
+// calling this for themselves at all.
+enum class ColorTarget { Outline, Pointer, Ring };
+
+QColor resolveColor(ColorTarget target)
 {
-    const QString source = forOutline ? SirkelConfig::outlineColorSource() : SirkelConfig::indicatorColorSource();
+    QString source;
+    switch (target) {
+    case ColorTarget::Outline:
+        source = SirkelConfig::outlineColorSource();
+        break;
+    case ColorTarget::Pointer:
+        source = SirkelConfig::indicatorPointerColorSource();
+        break;
+    case ColorTarget::Ring:
+        source = SirkelConfig::indicatorRingColorSource();
+        break;
+    }
     if (source == QStringLiteral("wallpaper")) {
         const QColor wallpaper = readWallpaperColor();
         if (wallpaper.isValid()) {
@@ -78,7 +93,14 @@ QColor resolveColor(bool forOutline)
         // missing/unparseable — always-valid is more useful than a visibly
         // broken color.
     } else if (source == QStringLiteral("manual")) {
-        return forOutline ? SirkelConfig::outlineColor() : SirkelConfig::indicatorColor();
+        switch (target) {
+        case ColorTarget::Outline:
+            return SirkelConfig::outlineColor();
+        case ColorTarget::Pointer:
+            return SirkelConfig::indicatorPointerColor();
+        case ColorTarget::Ring:
+            return SirkelConfig::indicatorRingColor();
+        }
     }
     return QGuiApplication::palette().color(QPalette::Highlight);
 }
@@ -133,6 +155,19 @@ KeyAxis axisForArmedKey(int key, const QString &scheme)
     return KeyAxis::None;
 }
 
+// Scroll-resize step fractions (see ScrollResizeEnabled's kcfg doc
+// comment), in ascending order. Edges/corners cycle through
+// kEdgeFractions, anchored on kEdgeNormalIndex (the 0.5/"half" entry) as
+// where a fresh direction pick always starts. Maximize uses its own list,
+// anchored on its own last entry (1.0, "full") since there's no state
+// "larger" than full size. Deliberately a plain fixed list, not a KCM
+// setting - adding a step later (e.g. a quarter) is a one-line change
+// here plus updating the matching *NormalIndex, not a new UI to build.
+const QList<qreal> kEdgeFractions = {1.0 / 3.0, 1.0 / 2.0, 2.0 / 3.0};
+const int kEdgeNormalIndex = 1;
+const QList<qreal> kMaximizeFractions = {1.0 / 3.0, 1.0 / 2.0, 1.0};
+const int kMaximizeNormalIndex = 2;
+
 // Combines the currently-held Up/Down/Left/Right keys into one of the 8
 // directions (or None). Opposite keys held together (e.g. Up+Down) cancel
 // out on that axis rather than picking one arbitrarily.
@@ -173,11 +208,33 @@ SirkelEffect::SirkelEffect()
         arm();
     });
 
-    m_doubleClickTimer = new QTimer(this);
-    m_doubleClickTimer->setSingleShot(true);
-    connect(m_doubleClickTimer, &QTimer::timeout, this, &SirkelEffect::cancelPendingTrigger);
+    m_overlayHideTimer = new QTimer(this);
+    m_overlayHideTimer->setSingleShot(true);
+    connect(m_overlayHideTimer, &QTimer::timeout, this, [this]() {
+        m_overlay->hide();
+        KWindowEffects::enableBlurBehind(m_overlay.get(), false);
+    });
 
-    qCWarning(SIRKEL) << "constructed, build marker rev5-qquickview";
+    // If the window being targeted closes mid-session (hyperkey still held,
+    // a direction already chosen), m_targetWindow would otherwise go stale
+    // with nothing to notice - finish()/setDirection()/actionMaximize()
+    // would then still be touching it right up until release, which is a
+    // very plausible explanation for a live report of the display
+    // disconnecting/reconnecting under exactly this scenario (a fault deep
+    // enough to upset kwin_wayland itself would explain outputs getting
+    // re-enumerated on recovery far better than an ordinary Qt-level
+    // crash would). windowClosed() fires while the window is still valid
+    // (effects wanting to animate the close are expected to refWindow() at
+    // this point), so cancelling right here - the same clean path Esc
+    // already uses - is enough to make sure nothing touches it again after.
+    connect(KWin::effects, &KWin::EffectsHandler::windowClosed, this, [this](KWin::EffectWindow *w) {
+        if (m_active && w == m_targetWindow) {
+            qCDebug(SIRKEL) << "windowClosed(): target window closed mid-session, cancelling";
+            finish(false);
+        }
+    });
+
+    qCDebug(SIRKEL) << "constructed, build marker rev5-qquickview";
 }
 
 SirkelEffect::~SirkelEffect() = default;
@@ -204,7 +261,7 @@ void SirkelEffect::reconfigure(ReconfigureFlags flags)
     // was cached from when this effect's SirkelConfig was first touched.
     SirkelConfig::self()->config()->reparseConfiguration();
     SirkelConfig::self()->load();
-    qCWarning(SIRKEL) << "reconfigure(): config reloaded";
+    qCDebug(SIRKEL) << "reconfigure(): config reloaded";
 }
 
 void SirkelEffect::handleTrigger()
@@ -218,24 +275,15 @@ void SirkelEffect::handleTrigger()
 
     // See the identical comment this used to sit next to in arm() — moved
     // here since this is now the single entry point for every trigger mode,
-    // and delay/double-click need to know TriggerMode/TriggerDelay *before*
-    // arm() itself would otherwise run.
+    // and delay needs to know TriggerMode/TriggerDelay *before* arm()
+    // itself would otherwise run.
     SirkelConfig::self()->config()->reparseConfiguration();
     SirkelConfig::self()->load();
 
     const QString mode = SirkelConfig::triggerMode();
-    if (mode == QStringLiteral("doubleclick")) {
-        qCWarning(SIRKEL) << "handleTrigger(): first click, waiting for a second within the window";
-        m_triggerPhase = TriggerPhase::PendingDoubleClick;
-        m_keyboardAlreadyGrabbed = true;
-        KWin::effects->grabKeyboard(this);
-        m_doubleClickTimer->start(400);
-        return;
-    }
-
     const int delay = SirkelConfig::triggerDelay();
     if (mode == QStringLiteral("delay") && delay > 0) {
-        qCWarning(SIRKEL) << "handleTrigger(): pending delay of" << delay << "ms";
+        qCDebug(SIRKEL) << "handleTrigger(): pending delay of" << delay << "ms";
         m_triggerPhase = TriggerPhase::PendingDelay;
         m_keyboardAlreadyGrabbed = true;
         KWin::effects->grabKeyboard(this);
@@ -248,9 +296,8 @@ void SirkelEffect::handleTrigger()
 
 void SirkelEffect::cancelPendingTrigger()
 {
-    qCWarning(SIRKEL) << "cancelPendingTrigger(): trigger gesture abandoned";
+    qCDebug(SIRKEL) << "cancelPendingTrigger(): trigger gesture abandoned";
     m_delayTimer->stop();
-    m_doubleClickTimer->stop();
     m_triggerPhase = TriggerPhase::Idle;
     if (m_keyboardAlreadyGrabbed) {
         m_keyboardAlreadyGrabbed = false;
@@ -263,15 +310,19 @@ void SirkelEffect::arm()
     if (m_targetWindow) {
         // Already armed — shouldn't normally be reachable (handleTrigger()
         // already guards re-entrant triggers), but guard here too since
-        // arm() can also be called from the delay timer / double-click
-        // path, not just directly.
+        // arm() can also be called from the delay timer, not just directly.
         return;
     }
 
-    qCWarning(SIRKEL) << "arm() called";
+    qCDebug(SIRKEL) << "arm() called";
+    // Cancel any delayed overlay-hide left pending by a confirm flash from
+    // a previous session (see m_overlayHideTimer) - a fast re-trigger must
+    // not let that stale timer hide this new session's overlay out from
+    // under it a moment later.
+    m_overlayHideTimer->stop();
     m_targetWindow = KWin::effects->activeWindow();
     if (!m_targetWindow) {
-        qCWarning(SIRKEL) << "arm(): no active window, aborting";
+        qCDebug(SIRKEL) << "arm(): no active window, aborting";
         cancelPendingTrigger();
         return;
     }
@@ -283,7 +334,7 @@ void SirkelEffect::arm()
         // to be. isSpecialWindow() covers the desktop, docks/panels, and
         // similar window types that aren't meant to be moved/resized at
         // all, so refuse to arm against any of them.
-        qCWarning(SIRKEL) << "arm(): active window is a special window (desktop/panel/etc), aborting";
+        qCDebug(SIRKEL) << "arm(): active window is a special window (desktop/panel/etc), aborting";
         m_targetWindow = nullptr;
         cancelPendingTrigger();
         return;
@@ -296,12 +347,15 @@ void SirkelEffect::arm()
     }
     m_accumulatedDelta = QPointF();
     m_direction = SnapDirection::None;
-    m_sizeStep = 0;
+    m_sizeStep = kEdgeNormalIndex;
     m_keyUp = m_keyDown = m_keyLeft = m_keyRight = false;
     m_active = true;
     m_engaged = false;
     m_outlinePartVisible = false;
     m_indicatorPartVisible = false;
+    m_outlineEntrancePlayed = false;
+    m_indicatorEntrancePlayed = false;
+    m_outlineLocalRect = QRectF();
 
     applyIndicatorStyle();
 
@@ -357,6 +411,10 @@ void SirkelEffect::engage()
         m_indicatorPartVisible = true;
         if (QQuickItem *indicator = indicatorPart()) {
             indicator->setProperty("visible", true);
+            if (!m_indicatorEntrancePlayed) {
+                m_indicatorEntrancePlayed = true;
+                QMetaObject::invokeMethod(indicator, "playEntrance");
+            }
         }
         updateOverlayVisibility();
     }
@@ -364,29 +422,43 @@ void SirkelEffect::engage()
 
 void SirkelEffect::finish(bool applyPendingDirection)
 {
-    qCWarning(SIRKEL) << "finish() applyPendingDirection=" << applyPendingDirection
+    qCDebug(SIRKEL) << "finish() applyPendingDirection=" << applyPendingDirection
                           << "m_direction=" << snapDirectionName(m_direction);
     KWin::effects->stopMouseInterception(this);
     KWin::effects->ungrabKeyboard();
     m_outlinePartVisible = false;
     m_indicatorPartVisible = false;
-    m_overlay->hide();
-    KWindowEffects::enableBlurBehind(m_overlay.get(), false);
     m_active = false;
 
-    if (applyPendingDirection && m_targetWindow && m_direction != SnapDirection::None) {
+    const bool didSnap = applyPendingDirection && m_targetWindow && m_direction != SnapDirection::None;
+    if (didSnap) {
         const qreal fraction = sizeFractionForStep(m_direction, m_sizeStep);
         const QRectF target = snapTargetGeometry(m_direction, m_outlineArea, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), fraction);
         if (KWin::Window *window = m_targetWindow->window()) {
             window->setMaximize(false, false);
             window->moveResize(target);
-            qCWarning(SIRKEL) << "finish(): moveResize done, target=" << target;
+            qCDebug(SIRKEL) << "finish(): moveResize done, target=" << target;
         } else {
-            qCWarning(SIRKEL) << "finish(): m_targetWindow->window() was null!";
+            qCDebug(SIRKEL) << "finish(): m_targetWindow->window() was null!";
         }
     } else {
-        qCWarning(SIRKEL) << "finish(): no snap applied (applyPendingDirection=" << applyPendingDirection
+        qCDebug(SIRKEL) << "finish(): no snap applied (applyPendingDirection=" << applyPendingDirection
                               << "m_targetWindow=" << m_targetWindow << "m_direction=" << snapDirectionName(m_direction) << ")";
+    }
+
+    // A confirm flash needs the overlay to still be visible a moment longer
+    // than usual to actually be seen, so delay the hide/blur-teardown
+    // instead of doing it immediately in that case (see
+    // m_overlayHideTimer). No snap, or the flash is off: hide right away,
+    // same as always.
+    if (didSnap && SirkelConfig::outlineConfirmFlash()) {
+        if (QQuickItem *outline = outlinePart()) {
+            QMetaObject::invokeMethod(outline, "playConfirmFlash");
+        }
+        m_overlayHideTimer->start(360);
+    } else {
+        m_overlay->hide();
+        KWindowEffects::enableBlurBehind(m_overlay.get(), false);
     }
 
     m_targetWindow = nullptr;
@@ -401,15 +473,21 @@ void SirkelEffect::setDirection(SnapDirection direction)
     if (direction == m_direction) {
         return;
     }
-    qCWarning(SIRKEL) << "setDirection():" << snapDirectionName(m_direction) << "->" << snapDirectionName(direction);
+    qCDebug(SIRKEL) << "setDirection():" << snapDirectionName(m_direction) << "->" << snapDirectionName(direction);
     m_direction = direction;
     // A scroll-resize step is only meaningful relative to the direction it
     // was dialed in for - picking a different one always starts back at the
     // normal size (confirmed: never persists between interactions).
-    m_sizeStep = 0;
+    m_sizeStep = (direction == SnapDirection::Maximize) ? kMaximizeNormalIndex : kEdgeNormalIndex;
 
     if (QQuickItem *indicator = indicatorPart()) {
         indicator->setProperty("direction", snapDirectionName(m_direction));
+    }
+    if (QQuickItem *outline = outlinePart()) {
+        // Lets the gradient fill (when enabled) orient itself toward
+        // whichever screen edge this direction pulls the window against —
+        // see Outline.qml's gradientHorizontal/gradientSolidAtStart.
+        outline->setProperty("direction", snapDirectionName(m_direction));
     }
 
     if (m_direction == SnapDirection::None || !m_targetScreen) {
@@ -417,7 +495,8 @@ void SirkelEffect::setDirection(SnapDirection direction)
         if (QQuickItem *outline = outlinePart()) {
             outline->setProperty("visible", false);
         }
-        KWindowEffects::enableBlurBehind(m_overlay.get(), false);
+        m_outlineLocalRect = QRectF();
+        updateBlurRegion();
         updateOverlayVisibility();
         return;
     }
@@ -427,6 +506,10 @@ void SirkelEffect::setDirection(SnapDirection direction)
         m_outlinePartVisible = true;
         if (QQuickItem *outline = outlinePart()) {
             outline->setProperty("visible", true);
+            if (!m_outlineEntrancePlayed) {
+                m_outlineEntrancePlayed = true;
+                QMetaObject::invokeMethod(outline, "playEntrance");
+            }
         }
         updateOverlayVisibility();
     }
@@ -451,7 +534,8 @@ void SirkelEffect::updateOutlineGeometry()
         outline->setProperty("targetWidth", local.width());
         outline->setProperty("targetHeight", local.height());
     }
-    applyOutlineBlur(local);
+    m_outlineLocalRect = local;
+    updateBlurRegion();
 }
 
 void SirkelEffect::adjustSizeStep(int delta)
@@ -463,23 +547,22 @@ void SirkelEffect::adjustSizeStep(int delta)
         return;
     }
     const bool isMaximize = m_direction == SnapDirection::Maximize;
-    const bool isEdge = m_direction == SnapDirection::Left || m_direction == SnapDirection::Right
-        || m_direction == SnapDirection::Top || m_direction == SnapDirection::Bottom;
-    if (!isMaximize && !isEdge) {
-        // Corners don't support scroll resizing.
+    // Corners use the exact same fraction list as edges, just width-only
+    // (see snapTargetGeometry's TopLeft/TopRight/BottomLeft/BottomRight
+    // cases) — sizeFractionForStep() doesn't need to know the difference,
+    // since it already only special-cases Maximize.
+    const bool isSingleAxis = m_direction == SnapDirection::Left || m_direction == SnapDirection::Right
+        || m_direction == SnapDirection::Top || m_direction == SnapDirection::Bottom
+        || m_direction == SnapDirection::TopLeft || m_direction == SnapDirection::TopRight
+        || m_direction == SnapDirection::BottomLeft || m_direction == SnapDirection::BottomRight;
+    if (!isMaximize && !isSingleAxis) {
         return;
     }
 
-    // Edges have 3 steps centered on "normal" (-1 small, 0 normal, +1
-    // large). Maximize only has steps *below* its default, since full size
-    // is already the ceiling (-2 small, -1 half, 0 full/normal). Either way
-    // it's 3 steps, and scrolling past either end wraps around to the other
+    // Scrolling past either end of the list wraps around to the other
     // instead of stopping there — a cycle, not a clamp.
-    const int minStep = isMaximize ? -2 : -1;
-    const int maxStep = isMaximize ? 0 : 1;
-    const int rangeSize = maxStep - minStep + 1;
-    const int offset = ((m_sizeStep - minStep + delta) % rangeSize + rangeSize) % rangeSize;
-    const int newStep = minStep + offset;
+    const int count = (isMaximize ? kMaximizeFractions : kEdgeFractions).size();
+    const int newStep = ((m_sizeStep + delta) % count + count) % count;
     if (newStep == m_sizeStep) {
         return;
     }
@@ -489,25 +572,18 @@ void SirkelEffect::adjustSizeStep(int delta)
 
 qreal SirkelEffect::sizeFractionForStep(SnapDirection direction, int step) const
 {
-    const qreal small = SirkelConfig::scrollResizeSmallPercent() / 100.0;
-    if (direction == SnapDirection::Maximize) {
-        if (step <= -2) {
-            return small;
-        }
-        return step == -1 ? 0.5 : 1.0;
+    const QList<qreal> &fractions = (direction == SnapDirection::Maximize) ? kMaximizeFractions : kEdgeFractions;
+    if (fractions.isEmpty()) {
+        return 0.5;
     }
-    if (step <= -1) {
-        return small;
-    }
-    if (step >= 1) {
-        return SirkelConfig::scrollResizeLargePercent() / 100.0;
-    }
-    return 0.5;
+    const int count = fractions.size();
+    const int idx = ((step % count) + count) % count;
+    return fractions.at(idx);
 }
 
-void SirkelEffect::applyOutlineBlur(const QRectF &localRect)
+void SirkelEffect::updateBlurRegion()
 {
-    if (!SirkelConfig::outlineBlur()) {
+    if (!SirkelConfig::outlineBlur() || !m_outlinePartVisible) {
         KWindowEffects::enableBlurBehind(m_overlay.get(), false);
         return;
     }
@@ -516,7 +592,7 @@ void SirkelEffect::applyOutlineBlur(const QRectF &localRect)
     // rounded. Simple and reliable beats a pixel-perfect rounded region
     // here; the mismatch is minor at the small corner radii this effect
     // actually uses.
-    KWindowEffects::enableBlurBehind(m_overlay.get(), true, QRegion(localRect.toRect()));
+    KWindowEffects::enableBlurBehind(m_overlay.get(), true, QRegion(m_outlineLocalRect.toRect()));
 }
 
 void SirkelEffect::updateDirectionFromPointer()
@@ -529,6 +605,31 @@ void SirkelEffect::updateDirectionFromPointer()
     // before releasing F24 will switch the pick to maximize — a deliberate
     // trade-off for making center reachable at all after leaving it.)
     setDirection(candidate == SnapDirection::None ? SnapDirection::Maximize : candidate);
+    updateDirectionIntensity(false);
+}
+
+void SirkelEffect::updateDirectionIntensity(bool fullyCommitted)
+{
+    QQuickItem *indicator = indicatorPart();
+    if (!indicator) {
+        return;
+    }
+    if (fullyCommitted) {
+        indicator->setProperty("intensity", 1.0);
+        return;
+    }
+    // How far past its own deadzone the current drag is, each axis
+    // normalized by its own deadzone so horizontal/vertical are compared
+    // fairly even when the two deadzones differ. 1.0 = right at the
+    // boundary (just barely past it); grows from there as the drag
+    // continues. Mapped to [0.55, 1.0] rather than [0, 1] so the pointer is
+    // always clearly visible, never fades to nothing — "more confident"
+    // reads as brighter, not as "barely there".
+    const qreal hDead = std::max<qreal>(1.0, SirkelConfig::horizontalDeadzone());
+    const qreal vDead = std::max<qreal>(1.0, SirkelConfig::verticalDeadzone());
+    const qreal raw = std::max(std::abs(m_accumulatedDelta.x()) / hDead, std::abs(m_accumulatedDelta.y()) / vDead);
+    const qreal t = std::clamp((raw - 1.0) / 2.0, 0.0, 1.0);
+    indicator->setProperty("intensity", 0.55 + 0.45 * t);
 }
 
 void SirkelEffect::repositionIndicator()
@@ -562,15 +663,21 @@ void SirkelEffect::applyIndicatorStyle()
     // Read fresh each time a session arms, rather than reacting live to
     // config changes mid-session — settings changed in the KCM take effect
     // the next time Sirkel is triggered.
-    const QColor outlineColor = resolveColor(true);
-    const QColor indicatorColor = SirkelConfig::linkIndicatorOutlineColor() ? outlineColor : resolveColor(false);
+    const QColor outlineColor = resolveColor(ColorTarget::Outline);
+    const bool linked = SirkelConfig::linkIndicatorColors();
+    const QColor pointerColor = linked ? outlineColor : resolveColor(ColorTarget::Pointer);
+    const QColor ringColor = linked ? outlineColor : resolveColor(ColorTarget::Ring);
+    const QString easing = SirkelConfig::easing();
     if (QQuickItem *indicator = indicatorPart()) {
         indicator->setProperty("cornerRadius", SirkelConfig::indicatorCornerRadius());
         indicator->setProperty("ringWidth", SirkelConfig::indicatorRingWidth());
         indicator->setProperty("pointerLength", SirkelConfig::indicatorPointerLength());
         indicator->setProperty("showText", SirkelConfig::showIndicatorText());
-        indicator->setProperty("highlightColor", indicatorColor);
+        indicator->setProperty("highlightColor", pointerColor);
+        indicator->setProperty("ringColor", ringColor);
         indicator->setProperty("animationDuration", SirkelConfig::outlineAnimationDuration());
+        indicator->setProperty("easing", easing);
+        indicator->setProperty("baseOpacity", SirkelConfig::indicatorRingFillOpacity() / 100.0);
     }
     if (QQuickItem *outline = outlinePart()) {
         outline->setProperty("borderWidth", SirkelConfig::outlineBorderWidth());
@@ -578,6 +685,9 @@ void SirkelEffect::applyIndicatorStyle()
         outline->setProperty("cornerRadius", SirkelConfig::outlineCornerRadius());
         outline->setProperty("fillOpacity", SirkelConfig::outlineFillOpacity());
         outline->setProperty("animationDuration", SirkelConfig::outlineAnimationDuration());
+        outline->setProperty("easing", easing);
+        outline->setProperty("confirmFlashEnabled", SirkelConfig::outlineConfirmFlash());
+        outline->setProperty("gradientFillEnabled", SirkelConfig::outlineGradientFill());
     }
 }
 
@@ -634,23 +744,13 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
         // Not a real session yet — just watching for the gesture that
         // decides whether one starts. Esc always gives up. For "delay",
         // only a release matters (it cancels; the timer itself is what
-        // arms if the key's still down when it fires). For "doubleclick",
-        // only a second, non-autorepeat press matters — the very first
-        // press is never delivered here at all (it's what caused the
-        // keyboard grab in the first place, via handleTrigger()), so any
-        // fresh KeyPress seen while pending unambiguously *is* that second
-        // press.
+        // arms if the key's still down when it fires).
         if (event->key() == Qt::Key_Escape && event->type() == QEvent::KeyPress) {
             cancelPendingTrigger();
             return;
         }
-        if (event->key() == Qt::Key_F24) {
-            if (m_triggerPhase == TriggerPhase::PendingDelay && event->type() == QEvent::KeyRelease) {
-                cancelPendingTrigger();
-            } else if (m_triggerPhase == TriggerPhase::PendingDoubleClick && event->type() == QEvent::KeyPress && !event->isAutoRepeat()) {
-                m_doubleClickTimer->stop();
-                arm();
-            }
+        if (event->key() == Qt::Key_F24 && event->type() == QEvent::KeyRelease) {
+            cancelPendingTrigger();
         }
         return;
     }
@@ -688,14 +788,27 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
         case KeyAxis::None:
             break;
         }
-        // Sticky, same as the mouse-drag case: releasing the keys that
-        // composed a direction must not cancel it — only pressing a
-        // *different* real combination changes the pick. Without this,
-        // releasing e.g. Left+Up back to nothing would recompute None and
-        // wipe out the selection before F24 is even released.
-        const SnapDirection composed = composeDirection(m_keyUp, m_keyDown, m_keyLeft, m_keyRight);
-        if (composed != SnapDirection::None) {
-            setDirection(composed);
+        // Sticky, same as the mouse-drag case: only a fresh key PRESS can
+        // change the pick — a release must never cancel or change it, full
+        // stop. This has to be gated on the event being a press, not just
+        // on the recomposed result being non-None: releasing *one* of two
+        // keys that composed a corner (e.g. letting go of Left while Up is
+        // still held, after Up+Left picked TopLeft) recomposes to a
+        // different *valid* direction (Top) — composed != None is true, so
+        // without this check it reads as a deliberate new pick and
+        // silently downgrades the corner to a single edge, even though
+        // nothing was actually pressed. The key state bitmask above still
+        // needs updating on every event regardless (release included), so
+        // the next real press recomposes from accurate state — only the
+        // recompute-and-apply step below is press-only.
+        if (pressed) {
+            const SnapDirection composed = composeDirection(m_keyUp, m_keyDown, m_keyLeft, m_keyRight);
+            if (composed != SnapDirection::None) {
+                setDirection(composed);
+                // A key press is a deliberate, binary pick - no drag-distance
+                // equivalent, so it always reads as fully committed.
+                updateDirectionIntensity(true);
+            }
         }
         return;
     }

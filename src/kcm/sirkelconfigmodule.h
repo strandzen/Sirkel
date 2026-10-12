@@ -25,13 +25,16 @@ class SirkelConfigModule : public KQuickConfigModule
     Q_PROPERTY(int indicatorRingWidth READ indicatorRingWidth WRITE setIndicatorRingWidth NOTIFY settingsChanged)
     Q_PROPERTY(int indicatorPointerLength READ indicatorPointerLength WRITE setIndicatorPointerLength NOTIFY settingsChanged)
     Q_PROPERTY(bool showIndicatorText READ showIndicatorText WRITE setShowIndicatorText NOTIFY settingsChanged)
+    Q_PROPERTY(int indicatorRingFillOpacity READ indicatorRingFillOpacity WRITE setIndicatorRingFillOpacity NOTIFY settingsChanged)
     Q_PROPERTY(int outlineBorderWidth READ outlineBorderWidth WRITE setOutlineBorderWidth NOTIFY settingsChanged)
     Q_PROPERTY(int outlineCornerRadius READ outlineCornerRadius WRITE setOutlineCornerRadius NOTIFY settingsChanged)
     Q_PROPERTY(QColor outlineColor READ outlineColor WRITE setOutlineColor NOTIFY settingsChanged)
-    Q_PROPERTY(QColor indicatorColor READ indicatorColor WRITE setIndicatorColor NOTIFY settingsChanged)
+    Q_PROPERTY(QColor indicatorPointerColor READ indicatorPointerColor WRITE setIndicatorPointerColor NOTIFY settingsChanged)
+    Q_PROPERTY(QColor indicatorRingColor READ indicatorRingColor WRITE setIndicatorRingColor NOTIFY settingsChanged)
     Q_PROPERTY(QString outlineColorSource READ outlineColorSource WRITE setOutlineColorSource NOTIFY settingsChanged)
-    Q_PROPERTY(QString indicatorColorSource READ indicatorColorSource WRITE setIndicatorColorSource NOTIFY settingsChanged)
-    Q_PROPERTY(bool linkIndicatorOutlineColor READ linkIndicatorOutlineColor WRITE setLinkIndicatorOutlineColor NOTIFY settingsChanged)
+    Q_PROPERTY(QString indicatorPointerColorSource READ indicatorPointerColorSource WRITE setIndicatorPointerColorSource NOTIFY settingsChanged)
+    Q_PROPERTY(QString indicatorRingColorSource READ indicatorRingColorSource WRITE setIndicatorRingColorSource NOTIFY settingsChanged)
+    Q_PROPERTY(bool linkIndicatorColors READ linkIndicatorColors WRITE setLinkIndicatorColors NOTIFY settingsChanged)
     Q_PROPERTY(QString wallpaperColorPath READ wallpaperColorPath WRITE setWallpaperColorPath NOTIFY settingsChanged)
     Q_PROPERTY(int outlineFillOpacity READ outlineFillOpacity WRITE setOutlineFillOpacity NOTIFY settingsChanged)
     Q_PROPERTY(bool outlineBlur READ outlineBlur WRITE setOutlineBlur NOTIFY settingsChanged)
@@ -45,8 +48,9 @@ class SirkelConfigModule : public KQuickConfigModule
     Q_PROPERTY(QString triggerMode READ triggerMode WRITE setTriggerMode NOTIFY settingsChanged)
     Q_PROPERTY(int triggerDelay READ triggerDelay WRITE setTriggerDelay NOTIFY settingsChanged)
     Q_PROPERTY(bool scrollResizeEnabled READ scrollResizeEnabled WRITE setScrollResizeEnabled NOTIFY settingsChanged)
-    Q_PROPERTY(qreal scrollResizeSmallPercent READ scrollResizeSmallPercent WRITE setScrollResizeSmallPercent NOTIFY settingsChanged)
-    Q_PROPERTY(qreal scrollResizeLargePercent READ scrollResizeLargePercent WRITE setScrollResizeLargePercent NOTIFY settingsChanged)
+    Q_PROPERTY(QString easing READ easing WRITE setEasing NOTIFY settingsChanged)
+    Q_PROPERTY(bool outlineConfirmFlash READ outlineConfirmFlash WRITE setOutlineConfirmFlash NOTIFY settingsChanged)
+    Q_PROPERTY(bool outlineGradientFill READ outlineGradientFill WRITE setOutlineGradientFill NOTIFY settingsChanged)
 
 public:
     explicit SirkelConfigModule(QObject *parent, const KPluginMetaData &metaData);
@@ -78,6 +82,9 @@ public:
     bool showIndicatorText() const;
     void setShowIndicatorText(bool value);
 
+    int indicatorRingFillOpacity() const;
+    void setIndicatorRingFillOpacity(int value);
+
     int outlineBorderWidth() const;
     void setOutlineBorderWidth(int value);
 
@@ -87,17 +94,23 @@ public:
     QColor outlineColor() const;
     void setOutlineColor(const QColor &value);
 
-    QColor indicatorColor() const;
-    void setIndicatorColor(const QColor &value);
+    QColor indicatorPointerColor() const;
+    void setIndicatorPointerColor(const QColor &value);
+
+    QColor indicatorRingColor() const;
+    void setIndicatorRingColor(const QColor &value);
 
     QString outlineColorSource() const;
     void setOutlineColorSource(const QString &value);
 
-    QString indicatorColorSource() const;
-    void setIndicatorColorSource(const QString &value);
+    QString indicatorPointerColorSource() const;
+    void setIndicatorPointerColorSource(const QString &value);
 
-    bool linkIndicatorOutlineColor() const;
-    void setLinkIndicatorOutlineColor(bool value);
+    QString indicatorRingColorSource() const;
+    void setIndicatorRingColorSource(const QString &value);
+
+    bool linkIndicatorColors() const;
+    void setLinkIndicatorColors(bool value);
 
     QString wallpaperColorPath() const;
     void setWallpaperColorPath(const QString &value);
@@ -138,11 +151,23 @@ public:
     bool scrollResizeEnabled() const;
     void setScrollResizeEnabled(bool value);
 
-    qreal scrollResizeSmallPercent() const;
-    void setScrollResizeSmallPercent(qreal value);
+    QString easing() const;
+    void setEasing(const QString &value);
 
-    qreal scrollResizeLargePercent() const;
-    void setScrollResizeLargePercent(qreal value);
+    bool outlineConfirmFlash() const;
+    void setOutlineConfirmFlash(bool value);
+
+    bool outlineGradientFill() const;
+    void setOutlineGradientFill(bool value);
+
+    // Resets just the Colors tab's own settings (both colors, both
+    // sources, the link toggle, and the wallpaper path) to their kcfg
+    // defaults — distinct from the KCM's built-in "Defaults" button, which
+    // resets every setting on every tab. Uses each entry's own
+    // KConfigSkeletonItem::setDefault() (ItemAccessors=true in
+    // sirkelconfig.kcfgc) rather than re-typing the default values here by
+    // hand, so this can't drift out of sync with the kcfg file.
+    Q_INVOKABLE void resetColors();
 
     void load() override;
     void save() override;

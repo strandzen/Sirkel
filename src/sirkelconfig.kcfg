@@ -47,9 +47,25 @@
     <entry name="ShowIndicatorText" type="Bool">
       <default>false</default>
     </entry>
-    <!-- Border thickness (px) of the target-outline preview. -->
+    <!-- Opacity (%) of the indicator's static base ring only - the
+         pointer/marker and the text label always stay at full strength
+         regardless of this setting. 100 = fully opaque. Renamed from
+         IndicatorOpacity: "opacity"/"transparency" alone read as applying
+         to the whole indicator, and as the inverse of what the number
+         actually meant (higher = more opaque, not more transparent) -
+         "ring fill opacity" matches OutlineFillOpacity's own naming and is
+         unambiguous about both the direction and the scope. -->
+    <entry name="IndicatorRingFillOpacity" type="Int">
+      <default>100</default>
+      <min>0</min>
+      <max>100</max>
+    </entry>
+    <!-- Border thickness (px) of the target-outline preview. 0 hides the
+         border entirely, leaving just the fill (and Blur/Gradient fill, if
+         those are on) to mark the target. -->
     <entry name="OutlineBorderWidth" type="Int">
       <default>2</default>
+      <min>0</min>
     </entry>
     <!-- Corner radius (px) of the target-outline preview. -->
     <entry name="OutlineCornerRadius" type="Int">
@@ -77,8 +93,8 @@
       <default>75</default>
     </entry>
     <!-- Manually-picked color for the target-outline preview (and, when
-         LinkIndicatorOutlineColor is true, the indicator too), used when
-         OutlineColorSource is "manual". Alpha channel is respected
+         LinkIndicatorColors is true, the indicator's pointer and ring
+         too), used when OutlineColorSource is "manual". Alpha channel is respected
          (KConfig's Color type round-trips it natively). This static
          default is effectively never seen in practice: OutlineColorSource
          defaults to "theme", which resolves to the live Plasma accent
@@ -106,11 +122,26 @@
     <entry name="IndicatorFollowsMouse" type="Bool">
       <default>false</default>
     </entry>
-    <!-- Manually-picked color for the center indicator ring, used when
-         IndicatorColorSource is "manual". Independent of OutlineColor
-         unless LinkIndicatorOutlineColor is true. -->
-    <entry name="IndicatorColor" type="Color">
+    <!-- Manually-picked color for the indicator's pointer/marker, used when
+         IndicatorPointerColorSource is "manual". Independent of
+         OutlineColor and IndicatorRingColor unless LinkIndicatorColors is
+         true. Renamed from IndicatorColor now that the ring has its own
+         separate color (IndicatorRingColor below) - this one was always
+         really the pointer's color, the ring never used it. -->
+    <entry name="IndicatorPointerColor" type="Color">
       <default>61,174,233</default>
+    </entry>
+    <!-- Manually-picked color for the indicator's static base ring, used
+         when IndicatorRingColorSource is "manual". Independent of
+         OutlineColor and IndicatorPointerColor unless LinkIndicatorColors
+         is true. Defaults to a solid, fully-opaque neutral gray matching
+         the ring's original hardcoded look (which used to bake a fixed
+         ~40% alpha directly into the color - now that's a separate,
+         actually-controllable setting, IndicatorRingFillOpacity, this
+         needs to default to fully opaque on its own so 100% fill opacity
+         really does look solid). -->
+    <entry name="IndicatorRingColor" type="Color">
+      <default>46,52,64</default>
     </entry>
     <!-- Where the outline's color comes from: "manual" (OutlineColor, set
          via the KCM's picker), "theme" (the live Plasma accent color,
@@ -119,16 +150,32 @@
     <entry name="OutlineColorSource" type="String">
       <default>theme</default>
     </entry>
-    <!-- Same as OutlineColorSource, for the indicator. Ignored when
-         LinkIndicatorOutlineColor is true (the indicator just follows
+    <!-- Same as OutlineColorSource, for the indicator's pointer. Ignored
+         when LinkIndicatorColors is true (the pointer just follows
          whatever the outline resolves to). -->
-    <entry name="IndicatorColorSource" type="String">
+    <entry name="IndicatorPointerColorSource" type="String">
       <default>theme</default>
     </entry>
-    <!-- Whether the indicator uses its own color independently, or always
-         matches the outline's (the original, simpler behavior). -->
-    <entry name="LinkIndicatorOutlineColor" type="Bool">
-      <default>true</default>
+    <!-- Same as OutlineColorSource, for the indicator's ring. Ignored when
+         LinkIndicatorColors is true. Defaults to "manual" (not "theme")
+         so the ring keeps its own distinct neutral look out of the box,
+         consistent with LinkIndicatorColors itself defaulting to false -
+         see IndicatorRingColor's default for why. The KCM only offers
+         "manual"/"theme" for this one (not "wallpaper") - the ring's whole
+         point is to hold its own distinct identity, which a live-tracked
+         wallpaper color works against; still a plain String here so
+         nothing breaks if "wallpaper" ends up set some other way. -->
+    <entry name="IndicatorRingColorSource" type="String">
+      <default>manual</default>
+    </entry>
+    <!-- Whether the outline, the indicator's pointer, and the indicator's
+         ring all use one shared color (true), or each has its own
+         independent color/source (false). Defaults to false: with three
+         distinct colors now in play, independent-by-default avoids
+         silently overwriting the ring's own default look the first time
+         someone touches any of these three. -->
+    <entry name="LinkIndicatorColors" type="Bool">
+      <default>false</default>
     </entry>
     <!-- Where to read a wallpaper-derived color from, when a color's source
          is "wallpaper". Empty (the default) means: use pywal's own default
@@ -149,10 +196,12 @@
       <default>false</default>
     </entry>
     <!-- How a hyperkey press turns into an armed session: "instant" (arms
-         immediately, the original behavior), "delay" (must be held for
+         immediately, the original behavior) or "delay" (must be held for
          TriggerDelay ms before it arms — releasing sooner cancels with no
-         effect), or "doubleclick" (a quick tap-release-tap-and-hold within
-         ~400ms arms it — a single press-and-hold does nothing). -->
+         effect). A third mode, "doubleclick", existed briefly but was cut:
+         it was the most complex trigger path (its own pending-gesture
+         state machine) for what turned out to be the least-used of the
+         three, and the one mode that had ever had a real confirmed bug. -->
     <entry name="TriggerMode" type="String">
       <default>instant</default>
     </entry>
@@ -165,34 +214,43 @@
          scrolling resizes the target before release. Edge directions
          (Left/Right/Top/Bottom) resize only the one dimension that edge
          already controls (width for left/right, height for top/bottom) -
-         the other stays full, exactly like today's half-snap. Maximize
-         also scales width only, shrinking in from both sides, centered
-         horizontally - height stays full. Corners are unaffected.
+         the other stays full, exactly like today's half-snap. The four
+         corners resize width only the same way (height stays at the
+         quarter's usual half). Maximize also scales width only, shrinking
+         in from both sides, centered horizontally - height stays full.
          Never persists between interactions - a fresh direction pick
          always starts back at the normal size. -->
     <entry name="ScrollResizeEnabled" type="Bool">
       <default>false</default>
     </entry>
-    <!-- The "smaller" scroll step, as a percentage of the normal size: used
-         as an edge direction's smallest step, and as Maximize's smallest
-         (most-shrunk, still centered) step. One decimal place matters here:
-         three "small" windows side by side (e.g. Left+Maximize+Right all
-         scrolled to their smallest step, approximating thirds) sum their
-         widths, and a plain 33% leaves a visible 1%-of-screen-width gap
-         (3 x 33 = 99, not 100) - 33.3% shrinks that shortfall to 0.1%,
-         sub-pixel on any real display. -->
-    <entry name="ScrollResizeSmallPercent" type="Double">
-      <default>33.3</default>
-      <min>10.0</min>
-      <max>49.9</max>
+    <!-- Appearance toggles - small motion/visual touches. Entrance,
+         direction-intensity brightening, and the Maximize breathing pulse
+         used to be separately switchable too; cut as settings (not as
+         behavior - all three still happen) once it became clear nobody
+         would plausibly want them off independently of everything else.
+         Shared between Outline and Indicator (both read the same one): -->
+    <!-- How the glide/grow animation (OutlineAnimationDuration) and the
+         indicator pointer's slide ease into position: "linear" (constant
+         speed, no easing at all), "smooth" (a plain ease-out,
+         Easing.OutCubic), or "overshoot" (eases out past the target then
+         settles back, Easing.OutBack - a touch of "bounce" instead of just
+         arriving). Renamed/expanded from OvershootEasing (a plain bool) to
+         make room for more curves later without another rename. -->
+    <entry name="Easing" type="String">
+      <default>overshoot</default>
     </entry>
-    <!-- The "larger" scroll step, as a percentage of the normal size: used
-         only as an edge direction's largest step - Maximize has no equivalent
-         (its own default is already full size, nothing is "larger"). -->
-    <entry name="ScrollResizeLargePercent" type="Double">
-      <default>66.7</default>
-      <min>50.1</min>
-      <max>90.0</max>
+    <!-- A brief brightness/scale pulse on the outline's fill right as the
+         window actually snaps on release - separate from, and in addition
+         to, the glide animation that gets it there. -->
+    <entry name="OutlineConfirmFlash" type="Bool">
+      <default>true</default>
+    </entry>
+    <!-- A subtle gradient (brighter top, dimmer bottom, same hue) instead
+         of a flat translucent fill. Purely a paint change, no extra
+         rendering cost - off by default as a style choice, not a
+         performance one. -->
+    <entry name="OutlineGradientFill" type="Bool">
+      <default>false</default>
     </entry>
   </group>
 </kcfg>

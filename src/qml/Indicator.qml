@@ -15,17 +15,101 @@ import QtQuick.Shapes
 // SirkelEffect::applyIndicatorStyle().
 Item {
     id: root
+    transformOrigin: Item.Center
 
     property string direction: "none"
     property real cornerRadius: 110
     property int ringWidth: 12
     property real pointerLength: ringWidth * 3
     property bool showText: true
+    // highlightColor is the pointer/marker's own color (SirkelConfig::
+    // IndicatorPointerColor et al) — ringColor (SirkelConfig::
+    // IndicatorRingColor et al) is the static base ring's, entirely
+    // independent unless LinkIndicatorColors is on. Full alpha by default,
+    // unlike the ring's old hardcoded color which baked a fixed ~40% alpha
+    // directly in - transparency is baseOpacity's job now, not the color's.
     property color highlightColor: "#3daee9"
+    property color ringColor: "#2e3440"
     // Shared with Outline.qml's own glide/resize animation (both are driven
     // by SirkelConfig::OutlineAnimationDuration) — 0 means every change
     // below is instant, matching the original behavior.
     property int animationDuration: 0
+    // "linear" | "smooth" | "overshoot" — see Easing's kcfg doc comment.
+    // Shared with Outline.qml (both read the same setting).
+    property string easing: "overshoot"
+
+    function easingType() {
+        switch (root.easing) {
+        case "linear": return Easing.Linear;
+        case "smooth": return Easing.OutCubic;
+        default: return Easing.OutBack;
+        }
+    }
+
+    // SirkelConfig::IndicatorRingFillOpacity / 100 — applies only to the
+    // static base ring below, never to the pointer or text, which always
+    // stay at full strength regardless. (A ring-blur option was tried here
+    // too and pulled back out — see Todo.md's Unscoped ideas for why.)
+    property real baseOpacity: 1.0
+    // Pushed from SirkelEffect::updateDirectionIntensity() on every
+    // direction update, already mapped to [0.55, 1.0] — how "committed"
+    // the current drag reads as. Used by markerFillColor below for every
+    // direction except Maximize, which has its own feedback instead
+    // (breatheOpacity).
+    property real intensity: 1.0
+
+    function dimmedColor(c, factor) {
+        return Qt.rgba(c.r * factor, c.g * factor, c.b * factor, c.a);
+    }
+
+    readonly property color markerFillColor: (direction === "maximize" || direction === "none")
+        ? highlightColor
+        : dimmedColor(highlightColor, intensity)
+
+    // Slow opacity "breathing" while resting in the Maximize zone — a quiet
+    // "hold here to confirm" cue, distinct from the brightness-based
+    // feedback edges/corners get from `intensity`. Only ever loops while
+    // actually in that zone during an armed session.
+    property real breatheOpacity: 1.0
+
+    SequentialAnimation {
+        id: breatheAnim
+        loops: Animation.Infinite
+        running: root.direction === "maximize"
+        onRunningChanged: if (!running) root.breatheOpacity = 1.0
+        NumberAnimation { target: root; property: "breatheOpacity"; to: 0.72; duration: 650; easing.type: Easing.InOutSine }
+        NumberAnimation { target: root; property: "breatheOpacity"; to: 1.0; duration: 650; easing.type: Easing.InOutSine }
+    }
+
+    // Called once from SirkelEffect::engage() the moment real input first
+    // arrives each session — pops the whole indicator in (scale + fade
+    // from ~88%) instead of snapping straight to fully drawn. Explicitly
+    // invoked rather than keyed off `visible` changing: root.visible only
+    // ever transitions false->true *once* in the plugin's entire lifetime
+    // in practice (nothing ever sets it back to false between sessions),
+    // not once per session as an onVisibleChanged-driven version assumed —
+    // that version only ever played on the very first snap after KWin
+    // loaded the effect.
+    function playEntrance() {
+        if (root.animationDuration <= 0) {
+            opacity = 1;
+            return;
+        }
+        opacity = 0;
+        scale = 0.88;
+        entranceAnim.restart();
+    }
+
+    // Targets a flat 1, not baseOpacity — this animates the whole item
+    // (pointer and text included) popping in together; baseOpacity is a
+    // separate, ring-only multiplier applied below on baseRing, and
+    // composes correctly through it either way since child opacity
+    // multiplies with the parent's in Qt Quick.
+    ParallelAnimation {
+        id: entranceAnim
+        NumberAnimation { target: root; property: "opacity"; to: 1; duration: 180; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "scale"; to: 1; duration: 180; easing.type: Easing.OutBack }
+    }
 
     readonly property real r: Math.min(cornerRadius, width / 2, height / 2)
     readonly property real inset: ringWidth / 2
@@ -104,21 +188,26 @@ Item {
     }
 
     Behavior on unwrappedProgress {
-        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: 260; easing.type: root.easingType() }
     }
 
     Behavior on effectiveSpan {
         enabled: root.animationDuration > 0
-        NumberAnimation { duration: root.animationDuration; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: root.animationDuration; easing.type: root.easingType() }
     }
 
-    // Static base ring — same shape/color always, never swaps pieces.
+    // Static base ring — same shape always, never swaps pieces. color/
+    // opacity below are the only things IndicatorRingColor/
+    // IndicatorRingFillOpacity ever touch - the pointer (Shape, below) and
+    // text always stay at full strength regardless.
     Rectangle {
+        id: baseRing
         anchors.fill: parent
         radius: root.r
         color: "transparent"
         border.width: root.ringWidth
-        border.color: "#662e3440"
+        border.color: root.ringColor
+        opacity: root.baseOpacity
     }
 
     // The ring's boundary centerline has the same shape QML's Path/PathArc
@@ -231,9 +320,10 @@ Item {
     Shape {
         anchors.fill: parent
         visible: root.direction !== "none"
+        opacity: root.direction === "maximize" ? root.breatheOpacity : 1.0
         ShapePath {
             strokeWidth: 0
-            fillColor: root.highlightColor
+            fillColor: root.markerFillColor
             PathPolyline { path: root.markerPolygon }
         }
     }

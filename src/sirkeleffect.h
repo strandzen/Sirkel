@@ -61,8 +61,8 @@ protected:
 
 private:
     // The trigger entry point (connected to m_toggleAction) — decides,
-    // per TriggerMode, whether to arm() immediately or wait for a delay/
-    // double-click gesture to resolve first. See TriggerPhase below.
+    // per TriggerMode, whether to arm() immediately or wait for a delay
+    // gesture to resolve first. See TriggerPhase below.
     void handleTrigger();
     void cancelPendingTrigger();
     void arm();
@@ -84,8 +84,18 @@ private:
     // Tells KWin's Blur effect which part of m_overlay (in the window's own
     // local coordinates, same as what's pushed to targetX/Y/Width/Height)
     // to blur behind, or turns it off — see OutlineBlur's kcfg doc comment
-    // for why there's no separate "how much" parameter.
-    void applyOutlineBlur(const QRectF &localRect);
+    // for why there's no separate "how much" parameter. IndicatorBlur is a
+    // different, QML-only mechanism (see Indicator.qml's baseRing) and has
+    // nothing to do with this - it blurs the ring's own rendered pixels,
+    // not the desktop behind the window, so it doesn't need a region here.
+    void updateBlurRegion();
+    // Pushed to indicatorPart() on every direction update (mouse or key) —
+    // how far past its deadzone the current drag is, mapped to [0.55, 1.0]
+    // and used by Indicator.qml to brighten the pointer as the pick gets
+    // more "committed". Keyboard picks are always treated as fully
+    // committed (1.0), since there's no equivalent of drag distance for a
+    // key press.
+    void updateDirectionIntensity(bool fullyCommitted);
 
     // The two named child Items inside Overlay.qml's scene — see
     // Overlay.qml. Looked up by objectName each time rather than cached,
@@ -109,14 +119,19 @@ private:
     // Idle the rest of the time, including for the entire duration of a
     // real (armed) session — that part is still tracked by m_targetWindow/
     // m_active, same as before this existed.
-    enum class TriggerPhase { Idle, PendingDelay, PendingDoubleClick };
+    enum class TriggerPhase { Idle, PendingDelay };
     TriggerPhase m_triggerPhase = TriggerPhase::Idle;
     // Whether handleTrigger() already grabbed the keyboard for a pending
     // phase, so arm() (called either directly, or later once that phase
     // resolves) knows not to grab a second time.
     bool m_keyboardAlreadyGrabbed = false;
     QTimer *m_delayTimer = nullptr;
-    QTimer *m_doubleClickTimer = nullptr;
+    // A confirm flash (see OutlineConfirmFlash) needs the overlay to stay
+    // visible a little past the usual instant-hide in finish(), long enough
+    // to actually be seen - this fires that delayed hide. arm() stops it on
+    // every new session, so a rapid re-trigger during the previous
+    // session's flash can never hide the new one out from under it.
+    QTimer *m_overlayHideTimer = nullptr;
 
     QAction *m_toggleAction = nullptr;
     std::unique_ptr<QQuickView> m_overlay;
@@ -126,6 +141,25 @@ private:
     // no longer the same operation (see updateOverlayVisibility()).
     bool m_outlinePartVisible = false;
     bool m_indicatorPartVisible = false;
+    // Whether each part's one-shot entrance animation has already played
+    // this session — reset to false in arm(). Needed because each part's
+    // own QML `visible` property is not a reliable per-session signal for
+    // this: setDirection(SnapDirection::None) is never actually called
+    // anywhere (mouse input always resolves None to Maximize instead, and
+    // the keyboard path simply skips calling setDirection() at all when
+    // composeDirection() returns None), so outlinePart()'s `visible` only
+    // ever transitions false->true exactly once in the plugin's entire
+    // lifetime, not once per session - an onVisibleChanged-driven entrance
+    // would only ever play on the very first snap after KWin loads the
+    // effect. These flags plus an explicit playEntrance() invoke (see
+    // engage() and setDirection()) are the real per-session trigger.
+    bool m_outlineEntrancePlayed = false;
+    bool m_indicatorEntrancePlayed = false;
+    // The outline's current target rect in m_overlay's local coordinates
+    // (same space as targetX/Y/Width/Height) - tracked here purely so
+    // updateBlurRegion() has it without needing a parameter, moved/resized
+    // per direction/size-step change by updateOutlineGeometry().
+    QRectF m_outlineLocalRect;
     KWin::EffectWindow *m_targetWindow = nullptr;
     KWin::LogicalOutput *m_targetScreen = nullptr;
     // The target screen's usable area for this session, computed once in
@@ -148,11 +182,12 @@ private:
     QPointF m_indicatorCenter;
     QPointF m_accumulatedDelta;
     SnapDirection m_direction = SnapDirection::None;
-    // Scroll-resize step for m_direction, relative to its normal size - 0
-    // is always "normal" (today's half-snap / full-maximize size). Reset to
-    // 0 every time m_direction changes to a genuinely different direction,
-    // so a scroll adjustment never carries over to the next pick. See
-    // sizeFractionForStep() for what each step actually maps to.
+    // Scroll-resize step for m_direction - an index into whichever fraction
+    // list applies (kEdgeFractions or kMaximizeFractions, see
+    // sizeFractionForStep() in the .cpp), reset to that list's own "normal"
+    // entry (kEdgeNormalIndex/kMaximizeNormalIndex) every time m_direction
+    // changes to a genuinely different direction, so a scroll adjustment
+    // never carries over to the next pick.
     int m_sizeStep = 0;
     bool m_active = false;
     // Holding the hyperkey alone must not show the indicator or grab the

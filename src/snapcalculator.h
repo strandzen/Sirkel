@@ -35,9 +35,10 @@ SnapDirection snapDirectionForDelta(const QPointF &delta, qreal horizontalDeadzo
 //
 // `sizeFraction` is the scroll-resize step (see SirkelEffect::pointerAxis):
 // for Left/Right it scales width only (height stays full), for Top/Bottom
-// it scales height only (width stays full), and for Maximize it also
-// scales width only, centered horizontally (height stays full, same as the
-// ordinary maximize). Corners ignore it - scroll resizing is edge/maximize
-// only. Leave negative (the default) to use each direction's own normal
-// size: 0.5 for the half-snap directions, 1.0 for Maximize.
+// it scales height only (width stays full), for the four corners it scales
+// width only (height stays at the quarter's usual half), and for Maximize
+// it also scales width only, centered horizontally (height stays full,
+// same as the ordinary maximize). Leave negative (the default) to use each
+// direction's own normal size: 0.5 for the half/quarter-snap directions,
+// 1.0 for Maximize.
 QRectF snapTargetGeometry(SnapDirection direction, const QRectF &area, qreal paddingHorizontal = 0, qreal paddingVertical = 0, qreal sizeFraction = -1.0);

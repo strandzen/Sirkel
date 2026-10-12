@@ -61,7 +61,6 @@ QRectF snapTargetGeometry(SnapDirection direction, const QRectF &area, qreal pad
 {
     const qreal x = area.x();
     const qreal y = area.y();
-    const qreal halfW = area.width() / 2.0;
     const qreal halfH = area.height() / 2.0;
 
     // An edge against the screen's own border gets the full padding; an
@@ -98,22 +97,34 @@ QRectF snapTargetGeometry(SnapDirection direction, const QRectF &area, qreal pad
         sharedTop = true;
         break;
     }
-    case SnapDirection::TopLeft:
-        result = QRectF(x, y, halfW, halfH);
+    // Corners scroll-resize the same way Left/Right do - width only,
+    // anchored to their own screen edge - with height staying at the
+    // quarter's usual half-height regardless. No vertical equivalent: a
+    // corner's height is only ever "half", there's no second axis to pick.
+    case SnapDirection::TopLeft: {
+        const qreal w = area.width() * (sizeFraction < 0.0 ? 0.5 : sizeFraction);
+        result = QRectF(x, y, w, halfH);
         sharedRight = sharedBottom = true;
         break;
-    case SnapDirection::TopRight:
-        result = QRectF(x + halfW, y, halfW, halfH);
+    }
+    case SnapDirection::TopRight: {
+        const qreal w = area.width() * (sizeFraction < 0.0 ? 0.5 : sizeFraction);
+        result = QRectF(x + area.width() - w, y, w, halfH);
         sharedLeft = sharedBottom = true;
         break;
-    case SnapDirection::BottomLeft:
-        result = QRectF(x, y + halfH, halfW, halfH);
+    }
+    case SnapDirection::BottomLeft: {
+        const qreal w = area.width() * (sizeFraction < 0.0 ? 0.5 : sizeFraction);
+        result = QRectF(x, y + halfH, w, halfH);
         sharedRight = sharedTop = true;
         break;
-    case SnapDirection::BottomRight:
-        result = QRectF(x + halfW, y + halfH, halfW, halfH);
+    }
+    case SnapDirection::BottomRight: {
+        const qreal w = area.width() * (sizeFraction < 0.0 ? 0.5 : sizeFraction);
+        result = QRectF(x + area.width() - w, y + halfH, w, halfH);
         sharedLeft = sharedTop = true;
         break;
+    }
     case SnapDirection::Maximize: {
         // Width only, centered horizontally - height always stays full,
         // same as today's ordinary maximize. Shrinking in from both sides
