@@ -112,7 +112,7 @@ How Sirkel stacks up against [Loop](https://github.com/MrKai77/Loop), the macOS 
 | Indicator/preview independently toggleable | ✅ | ✅ |
 | Maximize / center gesture | ✅ | ✅ |
 | Separate colors for indicator vs. outline | ✅ | ✅ |
-| Thirds (horizontal/vertical, two-thirds variants) | ✅ | ❌ |
+| Thirds (horizontal/vertical, two-thirds variants) | ✅ | ✅ |
 | Per-action custom keybinds (any key → any specific action) | ✅ | ❌ |
 | Cycles (cycles through size variants before committing) | ✅ | ✅ |
 | Stash (hide windows at screen edge, reveal on hover) | ✅ | ❌ |
