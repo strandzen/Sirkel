@@ -161,10 +161,12 @@ KeyAxis axisForArmedKey(int key, const QString &scheme)
 // where a fresh direction pick always starts. Maximize uses its own list,
 // anchored on its own last entry (1.0, "full") since there's no state
 // "larger" than full size. Deliberately a plain fixed list, not a KCM
-// setting - adding a step later (e.g. a quarter) is a one-line change
-// here plus updating the matching *NormalIndex, not a new UI to build.
-const QList<qreal> kEdgeFractions = {1.0 / 3.0, 1.0 / 2.0, 2.0 / 3.0};
-const int kEdgeNormalIndex = 1;
+// setting - adding a step (quarters, added here as the first example of
+// that) is a one-line change here plus updating the matching
+// *NormalIndex, not a new UI to build. Maximize deliberately doesn't get
+// a quarter step (for now) - edges/corners do.
+const QList<qreal> kEdgeFractions = {1.0 / 4.0, 1.0 / 3.0, 1.0 / 2.0, 2.0 / 3.0};
+const int kEdgeNormalIndex = 2;
 const QList<qreal> kMaximizeFractions = {1.0 / 3.0, 1.0 / 2.0, 1.0};
 const int kMaximizeNormalIndex = 2;
 

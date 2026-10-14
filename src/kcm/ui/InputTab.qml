@@ -24,13 +24,26 @@ QQC2.ScrollView {
 
     Item {
         width: parent.width
-        implicitHeight: inputForm.implicitHeight + Kirigami.Units.largeSpacing * 2
+        implicitHeight: keydWarning.visible
+            ? keydWarning.implicitHeight + Kirigami.Units.largeSpacing * 3 + inputForm.implicitHeight
+            : inputForm.implicitHeight + Kirigami.Units.largeSpacing * 2
+
+        Kirigami.InlineMessage {
+            id: keydWarning
+            width: Math.min(parent.width - Kirigami.Units.largeSpacing * 2, root.formWidth)
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: Kirigami.Units.largeSpacing
+            visible: !kcm.keydOk
+            type: Kirigami.MessageType.Warning
+            text: "keyd doesn't seem to be running with Caps Lock mapped to F24 - the hyperkey won't work until that's fixed. See the README's \"Configure keyd\" step. (Checked once per System Settings launch - reopen it after fixing to clear this.)"
+        }
 
         Kirigami.FormLayout {
             id: inputForm
             width: Math.min(parent.width - Kirigami.Units.largeSpacing * 2, root.formWidth)
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
+            anchors.top: keydWarning.visible ? keydWarning.bottom : parent.top
             anchors.topMargin: Kirigami.Units.largeSpacing
 
             Kirigami.Separator {
@@ -155,16 +168,16 @@ QQC2.ScrollView {
 
             Kirigami.Separator {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Scroll sizing"
+                Kirigami.FormData.label: "Scroll-sizing"
             }
 
             QQC2.Switch {
-                Kirigami.FormData.label: "While previewing:"
-                text: "Scroll to resize before releasing"
+                Kirigami.FormData.label: "Scroll-sizing:"
+                text: "Use scrollwheel to resize"
                 checked: kcm.scrollResizeEnabled
                 onToggled: kcm.scrollResizeEnabled = checked
 
-                QQC2.ToolTip.text: "Resizes the one dimension each direction already controls, cycling 1/3 → 1/2 → 2/3. Never carries over to the next pick."
+                QQC2.ToolTip.text: "Resizes the one dimension each direction already controls, cycling 1/4 → 1/3 → 1/2 → 2/3. Never carries over to the next pick."
                 QQC2.ToolTip.visible: hovered
             }
         }

@@ -2,6 +2,8 @@
 
 A [Loop](https://github.com/MrKai77/Loop)-inspired directional window snapping tool for KDE Plasma 6.7+ / KWin.
 
+Current version: 0.1.0 - pre-1.0, single-machine tested, settings may still change between releases.
+
 Hold a hyperkey (Caps Lock, remapped to F24), drag the mouse or press a direction key to pick where the active window should go, release to snap it there - left/right halves, top/bottom halves, or one of the four quarter corners, previewed live with an on-screen outline and a direction indicator.
 
 ## Features
@@ -69,6 +71,18 @@ This installs both the KWin effect itself and its System Settings configuration 
 
 Open **System Settings → Desktop Effects**, find **Sirkel**, and enable it.
 
+If keyd isn't running, or Caps Lock isn't mapped to F24, Sirkel's own settings page (System Settings → Desktop Effects → Sirkel, Input tab) shows a warning saying so.
+
+## Uninstallation
+
+```sh
+sudo xargs rm < build/install_manifest.txt
+```
+
+This removes the two files the build installs (the effect and its settings page); run it from the same `build` directory you installed from. Then, in **System Settings → Desktop Effects**, Sirkel will disappear from the list on its own (nothing to disable by hand).
+
+Sirkel never writes to `/etc/keyd/` itself - if you want to undo the keyd setup too, remove or comment out the `capslock = f24` line you added to `/etc/keyd/default.conf` in step 1, then `sudo systemctl restart keyd` (or `sudo systemctl disable --now keyd` if you don't use keyd for anything else).
+
 ## Usage
 
 1. Hold Caps Lock (F24).
@@ -129,4 +143,4 @@ How Sirkel stacks up against [Loop](https://github.com/MrKai77/Loop), the macOS 
 
 ## License
 
-GPL-2.0-or-later.
+GPL-2.0-or-later. See [LICENSE](LICENSE).

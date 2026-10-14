@@ -51,6 +51,7 @@ class SirkelConfigModule : public KQuickConfigModule
     Q_PROPERTY(QString easing READ easing WRITE setEasing NOTIFY settingsChanged)
     Q_PROPERTY(bool outlineConfirmFlash READ outlineConfirmFlash WRITE setOutlineConfirmFlash NOTIFY settingsChanged)
     Q_PROPERTY(bool outlineGradientFill READ outlineGradientFill WRITE setOutlineGradientFill NOTIFY settingsChanged)
+    Q_PROPERTY(bool keydOk READ keydOk CONSTANT)
 
 public:
     explicit SirkelConfigModule(QObject *parent, const KPluginMetaData &metaData);
@@ -159,6 +160,14 @@ public:
 
     bool outlineGradientFill() const;
     void setOutlineGradientFill(bool value);
+
+    // Best-effort check that the hyperkey prerequisite is actually in
+    // place: the keyd.service is active AND some *.conf file under
+    // /etc/keyd/ maps capslock to f24 (the project never writes that file
+    // itself - see CLAUDE.md/README's "Configure keyd" step - so this can
+    // only check, never fix). Checked once when the KCM loads; re-open
+    // System Settings to re-check after fixing it.
+    bool keydOk() const;
 
     // Resets just the Colors tab's own settings (both colors, both
     // sources, the link toggle, and the wallpaper path) to their kcfg

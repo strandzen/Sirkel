@@ -10,6 +10,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QPalette>
+#include <QProcess>
+#include <QRegularExpression>
 
 namespace
 {
@@ -67,6 +69,38 @@ QColor resolveColor(ColorTarget target)
         }
     }
     return QGuiApplication::palette().color(QPalette::Highlight);
+}
+
+// Best-effort only: /etc/keyd/ may not be readable by this process, and
+// the mapping could legitimately live under a different key name than
+// "capslock" (e.g. remapped again upstream of keyd) - a false negative
+// here just means a warning the user can ignore, not a hard failure.
+bool checkKeydOk()
+{
+    const bool serviceActive = QProcess::execute(QStringLiteral("systemctl"), {QStringLiteral("is-active"), QStringLiteral("--quiet"), QStringLiteral("keyd")}) == 0;
+    if (!serviceActive) {
+        return false;
+    }
+
+    static const QRegularExpression mapping(QStringLiteral("^\\s*capslock\\s*=\\s*f24\\s*$"), QRegularExpression::CaseInsensitiveOption);
+    QDir keydDir(QStringLiteral("/etc/keyd"));
+    const QStringList confFiles = keydDir.entryList({QStringLiteral("*.conf")}, QDir::Files);
+    for (const QString &fileName : confFiles) {
+        QFile file(keydDir.filePath(fileName));
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            continue;
+        }
+        while (!file.atEnd()) {
+            const QString line = QString::fromUtf8(file.readLine()).trimmed();
+            if (line.startsWith(QLatin1Char('#'))) {
+                continue;
+            }
+            if (mapping.match(line).hasMatch()) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 }
 
@@ -493,6 +527,11 @@ void SirkelConfigModule::setOutlineGradientFill(bool value)
     SirkelConfig::setOutlineGradientFill(value);
     SirkelConfig::self()->save();
     Q_EMIT settingsChanged();
+}
+
+bool SirkelConfigModule::keydOk() const
+{
+    return checkKeydOk();
 }
 
 void SirkelConfigModule::resetColors()
