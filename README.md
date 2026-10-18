@@ -6,6 +6,9 @@ Hold Caps Lock, move the mouse or press a direction key, release. The active win
 
 Version 0.2.0. Early and tested on one machine, so settings may still change.
 
+## Demo
+<img width="400" height="225" alt="demo-video" src="https://github.com/user-attachments/assets/1860aa8e-80ff-4825-b9c2-fe4fa55ec903" />
+
 ## Features
 
 - 8 placements (halves and quarters) plus maximize, picked with the mouse or with arrow keys, WASD or HJKL. Two keys at once (Up+Left) pick a corner.
