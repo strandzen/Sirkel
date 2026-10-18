@@ -3,29 +3,27 @@ import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
 
-// One color swatch + "Customize…" row, reused for the Outline/Pointer/Ring
-// color pickers in the Colors tab — these used to be ~60 lines of near-
-// identical QML each (184 lines total across the three, confirmed by
-// audit). `target` names which kcm color property this instance edits
-// (e.g. "outlineColor") and `colorValue` is that property's actual value,
-// passed in statically by the caller (kcm.outlineColor, a plain named
-// binding) rather than looked up dynamically in here — QML's binding
-// dependency tracking doesn't reliably follow dynamic/bracket-notation
-// property lookups inside declarative bindings (confirmed the hard way
-// earlier in this project's history with a ListView that silently
-// rendered nothing). `target` itself is only ever read inside the
-// imperative onClicked handlers below, which don't have that problem.
+// A color swatch plus "Customize…" button, shared by the Outline, Pointer and
+// Ring rows. `colorValue` is bound statically by the caller (QML doesn't
+// reliably track dynamic kcm[...] lookups inside bindings); `target` is only
+// read imperatively when opening the popup.
 RowLayout {
     id: root
 
     property color colorValue
+    // "outline", "pointer" or "ring" (see SirkelConfigModule::pickColor).
     property string target
     property var popup
 
     spacing: Kirigami.Units.largeSpacing
 
-    // A checkerboard behind the swatch so a transparent/semi-transparent
-    // color is actually visible, not just washed out.
+    function openPopup() {
+        root.popup.target = root.target;
+        root.popup.initialColor = root.colorValue;
+        root.popup.open();
+    }
+
+    // Checkerboard behind the swatch so transparency is visible.
     Item {
         Layout.preferredWidth: Kirigami.Units.gridUnit * 3
         Layout.preferredHeight: Kirigami.Units.gridUnit * 2
@@ -53,18 +51,12 @@ RowLayout {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: {
-                root.popup.targetProperty = root.target;
-                root.popup.open();
-            }
+            onClicked: root.openPopup()
         }
     }
 
     QQC2.Button {
-        text: "Customize…"
-        onClicked: {
-            root.popup.targetProperty = root.target;
-            root.popup.open();
-        }
+        text: i18n("Customize…")
+        onClicked: root.openPopup()
     }
 }

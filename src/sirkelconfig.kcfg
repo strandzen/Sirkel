@@ -47,14 +47,8 @@
     <entry name="ShowIndicatorText" type="Bool">
       <default>false</default>
     </entry>
-    <!-- Opacity (%) of the indicator's static base ring only - the
-         pointer/marker and the text label always stay at full strength
-         regardless of this setting. 100 = fully opaque. Renamed from
-         IndicatorOpacity: "opacity"/"transparency" alone read as applying
-         to the whole indicator, and as the inverse of what the number
-         actually meant (higher = more opaque, not more transparent) -
-         "ring fill opacity" matches OutlineFillOpacity's own naming and is
-         unambiguous about both the direction and the scope. -->
+    <!-- Opacity (%) of the indicator's base ring only. The pointer and the
+         text label always stay at full strength. 100 = fully opaque. -->
     <entry name="IndicatorRingFillOpacity" type="Int">
       <default>100</default>
       <min>0</min>
@@ -86,22 +80,17 @@
     <entry name="OutlineBlur" type="Bool">
       <default>false</default>
     </entry>
-    <!-- How long (ms) the target-outline preview takes to glide/resize
-         between directions. 0 = instant (snaps straight to the new
-         position/size, the original behavior). -->
+    <!-- How long (ms) the outline preview takes to glide between picks.
+         Every other animation (pointer slide, entrance, exit, confirm
+         flash) scales with it, and with KWin's global animation speed.
+         0 = everything instant. -->
     <entry name="OutlineAnimationDuration" type="Int">
       <default>75</default>
     </entry>
-    <!-- Manually-picked color for the target-outline preview (and, when
-         LinkIndicatorColors is true, the indicator's pointer and ring
-         too), used when OutlineColorSource is "manual". Alpha channel is respected
-         (KConfig's Color type round-trips it natively). This static
-         default is effectively never seen in practice: OutlineColorSource
-         defaults to "theme", which resolves to the live Plasma accent
-         color instead — see resolveColor() in sirkeleffect.cpp /
-         sirkelconfigmodule.cpp. Picking any color via the KCM (a swatch or
-         the custom picker) sets OutlineColorSource to "manual" and stores
-         the picked value here. -->
+    <!-- Color for the outline preview (and, when LinkIndicatorColors is
+         true, the indicator's pointer and ring) when OutlineColorSource is
+         "manual". Alpha is respected. Picking a color in the KCM sets the
+         source to "manual". -->
     <entry name="OutlineColor" type="Color">
       <default>61,174,233</default>
     </entry>
@@ -122,31 +111,21 @@
     <entry name="IndicatorFollowsMouse" type="Bool">
       <default>false</default>
     </entry>
-    <!-- Manually-picked color for the indicator's pointer/marker, used when
-         IndicatorPointerColorSource is "manual". Independent of
-         OutlineColor and IndicatorRingColor unless LinkIndicatorColors is
-         true. Renamed from IndicatorColor now that the ring has its own
-         separate color (IndicatorRingColor below) - this one was always
-         really the pointer's color, the ring never used it. -->
+    <!-- Color for the indicator's pointer when IndicatorPointerColorSource
+         is "manual". -->
     <entry name="IndicatorPointerColor" type="Color">
       <default>61,174,233</default>
     </entry>
-    <!-- Manually-picked color for the indicator's static base ring, used
-         when IndicatorRingColorSource is "manual". Independent of
-         OutlineColor and IndicatorPointerColor unless LinkIndicatorColors
-         is true. Defaults to a solid, fully-opaque neutral gray matching
-         the ring's original hardcoded look (which used to bake a fixed
-         ~40% alpha directly into the color - now that's a separate,
-         actually-controllable setting, IndicatorRingFillOpacity, this
-         needs to default to fully opaque on its own so 100% fill opacity
-         really does look solid). -->
+    <!-- Color for the indicator's base ring when IndicatorRingColorSource
+         is "manual". Fully opaque; IndicatorRingFillOpacity sets
+         transparency. -->
     <entry name="IndicatorRingColor" type="Color">
       <default>46,52,64</default>
     </entry>
-    <!-- Where the outline's color comes from: "manual" (OutlineColor, set
-         via the KCM's picker), "theme" (the live Plasma accent color,
-         re-resolved every time — see resolveColor() in sirkeleffect.cpp /
-         sirkelconfigmodule.cpp), or "wallpaper" (WallpaperColorPath). -->
+    <!-- Where the outline's color comes from: "manual" (OutlineColor),
+         "theme" (the live Plasma accent) or "wallpaper"
+         (WallpaperColorPath). Resolved fresh every session, see
+         colorresolver.cpp. -->
     <entry name="OutlineColorSource" type="String">
       <default>theme</default>
     </entry>
@@ -157,23 +136,13 @@
       <default>theme</default>
     </entry>
     <!-- Same as OutlineColorSource, for the indicator's ring. Ignored when
-         LinkIndicatorColors is true. Defaults to "manual" (not "theme")
-         so the ring keeps its own distinct neutral look out of the box,
-         consistent with LinkIndicatorColors itself defaulting to false -
-         see IndicatorRingColor's default for why. The KCM only offers
-         "manual"/"theme" for this one (not "wallpaper") - the ring's whole
-         point is to hold its own distinct identity, which a live-tracked
-         wallpaper color works against; still a plain String here so
-         nothing breaks if "wallpaper" ends up set some other way. -->
+         LinkIndicatorColors is true. Defaults to "manual" so the ring keeps
+         its own neutral look; the KCM offers no "wallpaper" option for it. -->
     <entry name="IndicatorRingColorSource" type="String">
       <default>manual</default>
     </entry>
-    <!-- Whether the outline, the indicator's pointer, and the indicator's
-         ring all use one shared color (true), or each has its own
-         independent color/source (false). Defaults to false: with three
-         distinct colors now in play, independent-by-default avoids
-         silently overwriting the ring's own default look the first time
-         someone touches any of these three. -->
+    <!-- Whether the outline, pointer and ring share the outline's color
+         (true) or each have their own color and source (false). -->
     <entry name="LinkIndicatorColors" type="Bool">
       <default>false</default>
     </entry>
@@ -195,13 +164,9 @@
     <entry name="SnapToCursorScreen" type="Bool">
       <default>false</default>
     </entry>
-    <!-- How a hyperkey press turns into an armed session: "instant" (arms
-         immediately, the original behavior) or "delay" (must be held for
-         TriggerDelay ms before it arms — releasing sooner cancels with no
-         effect). A third mode, "doubleclick", existed briefly but was cut:
-         it was the most complex trigger path (its own pending-gesture
-         state machine) for what turned out to be the least-used of the
-         three, and the one mode that had ever had a real confirmed bug. -->
+    <!-- How a hyperkey press starts a session: "instant" (arms
+         immediately) or "delay" (must be held for TriggerDelay ms; releasing
+         sooner cancels). -->
     <entry name="TriggerMode" type="String">
       <default>instant</default>
     </entry>
@@ -223,19 +188,9 @@
     <entry name="ScrollResizeEnabled" type="Bool">
       <default>false</default>
     </entry>
-    <!-- Appearance toggles - small motion/visual touches. Entrance,
-         direction-intensity brightening, and the Maximize breathing pulse
-         used to be separately switchable too; cut as settings (not as
-         behavior - all three still happen) once it became clear nobody
-         would plausibly want them off independently of everything else.
-         Shared between Outline and Indicator (both read the same one): -->
-    <!-- How the glide/grow animation (OutlineAnimationDuration) and the
-         indicator pointer's slide ease into position: "linear" (constant
-         speed, no easing at all), "smooth" (a plain ease-out,
-         Easing.OutCubic), or "overshoot" (eases out past the target then
-         settles back, Easing.OutBack - a touch of "bounce" instead of just
-         arriving). Renamed/expanded from OvershootEasing (a plain bool) to
-         make room for more curves later without another rename. -->
+    <!-- Easing for the outline glide and the indicator pointer slide:
+         "linear", "smooth" (ease out) or "overshoot" (eases past the target
+         and settles back). -->
     <entry name="Easing" type="String">
       <default>overshoot</default>
     </entry>
@@ -245,10 +200,9 @@
     <entry name="OutlineConfirmFlash" type="Bool">
       <default>true</default>
     </entry>
-    <!-- A subtle gradient (brighter top, dimmer bottom, same hue) instead
-         of a flat translucent fill. Purely a paint change, no extra
-         rendering cost - off by default as a style choice, not a
-         performance one. -->
+    <!-- A gradient fill instead of a flat one: solid toward the screen
+         edge the placement snaps against, fading away from it. Same hue and
+         opacity as the flat fill. -->
     <entry name="OutlineGradientFill" type="Bool">
       <default>false</default>
     </entry>

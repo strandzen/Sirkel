@@ -1,37 +1,67 @@
 import QtQuick
 
-// Single shared window for both the target-outline preview and the center
-// direction indicator, replacing what used to be two independent
-// QQuickWindows. Stacking order between two separate top-level windows
-// turned out not to be reliably controllable from C++: neither an explicit
-// raise() nor avoiding redundant show() calls on the outline kept the
-// indicator reliably above it — and once the outline's own Blur effect
-// started blurring whatever's behind it, a wrongly-stacked outline meant
-// it was blurring the indicator's already-painted pixels into mush before
-// drawing its tinted fill on top.
+// One window for both the outline preview and the indicator. Two Items in
+// one scene stack deterministically (later declared = on top), which two
+// separate top-level windows did not. Indicator is declared after Outline so
+// it always reads as in front of the preview.
 //
-// Stacking between two *Items in one scene* has none of that ambiguity:
-// whichever is declared later always paints on top, full stop, with no
-// window-manager/compositor timing involved at all. Indicator is declared
-// after Outline here for exactly that reason — it must always read as "in
-// front of" the outline preview, never behind it.
-//
-// Outline fills this window entirely (its own target rect is a sub-region
-// within that, in its own local coordinates — see Outline.qml). Indicator
-// is instead positioned as an explicit sub-rect (x/y/width/height, plain
-// QQuickItem properties) within this same window, pushed from
-// SirkelEffect::repositionIndicator() — translating its desired absolute
-// screen position into this window's local coordinate space, the same way
-// Outline's own target rect already is.
+// Outline fills the window; Indicator is a sub-rect positioned by
+// OverlayController::placeIndicator().
 Item {
+    id: root
     anchors.fill: parent
 
+    // Emitted once the exit animation is done; the window is hidden then.
+    signal exitFinished()
+
+    // Multiplier for every animation duration (1 = the authored timings).
+    // 0 makes everything instant.
+    property real motionScale: 1
+    // "linear" | "smooth" | "overshoot", see Easing in the kcfg.
+    property string easing: "overshoot"
+    readonly property int easingType: {
+        switch (easing) {
+        case "linear": return Easing.Linear;
+        case "smooth": return Easing.OutCubic;
+        default: return Easing.OutBack;
+        }
+    }
+
+    function ms(base) {
+        return Math.round(base * root.motionScale);
+    }
+
+    // Called at the start of every session.
+    function reset() {
+        exitTimer.stop();
+        outline.reset();
+        indicator.reset();
+    }
+
+    function playExit(confirmed) {
+        const hold = outline.playExit(confirmed);
+        indicator.playExit(hold);
+        exitTimer.interval = Math.max(1, hold + root.ms(140));
+        exitTimer.restart();
+    }
+
+    Timer {
+        id: exitTimer
+        onTriggered: root.exitFinished()
+    }
+
     Outline {
+        id: outline
         objectName: "outlinePart"
         anchors.fill: parent
+        motionScale: root.motionScale
+        easingType: root.easingType
     }
 
     Indicator {
+        id: indicator
         objectName: "indicatorPart"
+        motionScale: root.motionScale
+        easingType: root.easingType
     }
 }

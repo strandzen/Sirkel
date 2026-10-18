@@ -3,12 +3,8 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// Visuals tab — merges the former IndicatorTab.qml and OutlineTab.qml into
-// one tab with two sections, plus a shared "Motion" section at the end for
-// the two settings (Animation duration, Easing) that were already shared
-// backend values pushed to both parts — they used to be shown twice
-// (once per old tab), which stops making sense once both live in the same
-// tab. See InputTab.qml's header comment for the ScrollBar.AlwaysOn fix.
+// Visuals tab: Indicator and Outline sections, plus a shared Motion section
+// for settings that apply to both.
 QQC2.ScrollView {
     id: root
 
@@ -31,182 +27,182 @@ QQC2.ScrollView {
 
             Kirigami.Separator {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Indicator"
+                Kirigami.FormData.label: i18n("Indicator")
             }
 
             QQC2.Switch {
-                Kirigami.FormData.label: "Visible:"
-                text: "Show the indicator"
-                checked: kcm.showIndicator
-                onToggled: kcm.showIndicator = checked
+                Kirigami.FormData.label: i18n("Visible:")
+                text: i18n("Show the indicator")
+                checked: kcm.settings.showIndicator
+                onToggled: kcm.settings.showIndicator = checked
             }
 
             QQC2.Switch {
-                Kirigami.FormData.label: "Text:"
-                text: "Show direction name"
-                checked: kcm.showIndicatorText
-                onToggled: kcm.showIndicatorText = checked
+                Kirigami.FormData.label: i18n("Text:")
+                text: i18n("Show direction name")
+                checked: kcm.settings.showIndicatorText
+                onToggled: kcm.settings.showIndicatorText = checked
             }
 
             QQC2.Switch {
-                Kirigami.FormData.label: "Position:"
-                text: "Spawn at cursor"
-                checked: kcm.indicatorFollowsMouse
-                onToggled: kcm.indicatorFollowsMouse = checked
+                Kirigami.FormData.label: i18n("Position:")
+                text: i18n("Spawn at cursor")
+                checked: kcm.settings.indicatorFollowsMouse
+                onToggled: kcm.settings.indicatorFollowsMouse = checked
             }
 
             QQC2.SpinBox {
-                Kirigami.FormData.label: "Size (px):"
+                Kirigami.FormData.label: i18n("Size (px):")
                 Layout.preferredWidth: root.fieldWidth
                 from: 60
                 to: 400
-                value: kcm.indicatorSize
-                onValueModified: kcm.indicatorSize = value
+                value: kcm.settings.indicatorSize
+                onValueModified: kcm.settings.indicatorSize = value
             }
 
             QQC2.SpinBox {
-                Kirigami.FormData.label: "Corner radius (px):"
+                Kirigami.FormData.label: i18n("Corner radius (px):")
                 Layout.preferredWidth: root.fieldWidth
                 from: 0
-                to: kcm.indicatorSize / 2
-                value: kcm.indicatorCornerRadius
-                onValueModified: kcm.indicatorCornerRadius = value
+                to: kcm.settings.indicatorSize / 2
+                value: kcm.settings.indicatorCornerRadius
+                onValueModified: kcm.settings.indicatorCornerRadius = value
             }
 
             QQC2.SpinBox {
-                Kirigami.FormData.label: "Line thickness (px):"
+                Kirigami.FormData.label: i18n("Line thickness (px):")
                 Layout.preferredWidth: root.fieldWidth
                 from: 2
                 to: 60
-                value: kcm.indicatorRingWidth
-                onValueModified: kcm.indicatorRingWidth = value
+                value: kcm.settings.indicatorRingWidth
+                onValueModified: kcm.settings.indicatorRingWidth = value
             }
 
             QQC2.SpinBox {
-                Kirigami.FormData.label: "Pointer length (px):"
+                Kirigami.FormData.label: i18n("Pointer length (px):")
                 Layout.preferredWidth: root.fieldWidth
                 from: 6
                 to: 200
-                value: kcm.indicatorPointerLength
-                onValueModified: kcm.indicatorPointerLength = value
+                value: kcm.settings.indicatorPointerLength
+                onValueModified: kcm.settings.indicatorPointerLength = value
             }
 
             QQC2.SpinBox {
-                Kirigami.FormData.label: "Opacity (%):"
+                Kirigami.FormData.label: i18n("Opacity (%):")
                 Layout.preferredWidth: root.fieldWidth
                 from: 0
                 to: 100
-                value: kcm.indicatorRingFillOpacity
-                onValueModified: kcm.indicatorRingFillOpacity = value
+                value: kcm.settings.indicatorRingFillOpacity
+                onValueModified: kcm.settings.indicatorRingFillOpacity = value
 
-                QQC2.ToolTip.text: "Ring only — pointer and text always stay fully visible."
+                QQC2.ToolTip.text: i18n("Ring only — pointer and text always stay fully visible.")
                 QQC2.ToolTip.visible: hovered
             }
 
             Kirigami.Separator {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Outline"
+                Kirigami.FormData.label: i18n("Outline")
             }
 
             QQC2.Switch {
-                Kirigami.FormData.label: "Visible:"
-                text: "Show the placement preview"
-                checked: kcm.showOutline
-                onToggled: kcm.showOutline = checked
+                Kirigami.FormData.label: i18n("Visible:")
+                text: i18n("Show the placement preview")
+                checked: kcm.settings.showOutline
+                onToggled: kcm.settings.showOutline = checked
             }
 
             QQC2.SpinBox {
-                Kirigami.FormData.label: "Border thickness (px):"
+                Kirigami.FormData.label: i18n("Border thickness (px):")
                 Layout.preferredWidth: root.fieldWidth
                 from: 0
                 to: 20
-                value: kcm.outlineBorderWidth
-                onValueModified: kcm.outlineBorderWidth = value
+                value: kcm.settings.outlineBorderWidth
+                onValueModified: kcm.settings.outlineBorderWidth = value
 
-                QQC2.ToolTip.text: "0 hides the border, leaving just the fill."
+                QQC2.ToolTip.text: i18n("0 hides the border, leaving just the fill.")
                 QQC2.ToolTip.visible: hovered
             }
 
             QQC2.SpinBox {
-                Kirigami.FormData.label: "Corner radius (px):"
+                Kirigami.FormData.label: i18n("Corner radius (px):")
                 Layout.preferredWidth: root.fieldWidth
                 from: 0
                 to: 60
-                value: kcm.outlineCornerRadius
-                onValueModified: kcm.outlineCornerRadius = value
+                value: kcm.settings.outlineCornerRadius
+                onValueModified: kcm.settings.outlineCornerRadius = value
             }
 
             QQC2.SpinBox {
-                Kirigami.FormData.label: "Opacity (%):"
+                Kirigami.FormData.label: i18n("Opacity (%):")
                 Layout.preferredWidth: root.fieldWidth
                 from: 0
                 to: 100
-                value: kcm.outlineFillOpacity
-                onValueModified: kcm.outlineFillOpacity = value
+                value: kcm.settings.outlineFillOpacity
+                onValueModified: kcm.settings.outlineFillOpacity = value
             }
 
             QQC2.Switch {
-                Kirigami.FormData.label: "Blur:"
-                text: "Blur the desktop behind the fill"
-                checked: kcm.outlineBlur
-                onToggled: kcm.outlineBlur = checked
+                Kirigami.FormData.label: i18n("Blur:")
+                text: i18n("Blur the desktop behind the fill")
+                checked: kcm.settings.outlineBlur
+                onToggled: kcm.settings.outlineBlur = checked
 
-                QQC2.ToolTip.text: "Needs Desktop Effects' Blur enabled. Opacity above controls how much shows through."
+                QQC2.ToolTip.text: i18n("Needs Desktop Effects' Blur enabled. Opacity above controls how much shows through.")
                 QQC2.ToolTip.visible: hovered
             }
 
             QQC2.Switch {
-                Kirigami.FormData.label: "Confirm flash:"
-                text: "Brief pulse on the fill right as it snaps"
-                checked: kcm.outlineConfirmFlash
-                onToggled: kcm.outlineConfirmFlash = checked
+                Kirigami.FormData.label: i18n("Confirm flash:")
+                text: i18n("Brief pulse on the fill right as it snaps")
+                checked: kcm.settings.outlineConfirmFlash
+                onToggled: kcm.settings.outlineConfirmFlash = checked
 
-                QQC2.ToolTip.text: "Marks the moment it snaps, separate from the glide animation."
+                QQC2.ToolTip.text: i18n("Marks the moment it snaps, separate from the glide animation.")
                 QQC2.ToolTip.visible: hovered
             }
 
             QQC2.Switch {
-                Kirigami.FormData.label: "Gradient fill:"
-                text: "Subtle gradient instead of a flat fill"
-                checked: kcm.outlineGradientFill
-                onToggled: kcm.outlineGradientFill = checked
+                Kirigami.FormData.label: i18n("Gradient fill:")
+                text: i18n("Subtle gradient instead of a flat fill")
+                checked: kcm.settings.outlineGradientFill
+                onToggled: kcm.settings.outlineGradientFill = checked
 
-                QQC2.ToolTip.text: "Brighter top, dimmer bottom, same hue/opacity as flat."
+                QQC2.ToolTip.text: i18n("Solid toward the edge the window snaps against, fading away from it. Same hue and opacity as flat.")
                 QQC2.ToolTip.visible: hovered
             }
 
             Kirigami.Separator {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Motion"
+                Kirigami.FormData.label: i18n("Motion")
             }
 
             QQC2.SpinBox {
-                Kirigami.FormData.label: "Animation duration (ms):"
+                Kirigami.FormData.label: i18n("Animation duration (ms):")
                 Layout.preferredWidth: root.fieldWidth
                 from: 0
                 to: 1000
                 stepSize: 10
-                value: kcm.outlineAnimationDuration
-                onValueModified: kcm.outlineAnimationDuration = value
+                value: kcm.settings.outlineAnimationDuration
+                onValueModified: kcm.settings.outlineAnimationDuration = value
 
-                QQC2.ToolTip.text: "0 = instant, no entrance pop-in. Higher = slower glide for both."
+                QQC2.ToolTip.text: i18n("Sets the pace for every animation (glide, pointer slide, entrance, exit). Also follows the global animation speed. 0 = instant.")
                 QQC2.ToolTip.visible: hovered
             }
 
             QQC2.ComboBox {
-                Kirigami.FormData.label: "Easing:"
+                Kirigami.FormData.label: i18n("Easing:")
                 Layout.preferredWidth: root.fieldWidth
                 Layout.minimumWidth: 0
                 textRole: "text"
                 model: [
-                    { value: "linear", text: "Linear" },
-                    { value: "smooth", text: "Smooth" },
-                    { value: "overshoot", text: "Overshoot" },
+                    { value: "linear", text: i18n("Linear") },
+                    { value: "smooth", text: i18n("Smooth") },
+                    { value: "overshoot", text: i18n("Overshoot") },
                 ]
-                currentIndex: model.findIndex(m => m.value === kcm.easing)
-                onActivated: kcm.easing = model[currentIndex].value
+                currentIndex: model.findIndex(m => m.value === kcm.settings.easing)
+                onActivated: kcm.settings.easing = model[currentIndex].value
 
-                QQC2.ToolTip.text: "Linear: constant speed. Smooth: eases out. Overshoot: eases past the target then settles back."
+                QQC2.ToolTip.text: i18n("Linear: constant speed. Smooth: eases out. Overshoot: eases past the target then settles back.")
                 QQC2.ToolTip.visible: hovered
             }
         }

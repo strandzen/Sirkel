@@ -20,14 +20,14 @@ Hold a hyperkey (Caps Lock, remapped to F24), drag the mouse or press a directio
 - Snap to whichever monitor the cursor is on instead of always the active window's own screen (opt-in)
 - Independent colors for the outline, the indicator's pointer, and the indicator's ring, each sourced from a manual pick, the live Plasma accent color, or (outline/pointer only) the current wallpaper - with a "linked" toggle to share one color across all three
 - Optional blur behind the outline's translucent fill, using KWin's own Blur effect
-- A handful of motion/feedback touches: configurable easing (linear/smooth/overshoot), a pop-in entrance, a confirm flash on release, a gradient fill option, brightness feedback as a drag commits, and a breathing pulse while resting at Maximize
+- A handful of motion/feedback touches: configurable easing (linear/smooth/overshoot), a pop-in entrance, a confirm flash on release, a gradient fill option, a fade-out on release, and brightness feedback as a drag commits
 - Tabbed settings page (System Settings → Desktop Effects → Sirkel): Input, Visuals, and Colors each on their own tab
 
 ## Requirements
 
 - KDE Plasma 6.7+ (KWin with the Wayland session)
 - [keyd](https://github.com/rvaiya/keyd) - hard dependency, used to remap Caps Lock to F24 at the input level
-- Build dependencies: CMake, Extra CMake Modules (ECM), Qt6 (Core, Gui, Qml, Quick, DBus), KDE Frameworks 6 (Config, CoreAddons, GlobalAccel, KCMUtils), and KWin's own development headers
+- Build dependencies: CMake, Extra CMake Modules (ECM), Qt6 (Core, Gui, Qml, Quick, DBus, Test), KDE Frameworks 6 (Config, ColorScheme, CoreAddons, GlobalAccel, I18n, KCMUtils, WindowSystem), and KWin's own development headers
 
 ## Recommended
 - [Geometry Change](https://github.com/peterfajdiga/kwin4_effect_geometry_change) - For fancier animations when windows change positons.
@@ -66,6 +66,14 @@ sudo cmake --install .
 ```
 
 This installs both the KWin effect itself and its System Settings configuration page.
+
+On Arch-based distributions (Arch, CachyOS, EndeavourOS...) you can build a pacman package instead, from the repository root:
+
+```sh
+makepkg -si
+```
+
+The PKGBUILD builds the latest commit on GitHub (not your local checkout). Remove it later with `sudo pacman -R sirkel-git`.
 
 ### 3. Enable the effect
 

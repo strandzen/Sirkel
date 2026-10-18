@@ -3,10 +3,8 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// Colors tab content, split out of main.qml — see InputTab.qml's header
-// comment for why tabs are split files, and for the ScrollBar.AlwaysOn
-// fix below. Owns colorPopup itself (the custom hex/RGBA picker), since
-// it's only ever used from here.
+// Colors tab. Owns colorPopup (the custom hex/RGBA picker), since only this
+// tab uses it.
 QQC2.ScrollView {
     id: root
 
@@ -14,6 +12,8 @@ QQC2.ScrollView {
     property real formWidth: Kirigami.Units.gridUnit * 30
 
     contentWidth: availableWidth
+    // Reserve the scrollbar's width permanently so overflowing doesn't
+    // narrow the form into label-above-field mode.
     QQC2.ScrollBar.vertical.policy: QQC2.ScrollBar.AlwaysOn
 
     Item {
@@ -29,141 +29,109 @@ QQC2.ScrollView {
 
             Kirigami.Separator {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Color source"
+                Kirigami.FormData.label: i18n("Color source")
             }
 
-            // Governs all three groups below at once, so it stays here,
-            // outside/above all of them, rather than nested under any one
-            // group's own section.
             QQC2.Switch {
-                Kirigami.FormData.label: "Linked:"
-                text: "One color for outline, pointer, and ring"
-                checked: kcm.linkIndicatorColors
-                onToggled: kcm.linkIndicatorColors = checked
+                Kirigami.FormData.label: i18n("Linked:")
+                text: i18n("One color for outline, pointer, and ring")
+                checked: kcm.settings.linkIndicatorColors
+                onToggled: kcm.settings.linkIndicatorColors = checked
             }
 
             Kirigami.Separator {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Outline"
+                Kirigami.FormData.label: i18n("Outline")
             }
 
-            // Outline — always shown. ColorPickerRow/ColorSourceCombo (see
-            // those files) take kcm.* values in statically (not via
-            // dynamic/bracket-notation property lookups): QML's binding
-            // engine doesn't reliably track dependencies through those
-            // inside declarative bindings, confirmed the hard way earlier
-            // this project's history (a ListView model that silently
-            // rendered nothing). Imperative one-shot reads/writes (inside
-            // functions, not bindings) don't have that problem, so
-            // colorPopup below still uses a dynamic target safely.
             ColorSourceCombo {
-                Kirigami.FormData.label: "Source:"
+                Kirigami.FormData.label: i18n("Source:")
                 Layout.preferredWidth: root.fieldWidth
-                sourceValue: kcm.outlineColorSource
-                onSourcePicked: (value) => kcm.outlineColorSource = value
+                sourceValue: kcm.settings.outlineColorSource
+                onSourcePicked: (value) => kcm.settings.outlineColorSource = value
             }
 
             ColorPickerRow {
-                Kirigami.FormData.label: "Color:"
-                colorValue: kcm.outlineColor
-                target: "outlineColor"
+                Kirigami.FormData.label: i18n("Color:")
+                colorValue: kcm.resolvedOutlineColor
+                target: "outline"
                 popup: colorPopup
             }
 
-            // Pointer/Ring groups (including their own section headers) —
-            // only shown when not linked to the outline's. Kirigami.
-            // FormLayout collapses hidden rows (no blank gap left behind),
-            // same pattern as every other conditional row already in this
-            // KCM.
+            // Pointer and Ring rows only matter when not linked.
             Kirigami.Separator {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Pointer"
-                visible: !kcm.linkIndicatorColors
+                Kirigami.FormData.label: i18n("Pointer")
+                visible: !kcm.settings.linkIndicatorColors
             }
 
             ColorSourceCombo {
-                Kirigami.FormData.label: "Source:"
+                Kirigami.FormData.label: i18n("Source:")
                 Layout.preferredWidth: root.fieldWidth
-                visible: !kcm.linkIndicatorColors
-                sourceValue: kcm.indicatorPointerColorSource
-                onSourcePicked: (value) => kcm.indicatorPointerColorSource = value
+                visible: !kcm.settings.linkIndicatorColors
+                sourceValue: kcm.settings.indicatorPointerColorSource
+                onSourcePicked: (value) => kcm.settings.indicatorPointerColorSource = value
             }
 
             ColorPickerRow {
-                Kirigami.FormData.label: "Color:"
-                visible: !kcm.linkIndicatorColors
-                colorValue: kcm.indicatorPointerColor
-                target: "indicatorPointerColor"
+                Kirigami.FormData.label: i18n("Color:")
+                visible: !kcm.settings.linkIndicatorColors
+                colorValue: kcm.resolvedPointerColor
+                target: "pointer"
                 popup: colorPopup
             }
 
-            // IndicatorRingColorSource defaults to "manual" (not "theme"),
-            // so the ring keeps its own distinct look out of the box even
-            // once unlinked - and its own source list deliberately drops
-            // "wallpaper": the ring's whole point is to hold its own
-            // distinct identity (see LinkIndicatorColors defaulting to
-            // false), which a live-tracked wallpaper color works against.
             Kirigami.Separator {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Ring"
-                visible: !kcm.linkIndicatorColors
+                Kirigami.FormData.label: i18n("Ring")
+                visible: !kcm.settings.linkIndicatorColors
             }
 
+            // No wallpaper option: the ring is meant to keep its own
+            // neutral identity.
             ColorSourceCombo {
-                Kirigami.FormData.label: "Source:"
+                Kirigami.FormData.label: i18n("Source:")
                 Layout.preferredWidth: root.fieldWidth
-                visible: !kcm.linkIndicatorColors
+                visible: !kcm.settings.linkIndicatorColors
                 sourceOptions: [
-                    { value: "manual", text: "Manual" },
-                    { value: "theme", text: "Theme accent (live)" },
+                    { value: "manual", text: i18n("Manual") },
+                    { value: "theme", text: i18n("Theme accent (live)") },
                 ]
-                sourceValue: kcm.indicatorRingColorSource
-                onSourcePicked: (value) => kcm.indicatorRingColorSource = value
+                sourceValue: kcm.settings.indicatorRingColorSource
+                onSourcePicked: (value) => kcm.settings.indicatorRingColorSource = value
             }
 
             ColorPickerRow {
-                Kirigami.FormData.label: "Color:"
-                visible: !kcm.linkIndicatorColors
-                colorValue: kcm.indicatorRingColor
-                target: "indicatorRingColor"
+                Kirigami.FormData.label: i18n("Color:")
+                visible: !kcm.settings.linkIndicatorColors
+                colorValue: kcm.resolvedRingColor
+                target: "ring"
                 popup: colorPopup
             }
 
             QQC2.TextField {
-                Kirigami.FormData.label: "Wallpaper color file:"
-                placeholderText: "Leave empty to use pywal's default output"
-                text: kcm.wallpaperColorPath
-                onEditingFinished: kcm.wallpaperColorPath = text
+                Kirigami.FormData.label: i18n("Wallpaper color file:")
+                placeholderText: i18n("Leave empty to use pywal's default output")
+                text: kcm.settings.wallpaperColorPath
+                onEditingFinished: kcm.settings.wallpaperColorPath = text
 
-                QQC2.ToolTip.text: "Used when a source above is \"From wallpaper\". Empty = pywal's default output. A path = a plain hex color file (matugen, etc.)."
+                QQC2.ToolTip.text: i18n("Used when a source above is \"From wallpaper\". Empty = pywal's default output. A path = a plain hex color file (matugen, etc.).")
                 QQC2.ToolTip.visible: hovered
             }
 
             QQC2.Button {
-                Kirigami.FormData.label: "Reset:"
-                text: "Reset colors to defaults"
+                Kirigami.FormData.label: i18n("Reset:")
+                text: i18n("Reset colors to defaults")
                 onClicked: kcm.resetColors()
 
-                QQC2.ToolTip.text: "Resets just this tab. The KCM's own Defaults button resets everything."
+                QQC2.ToolTip.text: i18n("Resets just this tab. The Defaults button resets everything.")
                 QQC2.ToolTip.visible: hovered
             }
-
-            // The "theme colors quick-pick" list that used to live here
-            // was removed — it never rendered its text correctly across
-            // several different rewrites (RowLayout, raw x/y
-            // positioning, QQC2.Label, plain Text, explicit colors; see
-            // timeline.md for the full trail), and "Theme accent (live)"
-            // in the source dropdowns above already covers "use a theme
-            // color" without it. Sticking to source + manual picker for
-            // now.
         }
     }
 
-    // Custom color picker — deliberately not QtQuick.Dialogs' ColorDialog,
-    // which relies on a native/platform dialog backend that didn't reliably
-    // show up at all when opened from inside an embedded KCM view. A Popup
-    // renders directly inside this page's own window, so it always works
-    // regardless of platform dialog support.
+    // A Popup rather than QtQuick.Dialogs' ColorDialog, whose platform
+    // dialog didn't reliably appear from inside an embedded KCM.
     QQC2.Popup {
         id: colorPopup
         parent: root
@@ -174,30 +142,18 @@ QQC2.ScrollView {
         focus: true
         closePolicy: QQC2.Popup.CloseOnEscape | QQC2.Popup.CloseOnPressOutside
 
-        // Which kcm color property this instance is currently editing —
-        // set right before open() by whichever "Customize…" button was
-        // clicked (inside a ColorPickerRow). Read/written only inside the
-        // plain JS functions below, never as part of a declarative
-        // binding, so the kcm[...] dynamic lookup here is safe (see the
-        // note above the Outline ComboBox).
-        property string targetProperty: "outlineColor"
+        // Set by ColorPickerRow right before open().
+        property string target: "outline"
+        property color initialColor
 
         property int red: 0
         property int green: 0
         property int blue: 0
         property int alpha: 255
 
-        function syncFromConfig() {
-            const current = kcm[targetProperty];
-            red = Math.round(current.r * 255);
-            green = Math.round(current.g * 255);
-            blue = Math.round(current.b * 255);
-            alpha = Math.round(current.a * 255);
-            hexField.text = toHex();
-        }
-
         function commit() {
-            kcm[targetProperty] = Qt.rgba(red / 255, green / 255, blue / 255, alpha / 255);
+            kcm.pickColor(target, Qt.rgba(red / 255, green / 255, blue / 255, alpha / 255));
+            hexField.text = toHex();
         }
 
         function toHex() {
@@ -218,7 +174,30 @@ QQC2.ScrollView {
             return true;
         }
 
-        onOpened: syncFromConfig()
+        onOpened: {
+            red = Math.round(initialColor.r * 255);
+            green = Math.round(initialColor.g * 255);
+            blue = Math.round(initialColor.b * 255);
+            alpha = Math.round(initialColor.a * 255);
+            hexField.text = toHex();
+        }
+
+        // One R/G/B/A slider row.
+        component ChannelRow: RowLayout {
+            id: channel
+            property string label
+            property int channelValue
+            signal picked(int value)
+            Layout.fillWidth: true
+            Text { text: channel.label; Layout.preferredWidth: Kirigami.Units.gridUnit; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
+            QQC2.Slider {
+                Layout.fillWidth: true
+                from: 0; to: 255; stepSize: 1
+                value: channel.channelValue
+                onMoved: channel.picked(Math.round(value))
+            }
+            Text { text: channel.channelValue; Layout.preferredWidth: Kirigami.Units.gridUnit * 1.5; horizontalAlignment: Text.AlignRight; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -226,7 +205,7 @@ QQC2.ScrollView {
 
             Kirigami.Heading {
                 level: 4
-                text: "Custom color"
+                text: i18n("Custom color")
             }
 
             Rectangle {
@@ -241,7 +220,7 @@ QQC2.ScrollView {
             RowLayout {
                 Layout.fillWidth: true
 
-                Text { text: "Hex:"; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
+                Text { text: i18n("Hex:"); color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
 
                 QQC2.TextField {
                     id: hexField
@@ -257,69 +236,10 @@ QQC2.ScrollView {
                 }
             }
 
-            RowLayout {
-                Layout.fillWidth: true
-                Text { text: "R"; Layout.preferredWidth: Kirigami.Units.gridUnit; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
-                QQC2.Slider {
-                    Layout.fillWidth: true
-                    from: 0; to: 255; stepSize: 1
-                    value: colorPopup.red
-                    onMoved: {
-                        colorPopup.red = Math.round(value);
-                        colorPopup.commit();
-                        hexField.text = colorPopup.toHex();
-                    }
-                }
-                Text { text: colorPopup.red; Layout.preferredWidth: Kirigami.Units.gridUnit * 1.5; horizontalAlignment: Text.AlignRight; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                Text { text: "G"; Layout.preferredWidth: Kirigami.Units.gridUnit; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
-                QQC2.Slider {
-                    Layout.fillWidth: true
-                    from: 0; to: 255; stepSize: 1
-                    value: colorPopup.green
-                    onMoved: {
-                        colorPopup.green = Math.round(value);
-                        colorPopup.commit();
-                        hexField.text = colorPopup.toHex();
-                    }
-                }
-                Text { text: colorPopup.green; Layout.preferredWidth: Kirigami.Units.gridUnit * 1.5; horizontalAlignment: Text.AlignRight; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                Text { text: "B"; Layout.preferredWidth: Kirigami.Units.gridUnit; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
-                QQC2.Slider {
-                    Layout.fillWidth: true
-                    from: 0; to: 255; stepSize: 1
-                    value: colorPopup.blue
-                    onMoved: {
-                        colorPopup.blue = Math.round(value);
-                        colorPopup.commit();
-                        hexField.text = colorPopup.toHex();
-                    }
-                }
-                Text { text: colorPopup.blue; Layout.preferredWidth: Kirigami.Units.gridUnit * 1.5; horizontalAlignment: Text.AlignRight; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                Text { text: "A"; Layout.preferredWidth: Kirigami.Units.gridUnit; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
-                QQC2.Slider {
-                    Layout.fillWidth: true
-                    from: 0; to: 255; stepSize: 1
-                    value: colorPopup.alpha
-                    onMoved: {
-                        colorPopup.alpha = Math.round(value);
-                        colorPopup.commit();
-                        hexField.text = colorPopup.toHex();
-                    }
-                }
-                Text { text: colorPopup.alpha; Layout.preferredWidth: Kirigami.Units.gridUnit * 1.5; horizontalAlignment: Text.AlignRight; color: Kirigami.Theme.textColor; verticalAlignment: Text.AlignVCenter }
-            }
+            ChannelRow { label: "R"; channelValue: colorPopup.red; onPicked: (v) => { colorPopup.red = v; colorPopup.commit(); } }
+            ChannelRow { label: "G"; channelValue: colorPopup.green; onPicked: (v) => { colorPopup.green = v; colorPopup.commit(); } }
+            ChannelRow { label: "B"; channelValue: colorPopup.blue; onPicked: (v) => { colorPopup.blue = v; colorPopup.commit(); } }
+            ChannelRow { label: "A"; channelValue: colorPopup.alpha; onPicked: (v) => { colorPopup.alpha = v; colorPopup.commit(); } }
 
             QQC2.DialogButtonBox {
                 Layout.fillWidth: true

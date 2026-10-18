@@ -10,9 +10,8 @@
         "Category": "Window Management",
         "Description": "Loop-style directional window snapping: hold the hyperkey, move the mouse to pick a direction, release to snap.",
         "EnabledByDefault": false,
-        "Id": "sirkel",
         "License": "GPL-2.0-or-later",
         "Name": "Sirkel",
-        "Version": "0.1.0"
+        "Version": "@PROJECT_VERSION@"
     }
 }
