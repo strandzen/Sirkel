@@ -7,7 +7,8 @@ Hold Caps Lock, move the mouse or press a direction key, release. The active win
 Version 0.2.0. Early and tested on one machine, so settings may still change.
 
 ## Demo
-<img width="600" height="375" alt="demo-video" src="https://github.com/user-attachments/assets/78f94943-b7fe-479a-a7d1-fbe0def5aba4" />
+[demo-video.webm](https://github.com/user-attachments/assets/7f5a1d62-6c34-4b2f-83e8-b8504662fea3)
+
 
 ## Features
 
