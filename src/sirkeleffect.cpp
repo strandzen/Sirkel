@@ -503,9 +503,12 @@ void SirkelEffect::setDirection(SnapDirection direction)
         return;
     }
 
+    // Set before updateOutlineGeometry(), which calls updateBlurRegion() —
+    // that bails out (blur off) while m_outlinePartVisible is still false,
+    // which is what left the first direction pick of a session unblurred.
+    m_outlinePartVisible = SirkelConfig::showOutline();
     updateOutlineGeometry();
-    if (SirkelConfig::showOutline()) {
-        m_outlinePartVisible = true;
+    if (m_outlinePartVisible) {
         if (QQuickItem *outline = outlinePart()) {
             outline->setProperty("visible", true);
             if (!m_outlineEntrancePlayed) {
@@ -643,15 +646,27 @@ void SirkelEffect::repositionIndicator()
     // wherever the cursor happened to be when the hyperkey was pressed (not
     // live-tracked afterward — confirmed that's the intended behavior).
     // Stored in m_indicatorCenter too: direction hit-testing is anchored to
-    // this same point, so it always matches what's actually drawn on screen.
+    // this same point, which matches what's drawn on screen except when the
+    // indicator is clamped away from an edge below.
     m_indicatorCenter = SirkelConfig::indicatorFollowsMouse() ? KWin::effects->cursorPos() : m_targetScreen->geometryF().center();
     const int size = SirkelConfig::indicatorSize();
+    // The drawn center is pushed inward so the whole indicator stays inside
+    // m_outlineArea (the overlay's own extent, panels excluded) when the
+    // press lands near an edge. Only the drawing moves: m_indicatorCenter
+    // stays at the press point, so a clamped indicator doesn't start the
+    // gesture already offset past the deadzone in some direction.
+    const qreal half = size / 2.0;
+    const auto clampAxis = [half](qreal v, qreal lo, qreal hi) {
+        return (hi - lo < 2 * half) ? (lo + hi) / 2.0 : std::clamp(v, lo + half, hi - half);
+    };
+    const QPointF drawCenter(clampAxis(m_indicatorCenter.x(), m_outlineArea.left(), m_outlineArea.right()),
+                             clampAxis(m_indicatorCenter.y(), m_outlineArea.top(), m_outlineArea.bottom()));
     // Absolute screen position translated into m_overlay's own local
     // coordinates (m_outlineArea must already be set — see arm()), the same
     // translation already used for the outline's own target rect. Plain
     // x/y/width/height — built-in QQuickItem properties, not anything
     // Indicator.qml needs to declare itself.
-    const QPointF topLeft = m_indicatorCenter - QPointF(size / 2.0, size / 2.0) - m_outlineArea.topLeft();
+    const QPointF topLeft = drawCenter - QPointF(half, half) - m_outlineArea.topLeft();
     if (QQuickItem *indicator = indicatorPart()) {
         indicator->setProperty("x", topLeft.x());
         indicator->setProperty("y", topLeft.y());

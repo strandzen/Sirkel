@@ -140,10 +140,10 @@ Item {
         "bottom": "Bottom",
         "left": "Left",
         "right": "Right",
-        "topRight": "Top Right",
-        "topLeft": "Top Left",
-        "bottomRight": "Bottom Right",
-        "bottomLeft": "Bottom Left",
+        "topRight": "Top\nRight",
+        "topLeft": "Top\nLeft",
+        "bottomRight": "Bottom\nRight",
+        "bottomLeft": "Bottom\nLeft",
         "maximize": "Maximize",
     })
 
@@ -328,10 +328,20 @@ Item {
         }
     }
 
+    // System font (whatever KDE's General font is set to), sized relative to
+    // the indicator's own width — 16px at the default IndicatorSize of 120,
+    // same as the old fixed size. HorizontalFit then shrinks long labels so
+    // they never spill past the ring's inner edge.
     Text {
         anchors.centerIn: parent
+        width: Math.max(0, root.width - 2 * root.ringWidth - 8)
+        horizontalAlignment: Text.AlignHCenter
+        lineHeight: 0.9
         color: "white"
-        font.pixelSize: 16
+        font.family: Qt.application.font.family
+        font.pixelSize: Math.max(8, Math.round(root.width * 16 / 120))
+        fontSizeMode: Text.HorizontalFit
+        minimumPixelSize: 8
         text: root.labelForDirection(root.direction)
         visible: root.showText && root.direction !== "none"
     }
