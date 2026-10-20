@@ -72,6 +72,7 @@ void OverlayController::begin(const QRectF &area)
     }
     m_view->setGeometry(area.toRect());
     KWindowEffects::enableBlurBehind(m_view.get(), false);
+    m_blurRegion = QRegion();
 
     if (QQuickItem *item = root()) {
         QMetaObject::invokeMethod(item, "reset");
@@ -80,6 +81,7 @@ void OverlayController::begin(const QRectF &area)
 
 void OverlayController::applyStyle()
 {
+    reloadColorSources();
     const QColor outlineColor = resolveLinkedColor(ColorTarget::Outline);
     m_blurEnabled = SirkelConfig::outlineBlur();
     m_outlineCornerRadius = SirkelConfig::outlineCornerRadius();
@@ -155,15 +157,9 @@ void OverlayController::showPlacement(SnapDirection direction, const QRectF &tar
     }
 
     // Which screen edge the placement pulls against, for the gradient fill.
-    const auto edge = [](Anchor anchor, bool constrained) {
-        if (!constrained || anchor == Anchor::Center) {
-            return 0;
-        }
-        return anchor == Anchor::Start ? -1 : 1;
-    };
-    m_outline->setProperty("edgeH", edge(p->horizontal, p->resizeAxis == ResizeAxis::Width || p->widthFraction < 1.0));
-    m_outline->setProperty("edgeV", edge(p->vertical, p->resizeAxis == ResizeAxis::Height || p->heightFraction < 1.0));
-
+    const QPoint edges = placementEdges(direction);
+    m_outline->setProperty("edgeH", edges.x());
+    m_outline->setProperty("edgeV", edges.y());
     const QPointF origin = m_area.topLeft();
     if (!m_outlineShown) {
         m_outlineShown = true;
@@ -196,6 +192,7 @@ void OverlayController::end(bool confirmed)
     // Blur can't fade with the rest, so it goes first.
     m_outlineShown = false;
     KWindowEffects::enableBlurBehind(m_view.get(), false);
+    m_blurRegion = QRegion();
     if (!m_view->isVisible()) {
         return;
     }
@@ -212,6 +209,7 @@ void OverlayController::hideNow()
     m_hideFallback->stop();
     m_view->hide();
     KWindowEffects::enableBlurBehind(m_view.get(), false);
+    m_blurRegion = QRegion();
 }
 
 void OverlayController::updateBlur()
@@ -223,5 +221,11 @@ void OverlayController::updateBlur()
     const QRectF rect = m_outline->property("visualRect").toRectF();
     QPainterPath path;
     path.addRoundedRect(rect, m_outlineCornerRadius, m_outlineCornerRadius);
-    KWindowEffects::enableBlurBehind(m_view.get(), true, QRegion(path.toFillPolygon().toPolygon()));
+    const QRegion region(path.toFillPolygon().toPolygon());
+    // Called every animation frame; only tell KWin when the region changed.
+    if (region == m_blurRegion) {
+        return;
+    }
+    m_blurRegion = region;
+    KWindowEffects::enableBlurBehind(m_view.get(), true, region);
 }

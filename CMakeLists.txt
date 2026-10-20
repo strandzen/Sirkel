@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(sirkel VERSION 0.2.0)
+project(sirkel VERSION 0.5.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -19,7 +19,7 @@ include(KDECompilerSettings NO_POLICY_SCOPE)
 include(FeatureSummary)
 include(ECMAddTests)
 
-find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick DBus Test)
+find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick DBus Test Widgets)
 find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS Config ColorScheme CoreAddons GlobalAccel I18n KCMUtils WindowSystem)
 find_package(KWin ${KWIN_MIN_VERSION} REQUIRED)
 

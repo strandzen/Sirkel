@@ -67,6 +67,16 @@ QString placementName(SnapDirection direction)
     return p ? QString::fromLatin1(p->name) : QStringLiteral("none");
 }
 
+SnapDirection directionFromName(const QString &name)
+{
+    for (const PlacementRow &row : kPlacements) {
+        if (name == QLatin1String(row.placement.name)) {
+            return row.placement.direction;
+        }
+    }
+    return SnapDirection::None;
+}
+
 QString placementLabel(SnapDirection direction)
 {
     const PlacementRow *row = rowFor(direction);
@@ -113,6 +123,24 @@ QRectF placementGeometry(SnapDirection direction, const QRectF &area, qreal padd
                          sharedTop ? paddingVertical / 2.0 : paddingVertical,
                          -(sharedRight ? paddingHorizontal / 2.0 : paddingHorizontal),
                          -(sharedBottom ? paddingVertical / 2.0 : paddingVertical));
+}
+
+QPoint placementEdges(SnapDirection direction)
+{
+    const Placement *p = placementFor(direction);
+    if (!p) {
+        return {};
+    }
+    // An axis only pulls against an edge if the placement is constrained on
+    // it (not full width/height) and not centered.
+    const auto edge = [](Anchor anchor, bool constrained) {
+        if (!constrained || anchor == Anchor::Center) {
+            return 0;
+        }
+        return anchor == Anchor::Start ? -1 : 1;
+    };
+    return QPoint(edge(p->horizontal, p->resizeAxis == ResizeAxis::Width || p->widthFraction < 1.0),
+                  edge(p->vertical, p->resizeAxis == ResizeAxis::Height || p->heightFraction < 1.0));
 }
 
 QRectF centeredFixedSize(const QRectF &target, const QSizeF &size, const QRectF &area)

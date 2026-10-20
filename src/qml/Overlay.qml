@@ -14,6 +14,10 @@ Item {
     // Emitted once the exit animation is done; the window is hidden then.
     signal exitFinished()
 
+    // For the settings page's live preview, which drives the parts directly.
+    readonly property alias outlineItem: outline
+    readonly property alias indicatorItem: indicator
+
     // Multiplier for every animation duration (1 = the authored timings).
     // 0 makes everything instant.
     property real motionScale: 1

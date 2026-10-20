@@ -1,0 +1,9 @@
+# Migrations for Sirkel's settings in kwinrc [Effect-sirkel]. kconf_update
+# runs each Id once per user (on the next Plasma login after install).
+# KF6's kconf_update only supports scripts, so each migration is a script.
+# Append new Ids at the end; never edit or reuse an Id that has shipped.
+Version=6
+
+# 2026-10: clean up settings renamed or removed during 0.1/0.2 development.
+Id=sirkel-2026-10-cleanup
+Script=sirkel-2026-10-cleanup.sh,sh

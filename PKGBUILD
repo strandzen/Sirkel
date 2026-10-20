@@ -1,14 +1,15 @@
 # Maintainer: Strandzen <strandzen@gmail.com>
 pkgname=sirkel-git
 _pkgname=Sirkel
-pkgver=0.2.0
+pkgver=0.5.0
 pkgrel=1
 pkgdesc="Loop-inspired directional window snapping for KDE Plasma (KWin effect)"
 arch=('x86_64')
 url="https://github.com/strandzen/Sirkel"
 license=('GPL-2.0-or-later')
-depends=('keyd' 'kwin' 'qt6-base' 'qt6-declarative' 'kconfig' 'kcolorscheme' 'kcoreaddons'
-         'kglobalaccel' 'ki18n' 'kcmutils' 'kwindowsystem' 'kirigami')
+depends=('kwin' 'qt6-base' 'qt6-declarative' 'kconfig' 'kcolorscheme' 'kcoreaddons'
+         'kglobalaccel' 'ki18n' 'kcmutils' 'kwindowsystem' 'kirigami' 'kdeclarative')
+optdepends=('keyd: use Caps Lock as the trigger (otherwise pick a key combination in the settings)')
 makedepends=('git' 'cmake' 'extra-cmake-modules')
 provides=('sirkel')
 conflicts=('sirkel')

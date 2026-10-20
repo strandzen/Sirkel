@@ -14,7 +14,7 @@ QQC2.ComboBox {
 
     property string sourceValue
     property var sourceOptions: [
-        { value: "manual", text: i18n("Manual") },
+        { value: "manual", text: i18n("Custom") },
         { value: "theme", text: i18n("Theme accent (live)") },
         { value: "wallpaper", text: i18n("From wallpaper (live)") },
     ]

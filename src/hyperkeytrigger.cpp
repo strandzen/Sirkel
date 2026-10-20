@@ -1,10 +1,10 @@
 #include "hyperkeytrigger.h"
+#include "shortcutactions.h"
 #include "sirkelconfig.h"
 
 #include <effect/effecthandler.h>
 
 #include <KGlobalAccel>
-#include <KLocalizedString>
 
 #include <QAction>
 #include <QKeyEvent>
@@ -19,8 +19,8 @@ HyperkeyTrigger::HyperkeyTrigger(KWin::Effect *effect, std::function<bool()> bus
     , m_busy(std::move(busy))
 {
     m_action = new QAction(this);
-    m_action->setObjectName(QStringLiteral("SirkelSnap"));
-    m_action->setText(i18n("Sirkel: hold to snap window"));
+    m_action->setObjectName(QString::fromLatin1(kTriggerActionId));
+    m_action->setText(kTriggerActionText.toString());
     KGlobalAccel::self()->setDefaultShortcut(m_action, {QKeySequence(Qt::Key_F24)});
     // Autoloading (the default): a user's own rebinding wins over F24.
     KGlobalAccel::self()->setShortcut(m_action, {QKeySequence(Qt::Key_F24)});
@@ -39,18 +39,20 @@ HyperkeyTrigger::~HyperkeyTrigger()
     releaseGrab();
 }
 
-int HyperkeyTrigger::releaseKey() const
+bool HyperkeyTrigger::isRelease(const QKeyEvent *event) const
 {
-    const QList<QKeySequence> shortcuts = KGlobalAccel::self()->shortcut(m_action);
-    if (!shortcuts.isEmpty() && !shortcuts.first().isEmpty()) {
-        return shortcuts.first()[0].key();
+    if (event->type() != QEvent::KeyRelease) {
+        return false;
     }
-    return Qt::Key_F24;
-}
-
-bool HyperkeyTrigger::isPending() const
-{
-    return m_pending;
+    const int key = event->key();
+    if (key == m_combo.key()) {
+        return true;
+    }
+    const Qt::KeyboardModifiers mods = m_combo.keyboardModifiers();
+    return ((mods & Qt::MetaModifier) && (key == Qt::Key_Meta || key == Qt::Key_Super_L || key == Qt::Key_Super_R))
+        || ((mods & Qt::ControlModifier) && key == Qt::Key_Control)
+        || ((mods & Qt::AltModifier) && key == Qt::Key_Alt)
+        || ((mods & Qt::ShiftModifier) && key == Qt::Key_Shift);
 }
 
 void HyperkeyTrigger::onTriggered()
@@ -59,6 +61,10 @@ void HyperkeyTrigger::onTriggered()
     if (m_pending || m_busy()) {
         return;
     }
+    // Once per press rather than on every key release: KGlobalAccel's
+    // service runs inside KWin, so each lookup is a D-Bus call to ourselves.
+    const QList<QKeySequence> shortcuts = KGlobalAccel::self()->globalShortcut(QStringLiteral("kwin"), QString::fromLatin1(kTriggerActionId));
+    m_combo = (!shortcuts.isEmpty() && !shortcuts.first().isEmpty()) ? shortcuts.first()[0] : QKeyCombination(Qt::Key_F24);
 
     const int delay = SirkelConfig::triggerDelay();
     if (SirkelConfig::triggerMode() == QStringLiteral("delay") && delay > 0) {
@@ -81,7 +87,7 @@ bool HyperkeyTrigger::handlePendingKey(QKeyEvent *event)
     }
     // Releasing early or pressing Esc abandons the trigger.
     if ((event->key() == Qt::Key_Escape && event->type() == QEvent::KeyPress)
-        || (event->key() == releaseKey() && event->type() == QEvent::KeyRelease)) {
+        || isRelease(event)) {
         cancelPending();
     }
     return true;

@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QPointer>
 #include <QRectF>
+#include <QRegion>
 
 #include <memory>
 
@@ -61,4 +62,6 @@ private:
     bool m_outlineShown = false;
     bool m_blurEnabled = false;
     int m_outlineCornerRadius = 0;
+    // Last region sent to KWin's blur, to skip unchanged per-frame updates.
+    QRegion m_blurRegion;
 };

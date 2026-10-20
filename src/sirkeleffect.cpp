@@ -1,6 +1,7 @@
 #include "sirkeleffect.h"
 #include "hyperkeytrigger.h"
 #include "overlaycontroller.h"
+#include "shortcutactions.h"
 #include "sirkelconfig.h"
 
 #include <core/output.h>
@@ -9,6 +10,9 @@
 #include <input_event.h>
 #include <window.h>
 
+#include <KGlobalAccel>
+
+#include <QAction>
 #include <QHash>
 #include <QKeyEvent>
 #include <QLoggingCategory>
@@ -17,12 +21,24 @@
 Q_LOGGING_CATEGORY(SIRKEL, "sirkel")
 
 SirkelEffect::SirkelEffect()
-    : m_overlay(std::make_unique<OverlayController>())
 {
     m_trigger = new HyperkeyTrigger(this, [this]() {
         return m_active;
     });
     connect(m_trigger, &HyperkeyTrigger::armRequested, this, &SirkelEffect::arm);
+
+    // Direct per-action shortcuts (System Settings -> Shortcuts -> KWin, or
+    // Sirkel's Shortcuts page). No defaults: users bind the ones they want.
+    for (const ShortcutAction &def : shortcutActions()) {
+        auto *action = new QAction(this);
+        action->setObjectName(QString::fromLatin1(def.id));
+        action->setText(def.text.toString());
+        KGlobalAccel::self()->setDefaultShortcut(action, {});
+        KGlobalAccel::self()->setShortcut(action, {});
+        connect(action, &QAction::triggered, this, [this, def]() {
+            runShortcutAction(def);
+        });
+    }
 
     // Safety net for a missed key release: cancels a session that has seen
     // no input for SessionTimeout seconds.
@@ -89,22 +105,7 @@ void SirkelEffect::arm()
     if (!window) {
         window = KWin::effects->activeWindow();
     }
-    // Special windows (desktop, panels, ...) aren't meant to be moved:
-    // moving the desktop window shifts the wallpaper. Fullscreen windows
-    // (games, video) are left alone entirely for now, and so is everything
-    // while Overview, Desktop Grid or a similar full-screen effect is up.
-    if (!window || window->isSpecialWindow() || window->isFullScreen() || KWin::effects->hasActiveFullScreenEffect()) {
-        m_trigger->releaseGrab();
-        return;
-    }
-    if (isExcluded(window)) {
-        m_trigger->releaseGrab();
-        return;
-    }
-    KWin::LogicalOutput *screen = SirkelConfig::snapToCursorScreen() ? KWin::effects->screenAt(KWin::effects->cursorPos().toPoint()) : nullptr;
-    if (!screen) {
-        screen = window->screen();
-    }
+    KWin::LogicalOutput *screen = isTargetable(window) ? screenFor(window) : nullptr;
     if (!screen) {
         m_trigger->releaseGrab();
         return;
@@ -125,7 +126,14 @@ void SirkelEffect::arm()
     m_input.setDeadzones(SirkelConfig::horizontalDeadzone(), SirkelConfig::verticalDeadzone());
     m_input.setAngleMode(SirkelConfig::pickingMode() == QStringLiteral("angle") ? SirkelConfig::centerRadius() : 0);
 
-    m_origin = SirkelConfig::indicatorFollowsMouse() ? KWin::effects->cursorPos() : screen->geometryF().center();
+    // The usable area's center, not the screen's: that's where the indicator
+    // is drawn, and picking is relative to it.
+    m_origin = SirkelConfig::indicatorFollowsMouse() ? KWin::effects->cursorPos() : m_area.center();
+    // Created on first use, so the QML isn't loaded at KWin startup for a
+    // session that never uses Sirkel.
+    if (!m_overlay) {
+        m_overlay = std::make_unique<OverlayController>();
+    }
     m_overlay->begin(m_area);
     m_overlay->applyStyle();
     m_overlay->placeIndicator(m_origin);
@@ -141,6 +149,21 @@ void SirkelEffect::restartIdleTimer()
     if (seconds > 0) {
         m_idleTimer->start(seconds * 1000);
     }
+}
+
+bool SirkelEffect::isTargetable(KWin::EffectWindow *window) const
+{
+    // Special windows (desktop, panels, ...) aren't meant to be moved:
+    // moving the desktop window shifts the wallpaper. Fullscreen windows
+    // (games, video) are left alone entirely for now, and so is everything
+    // while Overview, Desktop Grid or a similar full-screen effect is up.
+    return window && !window->isSpecialWindow() && !window->isFullScreen() && !KWin::effects->hasActiveFullScreenEffect() && !isExcluded(window);
+}
+
+KWin::LogicalOutput *SirkelEffect::screenFor(KWin::EffectWindow *window) const
+{
+    KWin::LogicalOutput *screen = SirkelConfig::snapToCursorScreen() ? KWin::effects->screenAt(KWin::effects->cursorPos().toPoint()) : nullptr;
+    return screen ? screen : window->screen();
 }
 
 KWin::EffectWindow *SirkelEffect::windowUnderCursor() const
@@ -204,12 +227,7 @@ void SirkelEffect::finish(bool apply)
 
     const bool snapped = apply && m_targetWindow && m_direction != SnapDirection::None;
     if (snapped) {
-        applyPlacement(m_direction, m_sizeStep);
-        // A window picked by pointing may not be the active one; give it
-        // focus, as you'd expect after moving it.
-        if (m_targetWindow != KWin::effects->activeWindow()) {
-            KWin::effects->activateWindow(m_targetWindow);
-        }
+        perform(m_targetWindow, m_area, {WindowAction::Kind::Place, m_direction}, m_sizeStep);
     }
     m_overlay->end(snapped);
 
@@ -231,14 +249,19 @@ void SirkelEffect::pick(SnapDirection direction)
     m_overlay->setIntensity(m_input.intensity());
 }
 
-QRectF SirkelEffect::targetGeometry(SnapDirection direction, int step) const
+QRectF SirkelEffect::geometryFor(KWin::EffectWindow *window, const QRectF &area, SnapDirection direction, int step)
 {
-    const QRectF target = placementGeometry(direction, m_area, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), step);
-    KWin::Window *window = m_targetWindow ? m_targetWindow->window() : nullptr;
-    if (window && !window->isResizable()) {
-        return centeredFixedSize(target, window->frameGeometry().size(), m_area);
+    const QRectF target = placementGeometry(direction, area, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), step);
+    KWin::Window *w = window ? window->window() : nullptr;
+    if (w && !w->isResizable()) {
+        return centeredFixedSize(target, w->frameGeometry().size(), area);
     }
     return target;
+}
+
+QRectF SirkelEffect::targetGeometry(SnapDirection direction, int step) const
+{
+    return geometryFor(m_targetWindow, m_area, direction, step);
 }
 
 void SirkelEffect::refreshPreview()
@@ -247,31 +270,55 @@ void SirkelEffect::refreshPreview()
     m_overlay->showPlacement(m_direction, target, m_targetWindow ? QRectF(m_targetWindow->frameGeometry()) : QRectF());
 }
 
-void SirkelEffect::applyPlacement(SnapDirection direction, int step)
+void SirkelEffect::perform(KWin::EffectWindow *window, const QRectF &area, const WindowAction &action, int step)
 {
-    KWin::Window *window = m_targetWindow ? m_targetWindow->window() : nullptr;
     if (!window) {
         return;
     }
-    window->setMaximize(false, false);
-    window->moveResize(targetGeometry(direction, step));
-}
-
-void SirkelEffect::runKeyAction(const KeyAction &action)
-{
     switch (action.kind) {
-    case KeyAction::Kind::Place:
-        // Keeps a scroll-resized size if that placement is the current pick.
-        applyPlacement(action.placement, action.placement == m_direction ? m_sizeStep : -1);
-        break;
-    case KeyAction::Kind::Minimize:
-        if (m_targetWindow) {
-            m_targetWindow->setMinimized(true);
+    case WindowAction::Kind::Place:
+        moveWindow(window, geometryFor(window, area, action.direction, step));
+        // A window picked by pointing may not be the active one; give it
+        // focus, as you'd expect after moving it.
+        if (window != KWin::effects->activeWindow()) {
+            KWin::effects->activateWindow(window);
         }
         break;
-    case KeyAction::Kind::Cancel:
+    case WindowAction::Kind::Minimize:
+        window->setMinimized(true);
+        break;
+    case WindowAction::Kind::Cancel:
         break;
     }
+}
+
+void SirkelEffect::moveWindow(KWin::EffectWindow *window, const QRectF &geometry)
+{
+    KWin::Window *w = window ? window->window() : nullptr;
+    if (!w) {
+        return;
+    }
+    w->setMaximize(false, false);
+    w->moveResize(geometry);
+}
+
+void SirkelEffect::runShortcutAction(const ShortcutAction &shortcut)
+{
+    // Not while a hyperkey session is running; that session owns the window.
+    if (m_active) {
+        return;
+    }
+    KWin::EffectWindow *window = KWin::effects->activeWindow();
+    KWin::LogicalOutput *screen = isTargetable(window) ? screenFor(window) : nullptr;
+    if (screen) {
+        perform(window, KWin::effects->clientArea(KWin::MaximizeArea, screen), shortcut.action, -1);
+    }
+}
+
+void SirkelEffect::runKeyAction(const WindowAction &action)
+{
+    // Keeps a scroll-resized size if that placement is the current pick.
+    perform(m_targetWindow, m_area, action, action.direction == m_direction ? m_sizeStep : -1);
     finish(false);
 }
 
@@ -282,11 +329,11 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
     }
     restartIdleTimer();
 
-    static const QHash<int, KeyAction> keyActions{
-        {Qt::Key_Return, {KeyAction::Kind::Place, SnapDirection::Maximize}},
-        {Qt::Key_Enter, {KeyAction::Kind::Place, SnapDirection::Maximize}},
-        {Qt::Key_Backspace, {KeyAction::Kind::Minimize}},
-        {Qt::Key_Escape, {KeyAction::Kind::Cancel}},
+    static const QHash<int, WindowAction> keyActions{
+        {Qt::Key_Return, {WindowAction::Kind::Place, SnapDirection::Maximize}},
+        {Qt::Key_Enter, {WindowAction::Kind::Place, SnapDirection::Maximize}},
+        {Qt::Key_Backspace, {WindowAction::Kind::Minimize}},
+        {Qt::Key_Escape, {WindowAction::Kind::Cancel}},
     };
 
     const bool press = event->type() == QEvent::KeyPress;
@@ -306,7 +353,7 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
         if (it != keyActions.constEnd()) {
             runKeyAction(it.value());
         }
-    } else if (release && event->key() == m_trigger->releaseKey()) {
+    } else if (m_trigger->isRelease(event)) {
         finish(true);
     }
 }

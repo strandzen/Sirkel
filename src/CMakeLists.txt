@@ -7,6 +7,7 @@ configure_file(metadata.json.in ${CMAKE_CURRENT_BINARY_DIR}/metadata.json @ONLY)
 add_library(sirkel_core STATIC
     placement.cpp
     directioninput.cpp
+    shortcutactions.cpp
 )
 set_target_properties(sirkel_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(sirkel_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -50,3 +51,7 @@ target_link_libraries(kwin_effect_sirkel PRIVATE
 )
 
 add_subdirectory(kcm)
+
+# Settings migrations, run once per user by kconf_update at Plasma login.
+install(FILES update/sirkel.upd DESTINATION ${KDE_INSTALL_KCONFUPDATEDIR})
+install(PROGRAMS update/sirkel-2026-10-cleanup.sh DESTINATION ${KDE_INSTALL_KCONFUPDATEDIR})

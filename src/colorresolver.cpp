@@ -31,15 +31,17 @@ QColor readWallpaperColor()
     }
     return QColor(QString::fromUtf8(file.readAll()).trimmed());
 }
+
+KSharedConfigPtr globals()
+{
+    return KSharedConfig::openConfig(QStringLiteral("kdeglobals"));
 }
 
 QColor accentColor()
 {
     // Plasma applies the accent color by writing it into kdeglobals' color
     // groups, so the selection background is the accent.
-    KSharedConfigPtr globals = KSharedConfig::openConfig(QStringLiteral("kdeglobals"));
-    globals->reparseConfiguration();
-    return KColorScheme(QPalette::Active, KColorScheme::Selection, globals).background(KColorScheme::NormalBackground).color();
+    return KColorScheme(QPalette::Active, KColorScheme::Selection, globals()).background(KColorScheme::NormalBackground).color();
 }
 
 QColor resolveColor(ColorTarget target)
@@ -72,6 +74,13 @@ QColor resolveColor(ColorTarget target)
         }
     }
     return accentColor();
+}
+
+}
+
+void reloadColorSources()
+{
+    globals()->reparseConfiguration();
 }
 
 QColor resolveLinkedColor(ColorTarget target)

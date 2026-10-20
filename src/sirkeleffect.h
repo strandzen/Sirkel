@@ -11,6 +11,8 @@
 #include <memory>
 
 class HyperkeyTrigger;
+struct ShortcutAction;
+struct WindowAction;
 class QTimer;
 class OverlayController;
 
@@ -48,14 +50,6 @@ protected:
     void reconfigure(ReconfigureFlags flags) override;
 
 private:
-    // Hyperkey+<key> actions while armed. Add a row to the table in
-    // grabbedKeyboardEvent() to bind another key.
-    struct KeyAction {
-        enum class Kind { Place, Minimize, Cancel };
-        Kind kind;
-        SnapDirection placement = SnapDirection::None;
-    };
-
     void arm();
     // Ends the session; snaps to the current pick if `apply`.
     void finish(bool apply);
@@ -63,8 +57,24 @@ private:
     void engage();
     void pick(SnapDirection direction);
     void refreshPreview();
-    void runKeyAction(const KeyAction &action);
-    void applyPlacement(SnapDirection direction, int step);
+    // A key pressed while holding the trigger (table in
+    // grabbedKeyboardEvent(); add a row to bind another key).
+    void runKeyAction(const WindowAction &action);
+    // Does `action` to `window` within `area` (`step` = scroll-resize step,
+    // -1 for the normal size).
+    static void perform(KWin::EffectWindow *window, const QRectF &area, const WindowAction &action, int step);
+    // Whether Sirkel may act on `window` at all (not special, fullscreen,
+    // excluded, or during Overview and similar).
+    bool isTargetable(KWin::EffectWindow *window) const;
+    // The screen to snap on: the cursor's (SnapToCursorScreen) or the
+    // window's own.
+    KWin::LogicalOutput *screenFor(KWin::EffectWindow *window) const;
+    // Placement geometry for `window` in `area`, with fixed-size windows
+    // centered at their own size.
+    static QRectF geometryFor(KWin::EffectWindow *window, const QRectF &area, SnapDirection direction, int step);
+    static void moveWindow(KWin::EffectWindow *window, const QRectF &geometry);
+    // A per-action global shortcut fired: act on the active window directly.
+    void runShortcutAction(const ShortcutAction &action);
     // Whether the window's app is in ExcludedApps (matched against its
     // desktop file name and window class, case-insensitively).
     bool isExcluded(KWin::EffectWindow *window) const;
