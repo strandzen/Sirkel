@@ -21,21 +21,19 @@ Item {
     readonly property real screenW: Math.max(1, width / scaleFactor)
     readonly property real screenH: Math.max(1, height / scaleFactor)
 
-    // The demo: picks in order, then a release (flash + exit) and a restart.
+    // The demo: picks in order, then a release (exit) and a restart.
     readonly property var demo: ["left", "topRight", "maximize", "bottom", "right"]
     property int step: -1
 
     function showStep(dir, first) {
         const ind = overlay.indicatorItem;
         const out = overlay.outlineItem;
-        // Geometry, ring position, label and gradient edges come from the
-        // same C++ code the effect uses.
+        // Geometry, ring position and label come from the same C++ code the
+        // effect uses.
         const p = kcm.previewPlacement(dir, screenW, screenH);
         ind.label = p.label;
         ind.ringIndex = p.ringIndex;
         ind.direction = dir;
-        out.edgeH = p.edgeH;
-        out.edgeV = p.edgeV;
         if (first) {
             // Grow out from the middle (there's no real window to grow from).
             out.jumpTo(screenW / 2, screenH / 2, 0, 0);
@@ -60,7 +58,7 @@ Item {
             showStep(demo[step], step === 0);
             ticker.restart();
         } else {
-            overlay.playExit(kcm.settings.outlineConfirmFlash);
+            overlay.playExit();
         }
     }
 
@@ -158,6 +156,4 @@ Item {
     Binding { target: overlay.outlineItem; property: "borderColor"; value: kcm.resolvedOutlineColor }
     Binding { target: overlay.outlineItem; property: "cornerRadius"; value: kcm.settings.outlineCornerRadius }
     Binding { target: overlay.outlineItem; property: "fillOpacity"; value: kcm.settings.outlineFillOpacity }
-    Binding { target: overlay.outlineItem; property: "confirmFlashEnabled"; value: kcm.settings.outlineConfirmFlash }
-    Binding { target: overlay.outlineItem; property: "gradientFillEnabled"; value: kcm.settings.outlineGradientFill }
 }

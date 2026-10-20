@@ -20,8 +20,8 @@ Version 0.5.0. Early and tested on one machine, so settings may still change.
 - Act on the active window or the window under the cursor, on its own monitor or the one under the cursor.
 - Padding around snapped windows, with half padding between neighbours so gaps stay even.
 - Windows that can't be resized are moved and centered in the picked area. Fullscreen windows (games, video) and excluded apps are left alone.
-- Colors for the outline, pointer and ring: manual, Plasma accent, or a wallpaper color (pywal or any file with a hex color).
-- Optional blur, gradient fill, shadow, two-tone shading and a flash on snap. Adjustable animation duration and easing.
+- Colors for the outline, pointer and ring: manual, Plasma accent, or a wallpaper color (pywal or any file with a hex color). A theme-colored ring uses a dark, muted version of the accent.
+- Optional blur, shadow and two-tone shading. Adjustable animation duration and easing.
 - Settings window with a live preview of the indicator and outline at real size.
 
 ## Requirements
@@ -94,8 +94,8 @@ While holding the trigger:
 Open them from **System Settings → Desktop Effects → Sirkel** (gear icon), or from the **Sirkel** entry in the application launcher. Changes apply right away.
 
 - **General:** picking mode, direction keys, scroll-to-resize, target window and monitor, gaps, deadzones, trigger delay, excluded apps
-- **Appearance:** indicator and outline size, shape, opacity and visibility, blur, gradient, flash, shadow, two-tone, animation duration and easing
-- **Colors:** source and color for outline, pointer and ring, or one linked color for all three
+- **Appearance:** indicator and outline size, shape, opacity and visibility, blur, shadow, two-tone, animation duration and easing
+- **Colors:** source and color for outline, pointer and ring
 - **Shortcuts:** trigger (Caps Lock or a combination) and the direct shortcuts
 
 Appearance and Colors have a preview pane on the right. Drag the window edge to resize it, or hide it from the header.

@@ -14,8 +14,6 @@ Item {
     property real cornerRadius: 6
     // 0-100.
     property real fillOpacity: 0
-    property bool confirmFlashEnabled: true
-    property bool gradientFillEnabled: false
     property real motionScale: 1
     property int easingType: Easing.OutBack
     // Bezier control points, used when easingType is BezierSpline.
@@ -25,22 +23,14 @@ Item {
     property bool twoTone: false
     readonly property color secondColor: Qt.rgba(borderColor.r * 0.55, borderColor.g * 0.55, borderColor.b * 0.55, borderColor.a)
 
-    // The screen edge the current placement pulls against: -1 left/top,
-    // 1 right/bottom, 0 none. Orients the gradient fill.
-    property int edgeH: 0
-    property int edgeV: 0
-
     property real targetX: 0
     property real targetY: 0
     property real targetWidth: 0
     property real targetHeight: 0
 
-    // Extra size during the confirm pop, in px on every side.
-    property real popGrow: 0
-
     // The rect actually drawn right now, mid-animation included. The blur
     // region follows this.
-    readonly property rect visualRect: Qt.rect(targetX - popGrow, targetY - popGrow, Math.max(0, targetWidth + 2 * popGrow), Math.max(0, targetHeight + 2 * popGrow))
+    readonly property rect visualRect: Qt.rect(targetX, targetY, Math.max(0, targetWidth), Math.max(0, targetHeight))
 
     // Set while jumping without animation (see jumpTo()).
     property bool instant: false
@@ -62,11 +52,7 @@ Item {
 
     function reset() {
         entranceAnim.stop();
-        confirmFlashAnim.stop();
-        confirmPopAnim.stop();
         exitAnim.stop();
-        popGrow = 0;
-        flashOverlay.opacity = 0;
         opacity = 1;
         visible = false;
     }
@@ -77,19 +63,9 @@ Item {
         entranceAnim.restart();
     }
 
-    // Fades out after the confirm flash (if any). Returns how long the
-    // flash holds before the fade starts, so the indicator can match.
-    function playExit(confirmed) {
+    function playExit() {
         entranceAnim.stop();
-        let hold = 0;
-        if (confirmed && confirmFlashEnabled && visible) {
-            confirmFlashAnim.restart();
-            confirmPopAnim.restart();
-            hold = ms(250);
-        }
-        exitAnim.hold = hold;
         exitAnim.restart();
-        return hold;
     }
 
     // easing.overshoot tones OutBack down: the default bounce is too much on
@@ -114,44 +90,24 @@ Item {
         easing.type: Easing.OutCubic
     }
 
-    SequentialAnimation {
-        id: confirmPopAnim
-        NumberAnimation { target: root; property: "popGrow"; to: 6; duration: root.ms(80); easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "popGrow"; to: 0; duration: root.ms(180); easing.type: Easing.OutBack }
-    }
-
-    SequentialAnimation {
-        id: confirmFlashAnim
-        NumberAnimation { target: flashOverlay; property: "opacity"; to: 0.85; duration: root.ms(90); easing.type: Easing.OutQuad }
-        NumberAnimation { target: flashOverlay; property: "opacity"; to: 0; duration: root.ms(320); easing.type: Easing.InQuad }
-    }
-
-    SequentialAnimation {
+    NumberAnimation {
         id: exitAnim
-        property int hold: 0
-        PauseAnimation { duration: exitAnim.hold }
-        NumberAnimation { target: root; property: "opacity"; to: 0; duration: root.ms(140); easing.type: Easing.InCubic }
+        target: root
+        property: "opacity"
+        to: 0
+        duration: root.ms(140)
+        easing.type: Easing.InCubic
     }
 
-    // Alpha envelope along the gradient's solid->faint axis (0..1). Several
-    // stops instead of two: a linear 2-stop ramp bands at low alpha.
-    function gradientAlpha(pos) {
-        return Math.min(1, root.fillOpacity / 100 * (0.4 + (1 - pos * pos) * 1.2));
-    }
-    readonly property bool gradientHorizontal: edgeH !== 0
-    readonly property bool gradientSolidAtStart: gradientHorizontal ? edgeH < 0 : edgeV <= 0
-    // Either or both of: the alpha fade (gradientFillEnabled) and the
-    // two-tone color shift. Two-tone alone runs top to bottom.
+    // Two-tone: the fill shades from borderColor into secondColor, top to
+    // bottom. Several stops instead of two: a 2-stop ramp bands at low alpha.
     function gradientStop(position) {
-        const pos = gradientSolidAtStart ? position : 1 - position;
-        const alpha = gradientFillEnabled ? gradientAlpha(pos) : fillOpacity / 100;
-        const c = twoTone ? Qt.tint(borderColor, Qt.rgba(secondColor.r, secondColor.g, secondColor.b, position)) : borderColor;
-        return Qt.rgba(c.r, c.g, c.b, alpha);
+        const c = Qt.tint(borderColor, Qt.rgba(secondColor.r, secondColor.g, secondColor.b, position));
+        return Qt.rgba(c.r, c.g, c.b, fillOpacity / 100);
     }
 
     Gradient {
         id: fillGradient
-        orientation: root.gradientFillEnabled && root.gradientHorizontal ? Gradient.Horizontal : Gradient.Vertical
         GradientStop { position: 0.00; color: root.gradientStop(0.00) }
         GradientStop { position: 0.25; color: root.gradientStop(0.25) }
         GradientStop { position: 0.50; color: root.gradientStop(0.50) }
@@ -166,7 +122,7 @@ Item {
         width: Math.max(0, root.visualRect.width - root.borderWidth)
         height: Math.max(0, root.visualRect.height - root.borderWidth)
         color: Qt.rgba(root.borderColor.r, root.borderColor.g, root.borderColor.b, root.fillOpacity / 100)
-        gradient: root.gradientFillEnabled || root.twoTone ? fillGradient : null
+        gradient: root.twoTone ? fillGradient : null
         border.color: root.borderColor
         border.width: root.borderWidth
         radius: root.cornerRadius
@@ -181,15 +137,6 @@ Item {
             shadowBlur: 0.6
             blurMax: 24
             shadowVerticalOffset: 2
-        }
-
-        // The confirm flash's brightness pulse.
-        Rectangle {
-            id: flashOverlay
-            anchors.fill: parent
-            radius: parent.radius
-            color: root.borderColor
-            opacity: 0
         }
     }
 }

@@ -48,7 +48,6 @@ SirkelConfigModule::SirkelConfigModule(QObject *parent, const KPluginMetaData &m
                         &SirkelConfig::IndicatorPointerColorSourceChanged,
                         &SirkelConfig::IndicatorRingColorChanged,
                         &SirkelConfig::IndicatorRingColorSourceChanged,
-                        &SirkelConfig::LinkIndicatorColorsChanged,
                         &SirkelConfig::WallpaperColorPathChanged}) {
         connect(config, signal, this, &SirkelConfigModule::colorsChanged);
     }
@@ -64,17 +63,17 @@ SirkelConfig *SirkelConfigModule::settings() const
 
 QColor SirkelConfigModule::resolvedOutlineColor() const
 {
-    return resolveLinkedColor(ColorTarget::Outline);
+    return resolveColor(ColorTarget::Outline);
 }
 
 QColor SirkelConfigModule::resolvedPointerColor() const
 {
-    return resolveLinkedColor(ColorTarget::Pointer);
+    return resolveColor(ColorTarget::Pointer);
 }
 
 QColor SirkelConfigModule::resolvedRingColor() const
 {
-    return resolveLinkedColor(ColorTarget::Ring);
+    return resolveColor(ColorTarget::Ring);
 }
 
 QStringList SirkelConfigModule::keybindSchemes() const
@@ -247,13 +246,10 @@ QVariantMap SirkelConfigModule::previewPlacement(const QString &name, qreal widt
 {
     const SnapDirection direction = directionFromName(name);
     const Placement *p = placementFor(direction);
-    const QPoint edges = placementEdges(direction);
     return {
         {QStringLiteral("rect"), placementGeometry(direction, QRectF(0, 0, width, height), SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical())},
         {QStringLiteral("ringIndex"), p ? p->ringIndex : -1},
         {QStringLiteral("label"), placementLabel(direction)},
-        {QStringLiteral("edgeH"), edges.x()},
-        {QStringLiteral("edgeV"), edges.y()},
     };
 }
 
@@ -285,7 +281,6 @@ void SirkelConfigModule::resetColors()
     config->indicatorPointerColorSourceItem()->setDefault();
     config->indicatorRingColorItem()->setDefault();
     config->indicatorRingColorSourceItem()->setDefault();
-    config->linkIndicatorColorsItem()->setDefault();
     config->wallpaperColorPathItem()->setDefault();
 }
 

@@ -81,14 +81,13 @@
       <default>false</default>
     </entry>
     <!-- How long (ms) the outline preview takes to glide between picks.
-         Every other animation (pointer slide, entrance, exit, confirm
-         flash) scales with it, and with KWin's global animation speed.
+         Every other animation (pointer slide, entrance, exit) scales
+         with it, and with KWin's global animation speed.
          0 = everything instant. -->
     <entry name="OutlineAnimationDuration" type="Int">
       <default>75</default>
     </entry>
-    <!-- Color for the outline preview (and, when LinkIndicatorColors is
-         true, the indicator's pointer and ring) when OutlineColorSource is
+    <!-- Color for the outline preview when OutlineColorSource is
          "manual". Alpha is respected. Picking a color in the KCM sets the
          source to "manual". -->
     <entry name="OutlineColor" type="Color">
@@ -129,22 +128,16 @@
     <entry name="OutlineColorSource" type="String">
       <default>theme</default>
     </entry>
-    <!-- Same as OutlineColorSource, for the indicator's pointer. Ignored
-         when LinkIndicatorColors is true (the pointer just follows
-         whatever the outline resolves to). -->
+    <!-- Same as OutlineColorSource, for the indicator's pointer. -->
     <entry name="IndicatorPointerColorSource" type="String">
       <default>theme</default>
     </entry>
-    <!-- Same as OutlineColorSource, for the indicator's ring. Ignored when
-         LinkIndicatorColors is true. Defaults to "manual" so the ring keeps
-         its own neutral look; the KCM offers no "wallpaper" option for it. -->
+    <!-- Same as OutlineColorSource, for the indicator's ring, except that
+         "theme" gives a dark, muted version of the accent. Defaults to
+         "manual" so the ring keeps its own neutral look; the KCM offers no
+         "wallpaper" option for it. -->
     <entry name="IndicatorRingColorSource" type="String">
       <default>manual</default>
-    </entry>
-    <!-- Whether the outline, pointer and ring share the outline's color
-         (true) or each have their own color and source (false). -->
-    <entry name="LinkIndicatorColors" type="Bool">
-      <default>false</default>
     </entry>
     <!-- Where to read a wallpaper-derived color from, when a color's source
          is "wallpaper". Empty (the default) means: use pywal's own default
@@ -201,18 +194,6 @@
          (eases past the target and settles back). -->
     <entry name="Easing" type="String">
       <default>fluid</default>
-    </entry>
-    <!-- A brief brightness/scale pulse on the outline's fill right as the
-         window actually snaps on release - separate from, and in addition
-         to, the glide animation that gets it there. -->
-    <entry name="OutlineConfirmFlash" type="Bool">
-      <default>true</default>
-    </entry>
-    <!-- A gradient fill instead of a flat one: solid toward the screen
-         edge the placement snaps against, fading away from it. Same hue and
-         opacity as the flat fill. -->
-    <entry name="OutlineGradientFill" type="Bool">
-      <default>false</default>
     </entry>
     <!-- Soft drop shadow under the indicator and the outline preview. -->
     <entry name="Shadow" type="Bool">

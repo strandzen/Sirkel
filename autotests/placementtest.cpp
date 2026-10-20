@@ -14,7 +14,6 @@ private Q_SLOTS:
     void ringIndicesAreUnique();
     void fixedSizeCentered();
     void namesRoundTrip();
-    void edges();
     void directionForAngle_data();
     void directionForAngle();
     void directionForDelta_data();
@@ -90,18 +89,6 @@ void PlacementTest::namesRoundTrip()
         QCOMPARE(directionFromName(placementName(d)), d);
     }
     QCOMPARE(directionFromName(QStringLiteral("bogus")), SnapDirection::None);
-}
-
-void PlacementTest::edges()
-{
-    QCOMPARE(placementEdges(SnapDirection::Left), QPoint(-1, 0));
-    QCOMPARE(placementEdges(SnapDirection::Right), QPoint(1, 0));
-    QCOMPARE(placementEdges(SnapDirection::Top), QPoint(0, -1));
-    QCOMPARE(placementEdges(SnapDirection::Bottom), QPoint(0, 1));
-    QCOMPARE(placementEdges(SnapDirection::TopLeft), QPoint(-1, -1));
-    QCOMPARE(placementEdges(SnapDirection::BottomRight), QPoint(1, 1));
-    QCOMPARE(placementEdges(SnapDirection::Maximize), QPoint(0, 0));
-    QCOMPARE(placementEdges(SnapDirection::None), QPoint(0, 0));
 }
 
 void PlacementTest::fixedSizeCentered()

@@ -3,9 +3,8 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// Colors: one accent color for everything by default; separate colors for
-// the indicator's pointer and ring are opt-in. "Use separate colors" is
-// LinkIndicatorColors inverted.
+// Colors: the outline, the indicator's pointer and its ring, each with its
+// own source.
 FormPage {
     id: root
 
@@ -15,7 +14,7 @@ FormPage {
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Accent")
+            Kirigami.FormData.label: i18n("Outline")
         }
 
         ColorSourceCombo {
@@ -32,30 +31,20 @@ FormPage {
             popup: colorPopup
         }
 
-        QQC2.Switch {
-            Kirigami.FormData.label: i18n("Indicator:")
-            text: i18n("Use separate colors for pointer and ring")
-            checked: !kcm.settings.linkIndicatorColors
-            onToggled: kcm.settings.linkIndicatorColors = !checked
-        }
-
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Pointer")
-            visible: !kcm.settings.linkIndicatorColors
         }
 
         ColorSourceCombo {
             Kirigami.FormData.label: i18n("Color from:")
             Layout.preferredWidth: root.fieldWidth
-            visible: !kcm.settings.linkIndicatorColors
             sourceValue: kcm.settings.indicatorPointerColorSource
             onSourcePicked: (value) => kcm.settings.indicatorPointerColorSource = value
         }
 
         ColorPickerRow {
             Kirigami.FormData.label: i18n("Color:")
-            visible: !kcm.settings.linkIndicatorColors
             colorValue: kcm.resolvedPointerColor
             target: "pointer"
             popup: colorPopup
@@ -64,18 +53,16 @@ FormPage {
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Ring")
-            visible: !kcm.settings.linkIndicatorColors
         }
 
         // No wallpaper option: the ring is meant to keep its own neutral
-        // identity.
+        // identity. The theme option is a dark, muted accent.
         ColorSourceCombo {
             Kirigami.FormData.label: i18n("Color from:")
             Layout.preferredWidth: root.fieldWidth
-            visible: !kcm.settings.linkIndicatorColors
             sourceOptions: [
                 { value: "manual", text: i18n("Custom") },
-                { value: "theme", text: i18n("Theme accent (live)") },
+                { value: "theme", text: i18n("Theme accent, muted (live)") },
             ]
             sourceValue: kcm.settings.indicatorRingColorSource
             onSourcePicked: (value) => kcm.settings.indicatorRingColorSource = value
@@ -83,7 +70,6 @@ FormPage {
 
         ColorPickerRow {
             Kirigami.FormData.label: i18n("Color:")
-            visible: !kcm.settings.linkIndicatorColors
             colorValue: kcm.resolvedRingColor
             target: "ring"
             popup: colorPopup

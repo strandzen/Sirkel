@@ -1,0 +1,82 @@
+# Changelog
+
+All notable changes to Sirkel. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [semantic versioning](https://semver.org/). Before 1.0, settings may still change between versions.
+
+## [0.5.0] - 2026-10-20
+
+### Added
+- New settings window with a sidebar: General, Appearance, Colors, Shortcuts and About. Less common options sit in Advanced folds.
+- "Sirkel" launcher entry that opens the settings in their own window.
+- Live preview on the Appearance and Colors pages: the real indicator and outline at real size over the blurred wallpaper. The pane slides out next to the settings and can be resized or hidden.
+- Key combination trigger as an alternative to Caps Lock. Releasing any key of the combination snaps.
+- Direct shortcuts for every placement, maximize and minimize. None are set by default; they also show up under KWin in System Settings → Shortcuts.
+- Angle picking mode: eight equal slices around a center radius, as an alternative to the per-axis box mode.
+- Option to act on the window under the cursor instead of the active window.
+- Excluded apps list.
+- Auto-cancel after a set idle time while the trigger is held.
+- Fluid easing (new default), shadow, two-tone shading and hairlines on the ring.
+- Indicator animations: settle-in on appear, the reverse on exit, and a press-in when maximize is picked.
+- Old settings are migrated automatically on the next login after an update.
+- About page with version, keyd setup and status.
+
+### Changed
+- keyd is now optional.
+- A theme-colored ring uses a dark, muted version of the accent.
+- The outline, pointer and ring always have their own color settings.
+- Enter now also focuses a window picked under the cursor.
+
+### Removed
+- Outline gradient fill.
+- Confirm flash when the window snaps.
+- "Use separate colors" toggle.
+
+### Fixed
+- Picking a direction with the cursor pinned at a screen edge. Movement past the edge now still counts.
+- Sirkel no longer starts while Overview or another full-screen effect is open.
+
+## [0.2.0] - 2026-10-18
+
+### Added
+- PKGBUILD for Arch-based systems (`sirkel-git`).
+- Windows that can't be resized are moved and centered in the picked area.
+- Fullscreen windows (games, video) are left alone.
+- Unit tests for placement and direction picking.
+
+### Changed
+- Internals rewritten into separate parts for placement, input, trigger, overlay and colors.
+- Settings apply right away through KWin instead of being re-read on every press.
+- The indicator is kept fully on screen when it appears near an edge.
+- Indicator text scales with the indicator, uses the system font and puts corner labels on two lines.
+
+### Removed
+- Breathing pulse while maximize is selected.
+
+### Fixed
+- Blur was missing on the first pick of a session.
+
+## [0.1.0] - 2026-10-14
+
+First versioned release.
+
+### Added
+- Hold Caps Lock (F24 via keyd), pick a direction with the mouse or keys, release to snap the active window.
+- Halves, quarters and maximize. Moving back to the indicator's center picks maximize.
+- Direction keys: arrows, WASD, HJKL or none. Two keys at once pick a corner, and releasing one of them keeps the corner.
+- Picks stay selected until a new direction is picked.
+- Holding Caps Lock alone does nothing until the mouse moves or a key is pressed.
+- Enter maximizes, Backspace minimizes, Esc cancels.
+- Scroll to resize before releasing: edges and corners cycle 1/4, 1/3, 1/2, 2/3; maximize cycles width 1/3, 1/2, full.
+- Ring indicator with a curved pointer that slides along the ring. Size, thickness, roundness, pointer length, opacity and an optional direction label.
+- Indicator at the screen center or at the cursor.
+- Outline preview of the target with border, roundness, fill opacity, optional blur and a glide animation with adjustable duration and easing.
+- Horizontal and vertical padding, with half padding between neighbouring windows.
+- Option to snap on the monitor under the cursor.
+- Trigger start: immediately or after holding briefly.
+- Colors for outline, pointer and ring: custom, Plasma accent or a wallpaper color (pywal or a hex color file). Color picker with hex and alpha.
+- Settings page in System Settings → Desktop Effects, with a warning when keyd isn't set up.
+- Desktop, panels and other special windows are ignored.
+- GPL-2.0-or-later license.
+
+[0.5.0]: https://github.com/strandzen/Sirkel/compare/v0.2.0...v0.5.0
+[0.2.0]: https://github.com/strandzen/Sirkel/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/strandzen/Sirkel/releases/tag/v0.1.0

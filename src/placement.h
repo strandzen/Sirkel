@@ -70,10 +70,6 @@ int cycleStep(SnapDirection direction, int step, int delta);
 // edge. Returns an empty rect for SnapDirection::None.
 QRectF placementGeometry(SnapDirection direction, const QRectF &area, qreal paddingHorizontal, qreal paddingVertical, int step = -1);
 
-// The screen edges a placement pulls against, for the outline's gradient
-// fill: x is -1 (left), 1 (right) or 0; y is -1 (top), 1 (bottom) or 0.
-QPoint placementEdges(SnapDirection direction);
-
 // Where a window of fixed `size` (one that can't be resized) goes for a
 // placement: centered in `target`, then kept inside `area` where possible.
 QRectF centeredFixedSize(const QRectF &target, const QSizeF &size, const QRectF &area);

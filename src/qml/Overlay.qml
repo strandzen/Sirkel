@@ -52,10 +52,10 @@ Item {
         indicator.reset();
     }
 
-    function playExit(confirmed) {
-        const hold = outline.playExit(confirmed);
-        indicator.playExit(hold);
-        exitTimer.interval = Math.max(1, hold + root.ms(150));
+    function playExit() {
+        outline.playExit();
+        indicator.playExit();
+        exitTimer.interval = Math.max(1, root.ms(150));
         exitTimer.restart();
     }
 

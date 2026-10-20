@@ -54,4 +54,4 @@ add_subdirectory(kcm)
 
 # Settings migrations, run once per user by kconf_update at Plasma login.
 install(FILES update/sirkel.upd DESTINATION ${KDE_INSTALL_KCONFUPDATEDIR})
-install(PROGRAMS update/sirkel-2026-10-cleanup.sh DESTINATION ${KDE_INSTALL_KCONFUPDATEDIR})
+install(PROGRAMS update/sirkel-2026-10-cleanup.sh update/sirkel-0.5-cleanup.sh DESTINATION ${KDE_INSTALL_KCONFUPDATEDIR})

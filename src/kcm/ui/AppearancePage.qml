@@ -123,20 +123,6 @@ FormPage {
             QQC2.ToolTip.visible: hovered
         }
 
-        QQC2.Switch {
-            Kirigami.FormData.label: i18n("Gradient:")
-            text: i18n("Fade the fill away from the snapped edge")
-            checked: kcm.settings.outlineGradientFill
-            onToggled: kcm.settings.outlineGradientFill = checked
-        }
-
-        QQC2.Switch {
-            Kirigami.FormData.label: i18n("Flash:")
-            text: i18n("Brief pulse as the window snaps")
-            checked: kcm.settings.outlineConfirmFlash
-            onToggled: kcm.settings.outlineConfirmFlash = checked
-        }
-
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Style")

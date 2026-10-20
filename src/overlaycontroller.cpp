@@ -82,7 +82,7 @@ void OverlayController::begin(const QRectF &area)
 void OverlayController::applyStyle()
 {
     reloadColorSources();
-    const QColor outlineColor = resolveLinkedColor(ColorTarget::Outline);
+    const QColor outlineColor = resolveColor(ColorTarget::Outline);
     m_blurEnabled = SirkelConfig::outlineBlur();
     m_outlineCornerRadius = SirkelConfig::outlineCornerRadius();
 
@@ -100,8 +100,8 @@ void OverlayController::applyStyle()
         m_indicator->setProperty("ringWidth", SirkelConfig::indicatorRingWidth());
         m_indicator->setProperty("pointerLength", SirkelConfig::indicatorPointerLength());
         m_indicator->setProperty("showText", SirkelConfig::showIndicatorText());
-        m_indicator->setProperty("highlightColor", resolveLinkedColor(ColorTarget::Pointer));
-        m_indicator->setProperty("ringColor", resolveLinkedColor(ColorTarget::Ring));
+        m_indicator->setProperty("highlightColor", resolveColor(ColorTarget::Pointer));
+        m_indicator->setProperty("ringColor", resolveColor(ColorTarget::Ring));
         m_indicator->setProperty("baseOpacity", SirkelConfig::indicatorRingFillOpacity() / 100.0);
     }
     if (m_outline) {
@@ -109,8 +109,6 @@ void OverlayController::applyStyle()
         m_outline->setProperty("borderColor", outlineColor);
         m_outline->setProperty("cornerRadius", m_outlineCornerRadius);
         m_outline->setProperty("fillOpacity", SirkelConfig::outlineFillOpacity());
-        m_outline->setProperty("confirmFlashEnabled", SirkelConfig::outlineConfirmFlash());
-        m_outline->setProperty("gradientFillEnabled", SirkelConfig::outlineGradientFill());
     }
 }
 
@@ -156,10 +154,6 @@ void OverlayController::showPlacement(SnapDirection direction, const QRectF &tar
         return;
     }
 
-    // Which screen edge the placement pulls against, for the gradient fill.
-    const QPoint edges = placementEdges(direction);
-    m_outline->setProperty("edgeH", edges.x());
-    m_outline->setProperty("edgeV", edges.y());
     const QPointF origin = m_area.topLeft();
     if (!m_outlineShown) {
         m_outlineShown = true;
@@ -187,7 +181,7 @@ void OverlayController::setIntensity(qreal intensity)
     }
 }
 
-void OverlayController::end(bool confirmed)
+void OverlayController::end()
 {
     // Blur can't fade with the rest, so it goes first.
     m_outlineShown = false;
@@ -197,7 +191,7 @@ void OverlayController::end(bool confirmed)
         return;
     }
     if (QQuickItem *item = root()) {
-        QMetaObject::invokeMethod(item, "playExit", Q_ARG(QVariant, confirmed));
+        QMetaObject::invokeMethod(item, "playExit");
         m_hideFallback->start();
     } else {
         hideNow();

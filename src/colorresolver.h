@@ -16,6 +16,5 @@ void reloadColorSources();
 // color), "theme" (the Plasma accent, from kdeglobals rather than the
 // process palette, which isn't guaranteed to follow accent changes live) or
 // "wallpaper" (WallpaperColorPath, falling back to the accent if
-// unreadable). Honours LinkIndicatorColors: when linked, pointer and ring
-// use the outline's color.
-QColor resolveLinkedColor(ColorTarget target);
+// unreadable). The ring gets a dark, muted version of the accent instead.
+QColor resolveColor(ColorTarget target);

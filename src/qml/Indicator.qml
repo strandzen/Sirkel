@@ -79,10 +79,9 @@ Item {
     }
 
     // Fades out while growing back towards 1.25x, the reverse of the
-    // entrance, once `hold` ms (the outline's confirm flash) pass.
-    function playExit(hold) {
+    // entrance.
+    function playExit() {
         entranceAnim.stop();
-        exitAnim.hold = hold;
         exitAnim.restart();
     }
 
@@ -92,14 +91,10 @@ Item {
         NumberAnimation { target: root; property: "scale"; to: 1; duration: root.ms(100); easing.type: Easing.OutCubic }
     }
 
-    SequentialAnimation {
+    ParallelAnimation {
         id: exitAnim
-        property int hold: 0
-        PauseAnimation { duration: exitAnim.hold }
-        ParallelAnimation {
-            NumberAnimation { target: root; property: "opacity"; to: 0; duration: root.ms(150); easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "scale"; to: 1.25; duration: root.ms(150); easing.type: Easing.InCubic }
-        }
+        NumberAnimation { target: root; property: "opacity"; to: 0; duration: root.ms(150); easing.type: Easing.InCubic }
+        NumberAnimation { target: root; property: "scale"; to: 1.25; duration: root.ms(150); easing.type: Easing.InCubic }
     }
 
     // Maximize "press-in": the whole ring shrinks a little while the center

@@ -225,11 +225,10 @@ void SirkelEffect::finish(bool apply)
     m_trigger->releaseGrab();
     m_active = false;
 
-    const bool snapped = apply && m_targetWindow && m_direction != SnapDirection::None;
-    if (snapped) {
+    if (apply && m_targetWindow && m_direction != SnapDirection::None) {
         perform(m_targetWindow, m_area, {WindowAction::Kind::Place, m_direction}, m_sizeStep);
     }
-    m_overlay->end(snapped);
+    m_overlay->end();
 
     m_targetWindow = nullptr;
     m_targetScreen = nullptr;

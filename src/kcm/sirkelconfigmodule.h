@@ -79,7 +79,7 @@ public:
 
     // Everything the preview needs for placement `name` (placementName()) on
     // a width x height screen, from the same code the effect uses:
-    // { rect, ringIndex, label, edgeH, edgeV }. Padding from the settings.
+    // { rect, ringIndex, label }. Padding from the settings.
     Q_INVOKABLE QVariantMap previewPlacement(const QString &name, qreal width, qreal height) const;
 
     Q_INVOKABLE QKeySequence shortcut(const QString &actionId) const;

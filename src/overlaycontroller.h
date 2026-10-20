@@ -43,8 +43,8 @@ public:
     // pick (the target window's current frame).
     void showPlacement(SnapDirection direction, const QRectF &target, const QRectF &windowFrame);
     void setIntensity(qreal intensity);
-    // Plays the exit (with the confirm flash if `confirmed`), then hides.
-    void end(bool confirmed);
+    // Plays the exit, then hides.
+    void end();
 
 private Q_SLOTS:
     // Connected by name to QML signals (visualRectChanged/exitFinished).

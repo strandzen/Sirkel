@@ -125,24 +125,6 @@ QRectF placementGeometry(SnapDirection direction, const QRectF &area, qreal padd
                          -(sharedBottom ? paddingVertical / 2.0 : paddingVertical));
 }
 
-QPoint placementEdges(SnapDirection direction)
-{
-    const Placement *p = placementFor(direction);
-    if (!p) {
-        return {};
-    }
-    // An axis only pulls against an edge if the placement is constrained on
-    // it (not full width/height) and not centered.
-    const auto edge = [](Anchor anchor, bool constrained) {
-        if (!constrained || anchor == Anchor::Center) {
-            return 0;
-        }
-        return anchor == Anchor::Start ? -1 : 1;
-    };
-    return QPoint(edge(p->horizontal, p->resizeAxis == ResizeAxis::Width || p->widthFraction < 1.0),
-                  edge(p->vertical, p->resizeAxis == ResizeAxis::Height || p->heightFraction < 1.0));
-}
-
 QRectF centeredFixedSize(const QRectF &target, const QSizeF &size, const QRectF &area)
 {
     QRectF rect(QPointF(), size);

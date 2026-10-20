@@ -44,6 +44,21 @@ QColor accentColor()
     return KColorScheme(QPalette::Active, KColorScheme::Selection, globals()).background(KColorScheme::NormalBackground).color();
 }
 
+// The accent's hue at the default ring's saturation and brightness
+// (#2e3440: about 28% and 25%), so a theme-colored ring stays a dark
+// backdrop for the pointer.
+QColor ringColorFrom(const QColor &accent)
+{
+    return QColor::fromHsvF(accent.hsvHueF(), accent.hsvSaturationF() * 0.4, 0.25);
+}
+
+}
+
+void reloadColorSources()
+{
+    globals()->reparseConfiguration();
+}
+
 QColor resolveColor(ColorTarget target)
 {
     QString source;
@@ -73,20 +88,6 @@ QColor resolveColor(ColorTarget target)
             return SirkelConfig::indicatorRingColor();
         }
     }
-    return accentColor();
-}
-
-}
-
-void reloadColorSources()
-{
-    globals()->reparseConfiguration();
-}
-
-QColor resolveLinkedColor(ColorTarget target)
-{
-    if (target != ColorTarget::Outline && SirkelConfig::linkIndicatorColors()) {
-        return resolveColor(ColorTarget::Outline);
-    }
-    return resolveColor(target);
+    const QColor accent = accentColor();
+    return target == ColorTarget::Ring ? ringColorFrom(accent) : accent;
 }

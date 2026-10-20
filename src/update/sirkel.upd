@@ -7,3 +7,7 @@ Version=6
 # 2026-10: clean up settings renamed or removed during 0.1/0.2 development.
 Id=sirkel-2026-10-cleanup
 Script=sirkel-2026-10-cleanup.sh,sh
+
+# 0.5: gradient fill, confirm flash and the linked colors toggle removed.
+Id=sirkel-0.5-cleanup
+Script=sirkel-0.5-cleanup.sh,sh
