@@ -68,6 +68,34 @@ SnapDirection composeDirection(bool up, bool down, bool left, bool right)
     return SnapDirection::None;
 }
 
+void EdgeOverflow::reset(const QPointF &position)
+{
+    m_lastPosition = position;
+    m_overflow = QPointF();
+}
+
+QPointF EdgeOverflow::update(const QPointF &position, const QPointF &motion)
+{
+    // Per axis: real movement drops the overflow; movement the cursor
+    // couldn't follow (pinned at an edge) adds to it; no movement on that
+    // axis keeps it.
+    const auto axis = [](qreal pos, qreal last, qreal move, qreal overflow) {
+        if (std::abs(pos - last) >= 0.01) {
+            return qreal(0);
+        }
+        return std::clamp(overflow + move, -kMaxOverflow, kMaxOverflow);
+    };
+    m_overflow = QPointF(axis(position.x(), m_lastPosition.x(), motion.x(), m_overflow.x()),
+                         axis(position.y(), m_lastPosition.y(), motion.y(), m_overflow.y()));
+    m_lastPosition = position;
+    return current();
+}
+
+QPointF EdgeOverflow::current() const
+{
+    return m_lastPosition + m_overflow;
+}
+
 void DirectionInput::reset()
 {
     m_up = m_down = m_left = m_right = false;
@@ -80,6 +108,11 @@ void DirectionInput::setDeadzones(qreal horizontal, qreal vertical)
 {
     m_horizontalDeadzone = horizontal;
     m_verticalDeadzone = vertical;
+}
+
+void DirectionInput::setAngleMode(qreal centerRadius)
+{
+    m_centerRadius = centerRadius;
 }
 
 std::optional<SnapDirection> DirectionInput::keyEvent(KeyAxis axis, bool pressed, const QPointF &cursor)
@@ -118,14 +151,18 @@ std::optional<SnapDirection> DirectionInput::pointerMoved(const QPointF &cursor,
 {
     if (m_keyPickCursor) {
         const QPointF moved = cursor - *m_keyPickCursor;
-        if (std::abs(moved.x()) < m_horizontalDeadzone && std::abs(moved.y()) < m_verticalDeadzone) {
+        const bool stillNear = m_centerRadius > 0
+            ? std::hypot(moved.x(), moved.y()) < m_centerRadius
+            : std::abs(moved.x()) < m_horizontalDeadzone && std::abs(moved.y()) < m_verticalDeadzone;
+        if (stillNear) {
             return std::nullopt;
         }
         m_keyPickCursor.reset();
     }
     m_lastDelta = delta;
     m_lastPickFromKey = false;
-    const SnapDirection candidate = directionForDelta(delta, m_horizontalDeadzone, m_verticalDeadzone);
+    const SnapDirection candidate = m_centerRadius > 0 ? directionForAngle(delta, m_centerRadius)
+                                                       : directionForDelta(delta, m_horizontalDeadzone, m_verticalDeadzone);
     return candidate == SnapDirection::None ? SnapDirection::Maximize : candidate;
 }
 
@@ -134,10 +171,16 @@ qreal DirectionInput::intensity() const
     if (m_lastPickFromKey) {
         return 1.0;
     }
-    // Each axis normalized by its own deadzone; 1.0 = right at the boundary.
-    const qreal h = std::max<qreal>(1.0, m_horizontalDeadzone);
-    const qreal v = std::max<qreal>(1.0, m_verticalDeadzone);
-    const qreal raw = std::max(std::abs(m_lastDelta.x()) / h, std::abs(m_lastDelta.y()) / v);
+    // Distance past the center relative to its size; 1.0 = right at the
+    // boundary. Box mode normalizes each axis by its own deadzone.
+    qreal raw;
+    if (m_centerRadius > 0) {
+        raw = std::hypot(m_lastDelta.x(), m_lastDelta.y()) / m_centerRadius;
+    } else {
+        const qreal h = std::max<qreal>(1.0, m_horizontalDeadzone);
+        const qreal v = std::max<qreal>(1.0, m_verticalDeadzone);
+        raw = std::max(std::abs(m_lastDelta.x()) / h, std::abs(m_lastDelta.y()) / v);
+    }
     const qreal t = std::clamp((raw - 1.0) / 2.0, 0.0, 1.0);
     return 0.55 + 0.45 * t;
 }

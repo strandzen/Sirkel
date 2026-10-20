@@ -12,6 +12,7 @@
 #include <QHash>
 #include <QKeyEvent>
 #include <QLoggingCategory>
+#include <QTimer>
 
 Q_LOGGING_CATEGORY(SIRKEL, "sirkel")
 
@@ -22,6 +23,17 @@ SirkelEffect::SirkelEffect()
         return m_active;
     });
     connect(m_trigger, &HyperkeyTrigger::armRequested, this, &SirkelEffect::arm);
+
+    // Safety net for a missed key release: cancels a session that has seen
+    // no input for SessionTimeout seconds.
+    m_idleTimer = new QTimer(this);
+    m_idleTimer->setSingleShot(true);
+    connect(m_idleTimer, &QTimer::timeout, this, [this]() {
+        if (m_active) {
+            qCWarning(SIRKEL) << "session idle for" << SirkelConfig::sessionTimeout() << "s, cancelling";
+            finish(false);
+        }
+    });
 
     // The window or screen a session targets can disappear mid-session.
     // Both signals fire while the object is still valid, so cancelling here
@@ -73,11 +85,19 @@ void SirkelEffect::arm()
     if (m_active) {
         return;
     }
-    KWin::EffectWindow *window = KWin::effects->activeWindow();
+    KWin::EffectWindow *window = SirkelConfig::targetWindowUnderCursor() ? windowUnderCursor() : nullptr;
+    if (!window) {
+        window = KWin::effects->activeWindow();
+    }
     // Special windows (desktop, panels, ...) aren't meant to be moved:
     // moving the desktop window shifts the wallpaper. Fullscreen windows
-    // (games, video) are left alone entirely for now.
-    if (!window || window->isSpecialWindow() || window->isFullScreen()) {
+    // (games, video) are left alone entirely for now, and so is everything
+    // while Overview, Desktop Grid or a similar full-screen effect is up.
+    if (!window || window->isSpecialWindow() || window->isFullScreen() || KWin::effects->hasActiveFullScreenEffect()) {
+        m_trigger->releaseGrab();
+        return;
+    }
+    if (isExcluded(window)) {
         m_trigger->releaseGrab();
         return;
     }
@@ -103,13 +123,67 @@ void SirkelEffect::arm()
     m_engaged = false;
     m_input.reset();
     m_input.setDeadzones(SirkelConfig::horizontalDeadzone(), SirkelConfig::verticalDeadzone());
+    m_input.setAngleMode(SirkelConfig::pickingMode() == QStringLiteral("angle") ? SirkelConfig::centerRadius() : 0);
 
     m_origin = SirkelConfig::indicatorFollowsMouse() ? KWin::effects->cursorPos() : screen->geometryF().center();
     m_overlay->begin(m_area);
     m_overlay->applyStyle();
     m_overlay->placeIndicator(m_origin);
+    m_edgeOverflow.reset(KWin::effects->cursorPos());
 
     KWin::effects->startMouseInterception(this, Qt::CrossCursor);
+    restartIdleTimer();
+}
+
+void SirkelEffect::restartIdleTimer()
+{
+    const int seconds = SirkelConfig::sessionTimeout();
+    if (seconds > 0) {
+        m_idleTimer->start(seconds * 1000);
+    }
+}
+
+KWin::EffectWindow *SirkelEffect::windowUnderCursor() const
+{
+    const QPointF cursor = KWin::effects->cursorPos();
+    const QList<KWin::EffectWindow *> stack = KWin::effects->stackingOrder();
+    // Topmost first; only regular windows count (no panels, desktop,
+    // popups or tooltips).
+    for (auto it = stack.crbegin(); it != stack.crend(); ++it) {
+        KWin::EffectWindow *w = *it;
+        if (w->isDeleted() || w->isMinimized() || w->isHidden() || !w->isOnCurrentDesktop() || !w->isOnCurrentActivity()) {
+            continue;
+        }
+        if (!w->isNormalWindow() && !w->isDialog()) {
+            continue;
+        }
+        if (QRectF(w->frameGeometry()).contains(cursor)) {
+            return w;
+        }
+    }
+    return nullptr;
+}
+
+bool SirkelEffect::isExcluded(KWin::EffectWindow *window) const
+{
+    const QStringList excluded = SirkelConfig::excludedApps();
+    KWin::Window *w = window->window();
+    if (excluded.isEmpty() || !w) {
+        return false;
+    }
+    const QStringList ids{w->desktopFileName(), w->resourceName(), w->resourceClass()};
+    for (const QString &entry : excluded) {
+        const QString wanted = entry.trimmed();
+        if (wanted.isEmpty()) {
+            continue;
+        }
+        for (const QString &id : ids) {
+            if (id.compare(wanted, Qt::CaseInsensitive) == 0) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void SirkelEffect::engage()
@@ -123,6 +197,7 @@ void SirkelEffect::engage()
 
 void SirkelEffect::finish(bool apply)
 {
+    m_idleTimer->stop();
     KWin::effects->stopMouseInterception(this);
     m_trigger->releaseGrab();
     m_active = false;
@@ -130,6 +205,11 @@ void SirkelEffect::finish(bool apply)
     const bool snapped = apply && m_targetWindow && m_direction != SnapDirection::None;
     if (snapped) {
         applyPlacement(m_direction, m_sizeStep);
+        // A window picked by pointing may not be the active one; give it
+        // focus, as you'd expect after moving it.
+        if (m_targetWindow != KWin::effects->activeWindow()) {
+            KWin::effects->activateWindow(m_targetWindow);
+        }
     }
     m_overlay->end(snapped);
 
@@ -200,6 +280,7 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
     if (m_trigger->handlePendingKey(event) || !m_active) {
         return;
     }
+    restartIdleTimer();
 
     static const QHash<int, KeyAction> keyActions{
         {Qt::Key_Return, {KeyAction::Kind::Place, SnapDirection::Maximize}},
@@ -214,7 +295,7 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
     const KeyAxis axis = axisForKey(event->key(), SirkelConfig::keybindScheme());
     if (axis != KeyAxis::None && (press || release)) {
         engage();
-        if (const auto direction = m_input.keyEvent(axis, press, KWin::effects->cursorPos())) {
+        if (const auto direction = m_input.keyEvent(axis, press, m_edgeOverflow.current())) {
             pick(*direction);
         }
         return;
@@ -235,8 +316,11 @@ void SirkelEffect::pointerMotion(KWin::PointerMotionEvent *event)
     if (!m_active) {
         return;
     }
+    restartIdleTimer();
     engage();
-    if (const auto direction = m_input.pointerMoved(event->position, event->position - m_origin)) {
+    // Virtual position: keeps counting movement past a screen edge.
+    const QPointF pointer = m_edgeOverflow.update(event->position, event->delta);
+    if (const auto direction = m_input.pointerMoved(pointer, pointer - m_origin)) {
         pick(*direction);
     }
 }
@@ -246,6 +330,7 @@ void SirkelEffect::pointerAxis(KWin::PointerAxisEvent *event)
     if (!m_active || !m_engaged || event->orientation != Qt::Vertical || m_direction == SnapDirection::None) {
         return;
     }
+    restartIdleTimer();
     if (!SirkelConfig::scrollResizeEnabled()) {
         return;
     }

@@ -175,6 +175,13 @@
     <entry name="TriggerDelay" type="Int">
       <default>300</default>
     </entry>
+    <!-- Seconds without any input after which a session cancels itself
+         (nothing moves). Insurance against a missed hyperkey release.
+         0 = never. -->
+    <entry name="SessionTimeout" type="Int">
+      <default>0</default>
+      <min>0</min>
+    </entry>
     <!-- While a direction is picked and the preview is showing, mouse-wheel
          scrolling resizes the target before release. Edge directions
          (Left/Right/Top/Bottom) resize only the one dimension that edge
@@ -189,10 +196,11 @@
       <default>false</default>
     </entry>
     <!-- Easing for the outline glide and the indicator pointer slide:
-         "linear", "smooth" (ease out) or "overshoot" (eases past the target
-         and settles back). -->
+         "fluid" (strong ease-out with no overshoot, Loop's curves - the
+         default), "linear", "smooth" (plain ease out) or "overshoot"
+         (eases past the target and settles back). -->
     <entry name="Easing" type="String">
-      <default>overshoot</default>
+      <default>fluid</default>
     </entry>
     <!-- A brief brightness/scale pulse on the outline's fill right as the
          window actually snaps on release - separate from, and in addition
@@ -204,6 +212,41 @@
          edge the placement snaps against, fading away from it. Same hue and
          opacity as the flat fill. -->
     <entry name="OutlineGradientFill" type="Bool">
+      <default>false</default>
+    </entry>
+    <!-- Soft drop shadow under the indicator and the outline preview. -->
+    <entry name="Shadow" type="Bool">
+      <default>true</default>
+    </entry>
+    <!-- Two-tone accents: the indicator pointer and the outline fill shade
+         from their color into a darker version of it, instead of one flat
+         color. -->
+    <entry name="TwoTone" type="Bool">
+      <default>false</default>
+    </entry>
+    <!-- Applications Sirkel ignores entirely. Each entry is matched
+         case-insensitively against the window's desktop file name and its
+         window class (resource name/class), e.g. "steam" or
+         "org.kde.konsole". -->
+    <entry name="ExcludedApps" type="StringList">
+      <default></default>
+    </entry>
+    <!-- How the mouse picks a direction: "box" (HorizontalDeadzone and
+         VerticalDeadzone checked per axis; corners need both) or "angle"
+         (CenterRadius around the center, then eight 45 degree slices with
+         slightly wider edge slices). -->
+    <entry name="PickingMode" type="String">
+      <default>box</default>
+    </entry>
+    <!-- Radius (px) of the center (Maximize) zone in "angle" picking mode. -->
+    <entry name="CenterRadius" type="Int">
+      <default>40</default>
+      <min>5</min>
+    </entry>
+    <!-- Act on the window under the cursor when the hyperkey is pressed,
+         instead of the active window. Falls back to the active window when
+         the cursor isn't over a regular window. -->
+    <entry name="TargetWindowUnderCursor" type="Bool">
       <default>false</default>
     </entry>
   </group>

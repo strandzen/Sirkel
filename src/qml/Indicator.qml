@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Shapes
 
 // Direction indicator: a static ring (square at cornerRadius 0, circle at
@@ -31,6 +32,24 @@ Item {
     property real intensity: 1.0
     property real motionScale: 1
     property int easingType: Easing.OutBack
+    // Bezier control points, used when easingType is BezierSpline.
+    property var easingCurve: [0.22, 1, 0.36, 1, 1, 1]
+    property bool shadowEnabled: true
+    // Pointer shades from its color into a darker one.
+    property bool twoTone: false
+
+    // Soft drop shadow under the whole indicator.
+    // The shadow needs a GPU renderer; with Qt Quick's software renderer
+    // a layer effect makes the whole item vanish, so it's skipped there.
+    layer.enabled: shadowEnabled && width > 0 && GraphicsInfo.api !== GraphicsInfo.Software
+    layer.effect: MultiEffect {
+        shadowEnabled: true
+        shadowColor: "black"
+        shadowOpacity: 0.35
+        shadowBlur: 0.6
+        blurMax: 24
+        shadowVerticalOffset: 2
+    }
 
     function ms(base) {
         return Math.round(base * root.motionScale);
@@ -50,15 +69,17 @@ Item {
         ringIndex = -1;
     }
 
-    // Pops in (scale + fade) on the first input of a session.
+    // Settles in: scales down from slightly larger while fading in, so it
+    // reads as landing on the screen rather than popping up.
     function playEntrance() {
         visible = true;
         opacity = 0;
-        scale = 0.88;
+        scale = 1.25;
         entranceAnim.restart();
     }
 
-    // Fades and shrinks out once `hold` ms (the outline's confirm flash) pass.
+    // Fades out while growing back towards 1.25x, the reverse of the
+    // entrance, once `hold` ms (the outline's confirm flash) pass.
     function playExit(hold) {
         entranceAnim.stop();
         exitAnim.hold = hold;
@@ -67,8 +88,8 @@ Item {
 
     ParallelAnimation {
         id: entranceAnim
-        NumberAnimation { target: root; property: "opacity"; to: 1; duration: root.ms(180); easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "scale"; to: 1; duration: root.ms(180); easing.type: Easing.OutBack }
+        NumberAnimation { target: root; property: "opacity"; to: 1; duration: root.ms(100); easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "scale"; to: 1; duration: root.ms(100); easing.type: Easing.OutCubic }
     }
 
     SequentialAnimation {
@@ -76,9 +97,24 @@ Item {
         property int hold: 0
         PauseAnimation { duration: exitAnim.hold }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "opacity"; to: 0; duration: root.ms(140); easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "scale"; to: 0.92; duration: root.ms(140); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "opacity"; to: 0; duration: root.ms(150); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "scale"; to: 1.25; duration: root.ms(150); easing.type: Easing.InCubic }
         }
+    }
+
+    // Maximize "press-in": the whole ring shrinks a little while the center
+    // is picked, like a button held down. A separate transform so it
+    // composes with the entrance/exit animations on `scale`.
+    property real pressScale: direction === "maximize" ? 0.85 : 1.0
+    Behavior on pressScale {
+        enabled: root.motionScale > 0
+        NumberAnimation { duration: root.ms(150); easing.type: Easing.OutCubic }
+    }
+    transform: Scale {
+        origin.x: root.width / 2
+        origin.y: root.height / 2
+        xScale: root.pressScale
+        yScale: root.pressScale
     }
 
     // Ring geometry. The path runs along the ring's centerline, inset by
@@ -199,11 +235,11 @@ Item {
 
     Behavior on unwrappedProgress {
         enabled: root.motionScale > 0
-        NumberAnimation { duration: root.ms(260); easing.type: root.easingType }
+        NumberAnimation { duration: root.ms(260); easing.type: root.easingType; easing.bezierCurve: root.easingCurve }
     }
     Behavior on effectiveSpan {
         enabled: root.motionScale > 0
-        NumberAnimation { duration: root.ms(75); easing.type: root.easingType }
+        NumberAnimation { duration: root.ms(75); easing.type: root.easingType; easing.bezierCurve: root.easingCurve }
     }
 
     // A band hugging the ring: each sample point on the centerline offset by
@@ -234,17 +270,47 @@ Item {
         border.width: root.ringWidth
         border.color: root.ringColor
         opacity: root.baseOpacity
+
+        // Hairlines along the ring's outer and inner edge: a thin light
+        // line that keeps the ring crisp against any background.
+        Rectangle {
+            anchors.fill: parent
+            radius: root.r
+            color: "transparent"
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.18)
+        }
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: root.ringWidth - 1
+            radius: Math.max(0, root.r - root.ringWidth + 1)
+            color: "transparent"
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.18)
+        }
     }
 
     Shape {
+        id: markerShape
         anchors.fill: parent
         visible: root.direction !== "none"
         // Analytic antialiasing; the default renderer leaves jagged edges.
         preferredRendererType: Shape.CurveRenderer
+
+        property LinearGradient twoToneGradient: LinearGradient {
+            x1: 0
+            y1: 0
+            x2: root.width
+            y2: root.height
+            GradientStop { position: 0; color: root.markerFillColor }
+            GradientStop { position: 1; color: Qt.rgba(root.markerFillColor.r * 0.55, root.markerFillColor.g * 0.55, root.markerFillColor.b * 0.55, root.markerFillColor.a) }
+        }
+
         ShapePath {
             strokeWidth: 0
             strokeColor: "transparent"
             fillColor: root.markerFillColor
+            fillGradient: root.twoTone ? markerShape.twoToneGradient : null
             PathPolyline { path: root.markerPolygon }
         }
     }

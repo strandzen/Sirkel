@@ -17,15 +17,25 @@ Item {
     // Multiplier for every animation duration (1 = the authored timings).
     // 0 makes everything instant.
     property real motionScale: 1
-    // "linear" | "smooth" | "overshoot", see Easing in the kcfg.
-    property string easing: "overshoot"
+    // "fluid" | "linear" | "smooth" | "overshoot", see Easing in the kcfg.
+    property string easing: "fluid"
     readonly property int easingType: {
         switch (easing) {
         case "linear": return Easing.Linear;
         case "smooth": return Easing.OutCubic;
-        default: return Easing.OutBack;
+        case "overshoot": return Easing.OutBack;
+        default: return Easing.BezierSpline;
         }
     }
+    // "fluid": Loop's strong ease-out curves - fast start, long gentle
+    // settle, no overshoot. Only used when easingType is BezierSpline.
+    readonly property var glideCurve: [0.22, 1, 0.47, 1, 1, 1]
+    readonly property var slideCurve: [0.22, 1, 0.36, 1, 1, 1]
+
+    // Soft drop shadow under both parts.
+    property bool shadowEnabled: true
+    // Pointer and outline fill shade from their color into a darker one.
+    property bool twoTone: false
 
     function ms(base) {
         return Math.round(base * root.motionScale);
@@ -41,7 +51,7 @@ Item {
     function playExit(confirmed) {
         const hold = outline.playExit(confirmed);
         indicator.playExit(hold);
-        exitTimer.interval = Math.max(1, hold + root.ms(140));
+        exitTimer.interval = Math.max(1, hold + root.ms(150));
         exitTimer.restart();
     }
 
@@ -56,6 +66,9 @@ Item {
         anchors.fill: parent
         motionScale: root.motionScale
         easingType: root.easingType
+        easingCurve: root.glideCurve
+        shadowEnabled: root.shadowEnabled
+        twoTone: root.twoTone
     }
 
     Indicator {
@@ -63,5 +76,8 @@ Item {
         objectName: "indicatorPart"
         motionScale: root.motionScale
         easingType: root.easingType
+        easingCurve: root.slideCurve
+        shadowEnabled: root.shadowEnabled
+        twoTone: root.twoTone
     }
 }

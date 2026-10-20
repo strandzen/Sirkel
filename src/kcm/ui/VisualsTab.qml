@@ -173,6 +173,28 @@ QQC2.ScrollView {
 
             Kirigami.Separator {
                 Kirigami.FormData.isSection: true
+                Kirigami.FormData.label: i18n("Style")
+            }
+
+            QQC2.Switch {
+                Kirigami.FormData.label: i18n("Shadow:")
+                text: i18n("Soft shadow under indicator and outline")
+                checked: kcm.settings.shadow
+                onToggled: kcm.settings.shadow = checked
+            }
+
+            QQC2.Switch {
+                Kirigami.FormData.label: i18n("Two-tone:")
+                text: i18n("Shade pointer and fill into a darker color")
+                checked: kcm.settings.twoTone
+                onToggled: kcm.settings.twoTone = checked
+
+                QQC2.ToolTip.text: i18n("Works together with Gradient fill: the fade sets the transparency, two-tone the color.")
+                QQC2.ToolTip.visible: hovered
+            }
+
+            Kirigami.Separator {
+                Kirigami.FormData.isSection: true
                 Kirigami.FormData.label: i18n("Motion")
             }
 
@@ -195,6 +217,7 @@ QQC2.ScrollView {
                 Layout.minimumWidth: 0
                 textRole: "text"
                 model: [
+                    { value: "fluid", text: i18n("Fluid") },
                     { value: "linear", text: i18n("Linear") },
                     { value: "smooth", text: i18n("Smooth") },
                     { value: "overshoot", text: i18n("Overshoot") },
@@ -202,7 +225,7 @@ QQC2.ScrollView {
                 currentIndex: model.findIndex(m => m.value === kcm.settings.easing)
                 onActivated: kcm.settings.easing = model[currentIndex].value
 
-                QQC2.ToolTip.text: i18n("Linear: constant speed. Smooth: eases out. Overshoot: eases past the target then settles back.")
+                QQC2.ToolTip.text: i18n("Fluid: fast start, long gentle settle, no bounce. Linear: constant speed. Smooth: plain ease out. Overshoot: eases past the target then settles back.")
                 QQC2.ToolTip.visible: hovered
             }
         }

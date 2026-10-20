@@ -11,6 +11,7 @@
 #include <memory>
 
 class HyperkeyTrigger;
+class QTimer;
 class OverlayController;
 
 namespace KWin
@@ -64,14 +65,24 @@ private:
     void refreshPreview();
     void runKeyAction(const KeyAction &action);
     void applyPlacement(SnapDirection direction, int step);
+    // Whether the window's app is in ExcludedApps (matched against its
+    // desktop file name and window class, case-insensitively).
+    bool isExcluded(KWin::EffectWindow *window) const;
+    // Topmost regular window under the cursor on the current desktop, or
+    // nullptr (TargetWindowUnderCursor).
+    KWin::EffectWindow *windowUnderCursor() const;
+    // (Re)starts the SessionTimeout countdown; called on every input.
+    void restartIdleTimer();
     // Where the target window actually ends up for a placement: the
     // placement rect, or for a window that can't be resized, its own size
     // centered in that rect.
     QRectF targetGeometry(SnapDirection direction, int step) const;
 
     HyperkeyTrigger *m_trigger = nullptr;
+    QTimer *m_idleTimer = nullptr;
     std::unique_ptr<OverlayController> m_overlay;
     DirectionInput m_input;
+    EdgeOverflow m_edgeOverflow;
 
     bool m_active = false;
     // Holding the hyperkey alone shows nothing; the session engages on the

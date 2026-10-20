@@ -75,3 +75,10 @@ QRectF centeredFixedSize(const QRectF &target, const QSizeF &size, const QRectF 
 // Each axis arms independently once past its own deadzone, so a diagonal drag
 // selects a corner. Returns None inside both deadzones.
 SnapDirection directionForDelta(const QPointF &delta, qreal horizontalDeadzone, qreal verticalDeadzone);
+
+// Angle-based alternative to directionForDelta(): None within `centerRadius`
+// of the center, otherwise one of eight 45 degree slices around it. The four
+// edge slices are widened by `cardinalBias` (a fraction of a slice taken
+// from the neighbouring corner slices) so a slightly sloppy horizontal or
+// vertical move still reads as an edge.
+SnapDirection directionForAngle(const QPointF &delta, qreal centerRadius, qreal cardinalBias = 0.2);

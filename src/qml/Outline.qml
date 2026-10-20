@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 
 // Preview of where the window will land. Fills the overlay window; only the
 // inner rect (targetX/Y/Width/Height, window-local) moves, so it can glide
@@ -17,6 +18,12 @@ Item {
     property bool gradientFillEnabled: false
     property real motionScale: 1
     property int easingType: Easing.OutBack
+    // Bezier control points, used when easingType is BezierSpline.
+    property var easingCurve: [0.22, 1, 0.47, 1, 1, 1]
+    property bool shadowEnabled: true
+    // Fill shades from borderColor into secondColor.
+    property bool twoTone: false
+    readonly property color secondColor: Qt.rgba(borderColor.r * 0.55, borderColor.g * 0.55, borderColor.b * 0.55, borderColor.a)
 
     // The screen edge the current placement pulls against: -1 left/top,
     // 1 right/bottom, 0 none. Orients the gradient fill.
@@ -90,6 +97,7 @@ Item {
     component Glide: NumberAnimation {
         duration: root.ms(75)
         easing.type: root.easingType
+        easing.bezierCurve: root.easingCurve
         easing.overshoot: 0.6
     }
     Behavior on targetX { enabled: root.motionScale > 0 && !root.instant; Glide {} }
@@ -132,14 +140,18 @@ Item {
     }
     readonly property bool gradientHorizontal: edgeH !== 0
     readonly property bool gradientSolidAtStart: gradientHorizontal ? edgeH < 0 : edgeV <= 0
+    // Either or both of: the alpha fade (gradientFillEnabled) and the
+    // two-tone color shift. Two-tone alone runs top to bottom.
     function gradientStop(position) {
         const pos = gradientSolidAtStart ? position : 1 - position;
-        return Qt.rgba(borderColor.r, borderColor.g, borderColor.b, gradientAlpha(pos));
+        const alpha = gradientFillEnabled ? gradientAlpha(pos) : fillOpacity / 100;
+        const c = twoTone ? Qt.tint(borderColor, Qt.rgba(secondColor.r, secondColor.g, secondColor.b, position)) : borderColor;
+        return Qt.rgba(c.r, c.g, c.b, alpha);
     }
 
     Gradient {
         id: fillGradient
-        orientation: root.gradientHorizontal ? Gradient.Horizontal : Gradient.Vertical
+        orientation: root.gradientFillEnabled && root.gradientHorizontal ? Gradient.Horizontal : Gradient.Vertical
         GradientStop { position: 0.00; color: root.gradientStop(0.00) }
         GradientStop { position: 0.25; color: root.gradientStop(0.25) }
         GradientStop { position: 0.50; color: root.gradientStop(0.50) }
@@ -154,10 +166,22 @@ Item {
         width: Math.max(0, root.visualRect.width - root.borderWidth)
         height: Math.max(0, root.visualRect.height - root.borderWidth)
         color: Qt.rgba(root.borderColor.r, root.borderColor.g, root.borderColor.b, root.fillOpacity / 100)
-        gradient: root.gradientFillEnabled ? fillGradient : null
+        gradient: root.gradientFillEnabled || root.twoTone ? fillGradient : null
         border.color: root.borderColor
         border.width: root.borderWidth
         radius: root.cornerRadius
+
+        // Soft drop shadow (Loop uses about black 20%, radius 10).
+        // Skipped on the software renderer, where it would hide the item.
+        layer.enabled: root.shadowEnabled && width > 0 && height > 0 && GraphicsInfo.api !== GraphicsInfo.Software
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: "black"
+            shadowOpacity: 0.35
+            shadowBlur: 0.6
+            blurMax: 24
+            shadowVerticalOffset: 2
+        }
 
         // The confirm flash's brightness pulse.
         Rectangle {

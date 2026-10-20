@@ -90,6 +90,8 @@ void OverlayController::applyStyle()
         const qreal motionScale = SirkelConfig::outlineAnimationDuration() / kReferenceDuration * KWin::effects->animationTimeFactor();
         item->setProperty("motionScale", motionScale);
         item->setProperty("easing", SirkelConfig::easing());
+        item->setProperty("shadowEnabled", SirkelConfig::shadow());
+        item->setProperty("twoTone", SirkelConfig::twoTone());
     }
     if (m_indicator) {
         m_indicator->setProperty("cornerRadius", SirkelConfig::indicatorCornerRadius());

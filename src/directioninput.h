@@ -18,6 +18,29 @@ KeyAxis axisForKey(int key, const QString &scheme);
 // None). Opposite keys on the same axis cancel out.
 SnapDirection composeDirection(bool up, bool down, bool left, bool right);
 
+// Lets a direction be picked past a screen edge. Pressed with the cursor at
+// the left edge, the cursor can't move further left, so Left would be
+// unreachable by mouse. While the cursor is pinned on an axis (the motion
+// event still reports movement but the position doesn't change), the
+// movement is accumulated into a virtual position beyond the edge, up to
+// kMaxOverflow. As soon as the cursor really moves on that axis again, the
+// virtual position snaps back to the real one.
+class EdgeOverflow
+{
+public:
+    static constexpr qreal kMaxOverflow = 150;
+
+    void reset(const QPointF &position);
+    // `position` is the (clamped) cursor position after the event, `motion`
+    // the movement the device reported. Returns the virtual position.
+    QPointF update(const QPointF &position, const QPointF &motion);
+    QPointF current() const;
+
+private:
+    QPointF m_lastPosition;
+    QPointF m_overflow;
+};
+
 // Turns raw key and pointer input during a session into placement picks.
 // Pure logic, no KWin dependency, so it can be unit tested.
 //
@@ -29,6 +52,9 @@ class DirectionInput
 public:
     void reset();
     void setDeadzones(qreal horizontal, qreal vertical);
+    // Switches pointer picking to angle slices around a center of
+    // `centerRadius` (see directionForAngle()); 0 = the per-axis deadzone box.
+    void setAngleMode(qreal centerRadius);
 
     // A direction key changed state. Returns the new pick, if any. `cursor` is
     // the pointer position at that moment, remembered so small pointer jitter
@@ -46,6 +72,8 @@ public:
 private:
     qreal m_horizontalDeadzone = 48;
     qreal m_verticalDeadzone = 48;
+    // > 0 when picking by angle.
+    qreal m_centerRadius = 0;
     bool m_up = false;
     bool m_down = false;
     bool m_left = false;

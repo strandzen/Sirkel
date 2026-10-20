@@ -147,3 +147,38 @@ SnapDirection directionForDelta(const QPointF &delta, qreal horizontalDeadzone, 
     }
     return SnapDirection::None;
 }
+
+SnapDirection directionForAngle(const QPointF &delta, qreal centerRadius, qreal cardinalBias)
+{
+    if (std::hypot(delta.x(), delta.y()) < centerRadius) {
+        return SnapDirection::None;
+    }
+    // Clockwise from Right, in screen coordinates (y grows downwards).
+    static constexpr std::array<SnapDirection, 8> kSlices{
+        SnapDirection::Right,
+        SnapDirection::BottomRight,
+        SnapDirection::Bottom,
+        SnapDirection::BottomLeft,
+        SnapDirection::Left,
+        SnapDirection::TopLeft,
+        SnapDirection::Top,
+        SnapDirection::TopRight,
+    };
+    qreal degrees = std::atan2(delta.y(), delta.x()) * 180.0 / M_PI;
+    if (degrees < 0) {
+        degrees += 360.0;
+    }
+    const qreal shifted = std::fmod(degrees + 22.5, 360.0);
+    int slice = int(shifted / 45.0) % 8;
+    // Odd slices are corners; hand their outer edges to the neighbouring
+    // edge slices.
+    if (slice % 2 == 1) {
+        const qreal position = std::fmod(shifted, 45.0) / 45.0;
+        if (position < cardinalBias / 2.0) {
+            slice = (slice + 7) % 8;
+        } else if (position > 1.0 - cardinalBias / 2.0) {
+            slice = (slice + 1) % 8;
+        }
+    }
+    return kSlices[slice];
+}
