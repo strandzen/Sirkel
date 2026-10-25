@@ -2,9 +2,11 @@
 
 #include "sirkelconfig.h"
 
+#include <KConfigWatcher>
 #include <KQuickManagedConfigModule>
 
 #include <QColor>
+#include <QHash>
 #include <QPointer>
 #include <QKeySequence>
 #include <QUrl>
@@ -38,6 +40,14 @@ class SirkelConfigModule : public KQuickManagedConfigModule
     Q_PROPERTY(bool keydOk READ keydOk NOTIFY keydOkChanged)
     // Plugin version, for the About page.
     Q_PROPERTY(QString version READ version CONSTANT)
+    // KWin only loads an effect built for its exact version. The KWin
+    // version Sirkel was built against, the installed one, and whether the
+    // effect runs: "checking", "running", "rebuild" (versions differ),
+    // "relogin" (enabled, versions match, not loaded yet) or "disabled".
+    // Checked asynchronously when the page opens.
+    Q_PROPERTY(QString kwinBuildVersion READ kwinBuildVersion CONSTANT)
+    Q_PROPERTY(QString kwinInstalledVersion READ kwinInstalledVersion NOTIFY effectStatusChanged)
+    Q_PROPERTY(QString effectStatus READ effectStatus NOTIFY effectStatusChanged)
     // Shortcuts (stored by KGlobalAccel under the "kwin" component, not in
     // kwinrc). The trigger is either F24 (Caps Lock via keyd) or a key
     // combination; the direct actions have no defaults.
@@ -64,6 +74,9 @@ public:
     QStringList keybindSchemes() const;
     bool keydOk() const;
     QString version() const;
+    QString kwinBuildVersion() const;
+    QString kwinInstalledVersion() const;
+    QString effectStatus() const;
     QString triggerId() const;
     bool triggerIsHyperkey() const;
     QString triggerText() const;
@@ -103,13 +116,21 @@ public:
 Q_SIGNALS:
     void colorsChanged();
     void keydOkChanged();
+    void effectStatusChanged();
     void shortcutsChanged();
 
 private:
     void checkKeyd();
+    void reloadShortcuts();
+    void checkEffect();
 
     QTimer *m_saveTimer = nullptr;
     QPointer<QPropertyAnimation> m_resizeAnimation;
     bool m_keydOk = true;
+    QString m_kwinInstalledVersion;
+    QString m_effectStatus = QStringLiteral("checking");
     int m_shortcutsRevision = 0;
+    // Action id -> shortcut, see reloadShortcuts().
+    QHash<QString, QKeySequence> m_shortcuts;
+    KConfigWatcher::Ptr m_globalsWatcher;
 };

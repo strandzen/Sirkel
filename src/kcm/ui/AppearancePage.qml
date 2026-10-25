@@ -45,7 +45,8 @@ FormPage {
             Kirigami.FormData.label: i18n("Thickness:")
             fieldWidth: root.fieldWidth
             from: 2
-            to: 60
+            // A ring thicker than half the indicator would fill it.
+            to: Math.max(2, Math.min(60, kcm.settings.indicatorSize / 2))
             unit: " px"
             value: kcm.settings.indicatorRingWidth
             onMoved: (v) => kcm.settings.indicatorRingWidth = v
@@ -140,9 +141,6 @@ FormPage {
             text: i18n("Shade pointer and fill into a darker color")
             checked: kcm.settings.twoTone
             onToggled: kcm.settings.twoTone = checked
-
-            QQC2.ToolTip.text: i18n("Works together with Gradient: the fade sets the transparency, two-tone the color.")
-            QQC2.ToolTip.visible: hovered
         }
 
         Kirigami.Separator {

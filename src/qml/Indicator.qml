@@ -21,6 +21,9 @@ Item {
 
     property real cornerRadius: 60
     property int ringWidth: 24
+    // The thickness actually drawn: at most half the indicator, or the
+    // ring would fill it and the pointer band fold over itself.
+    readonly property real band: Math.max(0, Math.min(ringWidth, width / 2, height / 2))
     property real pointerLength: 36
     property bool showText: false
     property color highlightColor: "#3daee9"
@@ -67,6 +70,9 @@ Item {
         visible = false;
         direction = "none";
         ringIndex = -1;
+        // The first pick lands directly, rather than sliding over from
+        // wherever the previous session left the pointer.
+        jumpNext = true;
     }
 
     // Settles in: scales down from slightly larger while fading in, so it
@@ -116,7 +122,7 @@ Item {
     // half the ring width; insetting a rounded corner shrinks its radius by
     // the same amount, hence rc rather than r for the arcs.
     readonly property real r: Math.min(cornerRadius, width / 2, height / 2)
-    readonly property real inset: ringWidth / 2
+    readonly property real inset: band / 2
     readonly property real rc: Math.max(0, r - inset)
     readonly property real straightX: Math.max(0, width - 2 * r)
     readonly property real straightY: Math.max(0, height - 2 * r)
@@ -206,6 +212,9 @@ Item {
     // Length of ring the pointer covers: pointerLength normally, the whole
     // loop for Maximize.
     property real effectiveSpan: pointerLength
+    // Set by reset(): the session's first pick skips the slide and grow
+    // animations. Cleared once that pick's direction is in.
+    property bool jumpNext: true
 
     onRingIndexChanged: {
         // Maximize (-1) has no position of its own; the band stays put and
@@ -225,15 +234,16 @@ Item {
     onDirectionChanged: {
         if (direction !== "none") {
             effectiveSpan = direction === "maximize" ? totalPathLength : pointerLength;
+            jumpNext = false;
         }
     }
 
     Behavior on unwrappedProgress {
-        enabled: root.motionScale > 0
+        enabled: root.motionScale > 0 && !root.jumpNext
         NumberAnimation { duration: root.ms(260); easing.type: root.easingType; easing.bezierCurve: root.easingCurve }
     }
     Behavior on effectiveSpan {
-        enabled: root.motionScale > 0
+        enabled: root.motionScale > 0 && !root.jumpNext
         NumberAnimation { duration: root.ms(75); easing.type: root.easingType; easing.bezierCurve: root.easingCurve }
     }
 
@@ -244,7 +254,7 @@ Item {
         const span = Math.min(effectiveSpan, totalPathLength);
         const lengths = sampleLengths(center - span / 2, center + span / 2);
         const total = Math.max(1, segments.reduce((sum, seg) => sum + seg[0], 0));
-        const half = ringWidth / 2;
+        const half = band / 2;
         const outer = [];
         const inner = [];
         for (const len of lengths) {
@@ -262,7 +272,7 @@ Item {
         anchors.fill: parent
         radius: root.r
         color: "transparent"
-        border.width: root.ringWidth
+        border.width: root.band
         border.color: root.ringColor
         opacity: root.baseOpacity
 
@@ -277,8 +287,8 @@ Item {
         }
         Rectangle {
             anchors.fill: parent
-            anchors.margins: root.ringWidth - 1
-            radius: Math.max(0, root.r - root.ringWidth + 1)
+            anchors.margins: root.band - 1
+            radius: Math.max(0, root.r - root.band + 1)
             color: "transparent"
             border.width: 1
             border.color: Qt.rgba(1, 1, 1, 0.18)
@@ -314,7 +324,7 @@ Item {
     // 120). HorizontalFit shrinks a label that would cross the ring.
     Text {
         anchors.centerIn: parent
-        width: Math.max(0, root.width - 2 * root.ringWidth - 8)
+        width: Math.max(0, root.width - 2 * root.band - 8)
         horizontalAlignment: Text.AlignHCenter
         lineHeight: 0.9
         color: "white"

@@ -6,12 +6,16 @@
 
 #include <KConfig>
 #include <KConfigGroup>
+#include <KConfigWatcher>
 #include <KGlobalAccel>
 #include <KPluginFactory>
+#include <KSharedConfig>
 
 #include <QDBusConnection>
 #include <QDBusMessage>
 #include <QDBusPendingCall>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 #include <QApplication>
 #include <QDialog>
 #include <QDir>
@@ -53,7 +57,16 @@ SirkelConfigModule::SirkelConfigModule(QObject *parent, const KPluginMetaData &m
     }
 
     reloadColorSources();
+    // A changed Plasma accent shows up while the settings are open.
+    m_globalsWatcher = KConfigWatcher::create(KSharedConfig::openConfig(QStringLiteral("kdeglobals")));
+    connect(m_globalsWatcher.data(), &KConfigWatcher::configChanged, this, [this]() {
+        reloadColorSources();
+        Q_EMIT colorsChanged();
+    });
+
+    reloadShortcuts();
     checkKeyd();
+    checkEffect();
 }
 
 SirkelConfig *SirkelConfigModule::settings() const
@@ -91,6 +104,21 @@ QString SirkelConfigModule::version() const
     return metaData().version();
 }
 
+QString SirkelConfigModule::kwinBuildVersion() const
+{
+    return QStringLiteral(SIRKEL_KWIN_VERSION);
+}
+
+QString SirkelConfigModule::kwinInstalledVersion() const
+{
+    return m_kwinInstalledVersion;
+}
+
+QString SirkelConfigModule::effectStatus() const
+{
+    return m_effectStatus;
+}
+
 QString SirkelConfigModule::triggerId() const
 {
     return QString::fromLatin1(kTriggerActionId);
@@ -123,7 +151,21 @@ int SirkelConfigModule::shortcutsRevision() const
 
 QKeySequence SirkelConfigModule::shortcut(const QString &actionId) const
 {
-    return KGlobalAccel::self()->globalShortcut(QStringLiteral("kwin"), actionId).value(0);
+    return m_shortcuts.value(actionId);
+}
+
+void SirkelConfigModule::reloadShortcuts()
+{
+    // Each lookup is a blocking D-Bus call, so they're read once here (on
+    // open and after every change) rather than from every QML binding.
+    const auto read = [this](const QString &id) {
+        m_shortcuts.insert(id, KGlobalAccel::self()->globalShortcut(QStringLiteral("kwin"), id).value(0));
+    };
+    m_shortcuts.clear();
+    read(triggerId());
+    for (const ShortcutAction &action : ::shortcutActions()) {
+        read(QString::fromLatin1(action.id));
+    }
 }
 
 void SirkelConfigModule::setShortcut(const QString &actionId, const QKeySequence &sequence)
@@ -154,6 +196,8 @@ void SirkelConfigModule::setShortcut(const QString &actionId, const QKeySequence
                                                           QStringLiteral("setForeignShortcut"));
     message << QStringList{QStringLiteral("kwin"), actionId, QStringLiteral("KWin"), text} << QVariant::fromValue(keys);
     QDBusConnection::sessionBus().call(message);
+    // Re-read all: a reassignment can take another action's keys too.
+    reloadShortcuts();
     ++m_shortcutsRevision;
     Q_EMIT shortcutsChanged();
 }
@@ -332,6 +376,48 @@ void SirkelConfigModule::checkKeyd()
     });
     connect(process, &QProcess::errorOccurred, process, &QObject::deleteLater);
     process->start(QStringLiteral("systemctl"), {QStringLiteral("is-active"), QStringLiteral("--quiet"), QStringLiteral("keyd")});
+}
+
+void SirkelConfigModule::checkEffect()
+{
+    QDBusMessage message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin"),
+                                                          QStringLiteral("/Effects"),
+                                                          QStringLiteral("org.kde.kwin.Effects"),
+                                                          QStringLiteral("isEffectLoaded"));
+    message << QStringLiteral("kwin_effect_sirkel");
+    auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(message), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher *watcher) {
+        watcher->deleteLater();
+        const QDBusPendingReply<bool> reply = *watcher;
+        const bool loaded = reply.isValid() && reply.value();
+
+        // The installed KWin, which is what the next login runs.
+        auto *process = new QProcess(this);
+        const auto decide = [this, process, loaded]() {
+            process->deleteLater();
+            // "kwin 6.8.1"; empty if kwin_wayland couldn't be run.
+            m_kwinInstalledVersion = QString::fromUtf8(process->readAllStandardOutput()).trimmed().section(QLatin1Char(' '), -1);
+            const bool enabled = KConfigGroup(KSharedConfig::openConfig(QStringLiteral("kwinrc")), QStringLiteral("Plugins"))
+                                     .readEntry("kwin_effect_sirkelEnabled", false);
+            if (!m_kwinInstalledVersion.isEmpty() && m_kwinInstalledVersion != kwinBuildVersion()) {
+                m_effectStatus = QStringLiteral("rebuild");
+            } else if (loaded) {
+                m_effectStatus = QStringLiteral("running");
+            } else if (!enabled) {
+                m_effectStatus = QStringLiteral("disabled");
+            } else {
+                m_effectStatus = QStringLiteral("relogin");
+            }
+            Q_EMIT effectStatusChanged();
+        };
+        connect(process, &QProcess::finished, this, decide);
+        connect(process, &QProcess::errorOccurred, this, [decide](QProcess::ProcessError error) {
+            if (error == QProcess::FailedToStart) {
+                decide();
+            }
+        });
+        process->start(QStringLiteral("kwin_wayland"), {QStringLiteral("--version")});
+    });
 }
 
 K_PLUGIN_CLASS_WITH_JSON(SirkelConfigModule, "kwin_effect_sirkel_config.json")

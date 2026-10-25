@@ -26,6 +26,10 @@ qt6_add_resources(kwin_effect_sirkel_config sirkel_preview_qml
         ../qml/Overlay.qml
 )
 
+# KWin loads an effect only if it was built for its exact version; the About
+# page compares this against the installed KWin.
+target_compile_definitions(kwin_effect_sirkel_config PRIVATE SIRKEL_KWIN_VERSION="${KWin_VERSION}")
+
 target_include_directories(kwin_effect_sirkel_config PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src)
 
 target_link_libraries(kwin_effect_sirkel_config PRIVATE

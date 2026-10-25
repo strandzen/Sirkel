@@ -26,6 +26,16 @@ HyperkeyTrigger::HyperkeyTrigger(KWin::Effect *effect, std::function<bool()> bus
     KGlobalAccel::self()->setShortcut(m_action, {QKeySequence(Qt::Key_F24)});
     connect(m_action, &QAction::triggered, this, &HyperkeyTrigger::onTriggered);
 
+    // Kept up to date locally rather than asked for on every press: the
+    // KGlobalAccel service runs inside KWin, so a lookup would be a
+    // blocking D-Bus call from the compositor to itself.
+    setCombo(KGlobalAccel::self()->shortcut(m_action).value(0));
+    connect(KGlobalAccel::self(), &KGlobalAccel::globalShortcutChanged, this, [this](QAction *action, const QKeySequence &sequence) {
+        if (action == m_action) {
+            setCombo(sequence);
+        }
+    });
+
     m_delayTimer = new QTimer(this);
     m_delayTimer->setSingleShot(true);
     connect(m_delayTimer, &QTimer::timeout, this, [this]() {
@@ -37,6 +47,11 @@ HyperkeyTrigger::HyperkeyTrigger(KWin::Effect *effect, std::function<bool()> bus
 HyperkeyTrigger::~HyperkeyTrigger()
 {
     releaseGrab();
+}
+
+void HyperkeyTrigger::setCombo(const QKeySequence &sequence)
+{
+    m_combo = sequence.isEmpty() ? QKeyCombination(Qt::Key_F24) : sequence[0];
 }
 
 bool HyperkeyTrigger::isRelease(const QKeyEvent *event) const
@@ -61,11 +76,6 @@ void HyperkeyTrigger::onTriggered()
     if (m_pending || m_busy()) {
         return;
     }
-    // Once per press rather than on every key release: KGlobalAccel's
-    // service runs inside KWin, so each lookup is a D-Bus call to ourselves.
-    const QList<QKeySequence> shortcuts = KGlobalAccel::self()->globalShortcut(QStringLiteral("kwin"), QString::fromLatin1(kTriggerActionId));
-    m_combo = (!shortcuts.isEmpty() && !shortcuts.first().isEmpty()) ? shortcuts.first()[0] : QKeyCombination(Qt::Key_F24);
-
     const int delay = SirkelConfig::triggerDelay();
     if (SirkelConfig::triggerMode() == QStringLiteral("delay") && delay > 0) {
         // The grab is needed now to see an early release.

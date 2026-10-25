@@ -7,14 +7,17 @@
   <kcfgfile name="kwinrc"/>
   <group name="Effect-sirkel">
     <!-- Pointer displacement (px) from the hyperkey-press position required
-         before a horizontal direction (left/right) is armed. -->
+         before a horizontal direction (left/right) is armed. At least 1:
+         at 0 every movement would count on both axes and pick a corner. -->
     <entry name="HorizontalDeadzone" type="Int">
       <default>48</default>
+      <min>1</min>
     </entry>
     <!-- Pointer displacement (px) required before a vertical direction
          (top/bottom, or tipping a horizontal pick into a corner) is armed. -->
     <entry name="VerticalDeadzone" type="Int">
       <default>48</default>
+      <min>1</min>
     </entry>
     <!-- Gap (px) left on the left/right edges of a snapped window. -->
     <entry name="PaddingHorizontal" type="Int">
@@ -33,7 +36,8 @@
     <entry name="IndicatorCornerRadius" type="Int">
       <default>60</default>
     </entry>
-    <!-- Ring thickness (px) of the center direction indicator. -->
+    <!-- Ring thickness (px) of the center direction indicator. Drawn at
+         most half the indicator's size. -->
     <entry name="IndicatorRingWidth" type="Int">
       <default>24</default>
     </entry>

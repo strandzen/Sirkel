@@ -89,11 +89,25 @@ Item {
     // Visibility switches restart the demo so entrances replay correctly.
     Connections {
         target: kcm.settings
-        function onShowIndicatorChanged() { pane.restart(); }
-        function onShowOutlineChanged() { pane.restart(); }
+        function onShowIndicatorChanged() { if (pane.visible) pane.restart(); }
+        function onShowOutlineChanged() { if (pane.visible) pane.restart(); }
     }
 
-    Component.onCompleted: restart()
+    // The demo only runs while the pane is shown: hidden, or on a page
+    // without a preview, it stops and starts over when shown again.
+    onVisibleChanged: {
+        if (visible) {
+            restart();
+        } else {
+            ticker.stop();
+            overlay.reset();
+        }
+    }
+    Component.onCompleted: {
+        if (visible) {
+            restart();
+        }
+    }
 
     // Background: the wallpaper, blurred and slightly darkened, so it reads
     // like frosted glass over the desktop. Falls back to the window color.

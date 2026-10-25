@@ -35,8 +35,8 @@ public:
 
     // Whether `event` releases the trigger: its key, or for a combination
     // like Meta+Z any of its modifiers (releasing either key ends the
-    // snap). The shortcut is read on each trigger press, so a change made
-    // in the settings applies from the next press, without restarting KWin.
+    // snap). Follows changes made in the settings live, without restarting
+    // KWin.
     bool isRelease(const QKeyEvent *event) const;
     // Feeds a key event while pending. Returns true if it was consumed.
     bool handlePendingKey(QKeyEvent *event);
@@ -53,13 +53,14 @@ Q_SIGNALS:
 private:
     void onTriggered();
     void cancelPending();
+    void setCombo(const QKeySequence &sequence);
 
     KWin::Effect *m_effect;
     std::function<bool()> m_busy;
     QAction *m_action = nullptr;
     QTimer *m_delayTimer = nullptr;
     bool m_pending = false;
-    // The trigger's key combination, read when it's pressed.
+    // The trigger's key combination (F24 when none is set).
     QKeyCombination m_combo = QKeyCombination(Qt::Key_F24);
     bool m_grabbed = false;
 };

@@ -104,7 +104,7 @@ FormPage {
             currentIndex: kcm.settings.snapToCursorScreen ? 1 : 0
             onActivated: kcm.settings.snapToCursorScreen = model[currentIndex].value
 
-            QQC2.ToolTip.text: i18n("Decided when you press the hyperkey; doesn't change if the cursor moves to another monitor mid-pick.")
+            QQC2.ToolTip.text: i18n("Decided when you press the trigger; doesn't change if the cursor moves to another monitor mid-pick.")
             QQC2.ToolTip.visible: hovered
         }
 
@@ -159,7 +159,7 @@ FormPage {
             Kirigami.FormData.label: i18n("Horizontal deadzone (px):")
             Layout.preferredWidth: root.fieldWidth
             visible: kcm.settings.pickingMode !== "angle"
-            from: 0
+            from: 1
             to: 500
             value: kcm.settings.horizontalDeadzone
             onValueModified: kcm.settings.horizontalDeadzone = value
@@ -169,7 +169,7 @@ FormPage {
             Kirigami.FormData.label: i18n("Vertical deadzone (px):")
             Layout.preferredWidth: root.fieldWidth
             visible: kcm.settings.pickingMode !== "angle"
-            from: 0
+            from: 1
             to: 500
             value: kcm.settings.verticalDeadzone
             onValueModified: kcm.settings.verticalDeadzone = value
@@ -177,7 +177,7 @@ FormPage {
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Hyperkey")
+            Kirigami.FormData.label: i18n("Trigger")
         }
 
         QQC2.ComboBox {
@@ -212,7 +212,7 @@ FormPage {
             value: kcm.settings.sessionTimeout
             onValueModified: kcm.settings.sessionTimeout = value
 
-            QQC2.ToolTip.text: i18n("Cancels if nothing happens for this long while the hyperkey is held, in case its release was missed. 0 = never.")
+            QQC2.ToolTip.text: i18n("Cancels if nothing happens for this long while the trigger is held, in case its release was missed. 0 = never.")
             QQC2.ToolTip.visible: hovered
         }
 
@@ -236,7 +236,9 @@ FormPage {
                 enabled: newExcludedApp.text.trim().length > 0
                 onClicked: {
                     const entry = newExcludedApp.text.trim();
-                    if (entry.length > 0 && !kcm.settings.excludedApps.includes(entry)) {
+                    // Matching ignores case, so "Steam" and "steam" are one app.
+                    const known = kcm.settings.excludedApps.some(app => app.toLowerCase() === entry.toLowerCase());
+                    if (entry.length > 0 && !known) {
                         kcm.settings.excludedApps = kcm.settings.excludedApps.concat([entry]);
                     }
                     newExcludedApp.clear();

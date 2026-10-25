@@ -25,6 +25,34 @@ FormPage {
             text: i18n("Loop-inspired window snapping for KDE Plasma. Hold Caps Lock, move the mouse or press a direction key, release to snap the window there.")
         }
 
+        // KWin only loads Sirkel if it was built for the exact KWin version,
+        // so every Plasma update (bugfix ones too) needs a rebuild.
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            visible: kcm.effectStatus !== "checking"
+            type: ({
+                running: Kirigami.MessageType.Positive,
+                rebuild: Kirigami.MessageType.Error,
+                relogin: Kirigami.MessageType.Warning,
+                disabled: Kirigami.MessageType.Information,
+            })[kcm.effectStatus] ?? Kirigami.MessageType.Information
+            text: ({
+                running: i18n("Sirkel is running (built for KWin %1).", kcm.kwinBuildVersion),
+                rebuild: i18n("Sirkel was built for KWin %1, but KWin %2 is installed, so KWin won't load it. Rebuild and reinstall Sirkel, then log out and back in.", kcm.kwinBuildVersion, kcm.kwinInstalledVersion),
+                relogin: i18n("Sirkel matches KWin %1 but isn't running yet. Log out and back in.", kcm.kwinBuildVersion),
+                disabled: i18n("Sirkel is off. Turn it on in System Settings → Desktop Effects."),
+            })[kcm.effectStatus] ?? ""
+        }
+
+        QQC2.TextArea {
+            Layout.fillWidth: true
+            visible: kcm.effectStatus === "rebuild"
+            readOnly: true
+            selectByMouse: true
+            font.family: "monospace"
+            text: i18n("# Built from source, in the source folder:\ncmake --build build\nsudo cmake --install build\n\n# Installed with the PKGBUILD, in its folder:\nmakepkg -si")
+        }
+
         Kirigami.Heading {
             level: 3
             text: i18n("Setting up the hyperkey")
