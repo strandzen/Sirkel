@@ -2,6 +2,25 @@
 
 All notable changes to Sirkel. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [semantic versioning](https://semver.org/). Before 1.0, settings may still change between versions.
 
+## [0.5.1] - 2026-10-26
+
+### Added
+- The About page shows whether Sirkel is running. When the installed KWin differs from the version Sirkel was built for, it explains how to rebuild.
+
+### Changed
+- The settings window follows Plasma accent color changes while it's open.
+- Ring thickness is capped at half the indicator size.
+- The General page's "Hyperkey" section is now called "Trigger".
+- Shortcuts are no longer looked up over D-Bus on every trigger press.
+- README rewritten in plainer language, with a warning to rebuild after every Plasma update.
+
+### Fixed
+- A deadzone of 0 made every mouse movement pick a corner. The minimum is now 1 px.
+- The indicator's first pick in a session slid over from where the previous session ended.
+- The settings preview kept animating while hidden.
+- Excluded apps could be added twice with different capitalization.
+- A Two-tone tooltip still mentioned the removed gradient fill.
+
 ## [0.5.0] - 2026-10-20
 
 ### Added
@@ -77,6 +96,7 @@ First versioned release.
 - Desktop, panels and other special windows are ignored.
 - GPL-2.0-or-later license.
 
+[0.5.1]: https://github.com/strandzen/Sirkel/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/strandzen/Sirkel/compare/v0.2.0...v0.5.0
 [0.2.0]: https://github.com/strandzen/Sirkel/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/strandzen/Sirkel/releases/tag/v0.1.0

@@ -4,7 +4,7 @@ Window snapping for KDE Plasma 6.7+ on Wayland, inspired by [Loop](https://githu
 
 Hold Caps Lock, move the mouse toward where you want the window, and let go. It snaps to that half or quarter of the screen, or fills the screen if you leave the mouse in the middle. A small ring follows your direction and an outline shows where the window will end up, so you know what you'll get before you let go.
 
-This is version 0.5.0. It's early and I've only tested it on my own machine, so settings may still change.
+This is version 0.5.1. It's early and I've only tested it on my own machine, so settings may still change.
 
 > [!WARNING]
 > You have to rebuild Sirkel after every Plasma update, even small ones like 6.8.0 to 6.8.1. KWin refuses to load effects that were built for a different version. See [Installation](#installation).
