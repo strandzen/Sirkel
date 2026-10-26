@@ -73,6 +73,7 @@ Item {
         // The first pick lands directly, rather than sliding over from
         // wherever the previous session left the pointer.
         jumpNext = true;
+        lastRingIndex = -1;
     }
 
     // Settles in: scales down from slightly larger while fading in, so it
@@ -215,6 +216,10 @@ Item {
     // Set by reset(): the session's first pick skips the slide and grow
     // animations. Cleared once that pick's direction is in.
     property bool jumpNext: true
+    // The last real ring position (Maximize leaves it as it was), and set
+    // while jumping to the opposite side (see onRingIndexChanged).
+    property int lastRingIndex: -1
+    property bool jumpOpposite: false
 
     onRingIndexChanged: {
         // Maximize (-1) has no position of its own; the band stays put and
@@ -222,6 +227,11 @@ Item {
         if (ringIndex < 0) {
             return;
         }
+        // Directly opposite (Left -> Right): both ways round are equally
+        // long, so a slide would sweep half the ring through unrelated
+        // directions. Jump instead, like Loop.
+        const opposite = lastRingIndex >= 0 && (ringIndex - lastRingIndex + 8) % 8 === 4;
+        lastRingIndex = ringIndex;
         const current = ((unwrappedProgress % 1) + 1) % 1;
         let delta = ringIndex / 8 - current;
         if (delta > 0.5) {
@@ -229,7 +239,9 @@ Item {
         } else if (delta < -0.5) {
             delta += 1;
         }
+        jumpOpposite = opposite;
         unwrappedProgress += delta;
+        jumpOpposite = false;
     }
     onDirectionChanged: {
         if (direction !== "none") {
@@ -239,7 +251,7 @@ Item {
     }
 
     Behavior on unwrappedProgress {
-        enabled: root.motionScale > 0 && !root.jumpNext
+        enabled: root.motionScale > 0 && !root.jumpNext && !root.jumpOpposite
         NumberAnimation { duration: root.ms(260); easing.type: root.easingType; easing.bezierCurve: root.easingCurve }
     }
     Behavior on effectiveSpan {

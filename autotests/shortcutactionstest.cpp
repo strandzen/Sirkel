@@ -14,6 +14,7 @@ private Q_SLOTS:
     void idsAreUnique();
     void parseStored();
     void matching();
+    void triggerRelease();
 };
 
 void ShortcutActionsTest::idsAreUnique()
@@ -56,6 +57,37 @@ void ShortcutActionsTest::matching()
     QVERIFY(matchesKey(QKeySequence(Qt::Key_Enter), Qt::Key_Enter, Qt::KeypadModifier));
     QVERIFY(matchesKey(QKeySequence(Qt::KeypadModifier | Qt::Key_Enter), Qt::Key_Enter, Qt::NoModifier));
     QVERIFY(!matchesKey(QKeySequence(), Qt::Key_Return, Qt::NoModifier));
+}
+
+void ShortcutActionsTest::triggerRelease()
+{
+    // A single key (F24 from Caps Lock): only that key.
+    const QKeyCombination f24(Qt::Key_F24);
+    QVERIFY(isTriggerRelease(f24, Qt::Key_F24));
+    QVERIFY(!isTriggerRelease(f24, Qt::Key_Meta));
+    QVERIFY(!isTriggerRelease(f24, Qt::Key_Left));
+
+    // A combination: its key or any of its modifiers, whichever way the
+    // Meta key is reported.
+    const QKeyCombination metaSpace(Qt::META | Qt::Key_Space);
+    QVERIFY(isTriggerRelease(metaSpace, Qt::Key_Space));
+    QVERIFY(isTriggerRelease(metaSpace, Qt::Key_Meta));
+    QVERIFY(isTriggerRelease(metaSpace, Qt::Key_Super_L));
+    QVERIFY(isTriggerRelease(metaSpace, Qt::Key_Super_R));
+    // Modifiers that aren't part of it, and direction keys, don't count.
+    QVERIFY(!isTriggerRelease(metaSpace, Qt::Key_Control));
+    QVERIFY(!isTriggerRelease(metaSpace, Qt::Key_Shift));
+    QVERIFY(!isTriggerRelease(metaSpace, Qt::Key_Return));
+
+    const QKeyCombination ctrlAltX(Qt::CTRL | Qt::ALT | Qt::Key_X);
+    QVERIFY(isTriggerRelease(ctrlAltX, Qt::Key_Control));
+    QVERIFY(isTriggerRelease(ctrlAltX, Qt::Key_Alt));
+    QVERIFY(isTriggerRelease(ctrlAltX, Qt::Key_X));
+    QVERIFY(!isTriggerRelease(ctrlAltX, Qt::Key_Meta));
+
+    const QKeyCombination shiftF12(Qt::SHIFT | Qt::Key_F12);
+    QVERIFY(isTriggerRelease(shiftF12, Qt::Key_Shift));
+    QVERIFY(!isTriggerRelease(shiftF12, Qt::Key_Alt));
 }
 
 QTEST_GUILESS_MAIN(ShortcutActionsTest)

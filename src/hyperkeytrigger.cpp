@@ -48,17 +48,7 @@ void HyperkeyTrigger::setCombo(const QKeySequence &sequence)
 
 bool HyperkeyTrigger::isRelease(const QKeyEvent *event) const
 {
-    if (event->type() != QEvent::KeyRelease) {
-        return false;
-    }
-    const int key = event->key();
-    if (key == m_combo.key()) {
-        return true;
-    }
-    const Qt::KeyboardModifiers mods = m_combo.keyboardModifiers();
-    return ((mods & Qt::MetaModifier) && (key == Qt::Key_Meta || key == Qt::Key_Super_L || key == Qt::Key_Super_R))
-        || ((mods & Qt::ControlModifier) && key == Qt::Key_Control) || ((mods & Qt::AltModifier) && key == Qt::Key_Alt)
-        || ((mods & Qt::ShiftModifier) && key == Qt::Key_Shift);
+    return event->type() == QEvent::KeyRelease && isTriggerRelease(m_combo, event->key());
 }
 
 void HyperkeyTrigger::onTriggered()

@@ -48,7 +48,7 @@ FormPage {
             visible: root.comboMode
             modifierlessAllowed: false
             checkForConflictsAgainst: KQuickControls.ShortcutType.GlobalShortcuts | KQuickControls.ShortcutType.StandardShortcuts
-            keySequence: kcm.shortcutsRevision, kcm.triggerIsHyperkey ? "" : kcm.shortcut(kcm.triggerId)
+            keySequence: kcm.shortcutsRevision, kcm.triggerKind === "combination" ? kcm.shortcut(kcm.triggerId) : ""
             onKeySequenceModified: {
                 if (keySequence.toString().length > 0) {
                     kcm.setShortcut(kcm.triggerId, keySequence);
@@ -65,11 +65,17 @@ FormPage {
             Layout.preferredWidth: root.fieldWidth
             wrapMode: Text.WordWrap
             color: Kirigami.Theme.disabledTextColor
-            text: root.comboMode
-                ? (kcm.triggerIsHyperkey
+            text: {
+                if (!root.comboMode) {
+                    return i18n("Needs keyd to send Caps Lock as F24; see About.");
+                }
+                if (kcm.triggerKind === "combination") {
+                    return i18n("Hold the combination, pick a direction, release either key to snap. keyd isn't needed.");
+                }
+                return kcm.triggerKind === "capslock"
                     ? i18n("Record a combination, for example Meta+Z. Until then Caps Lock stays the trigger.")
-                    : i18n("Hold the combination, pick a direction, release either key to snap. keyd isn't needed."))
-                : i18n("Needs keyd to send Caps Lock as F24; see About.")
+                    : i18n("No trigger is set yet. Record a combination, for example Meta+Z.");
+            }
         }
 
         Kirigami.Separator {
@@ -84,6 +90,10 @@ FormPage {
         QQC2.Label {
             Kirigami.FormData.label: i18n("Direction keys:")
             text: i18n("Pick a direction; two at once for a corner")
+        }
+        QQC2.Label {
+            Kirigami.FormData.label: i18n("Same key again:")
+            text: i18n("Change the size (1/2, 1/3, 1/4, 2/3)")
         }
         // Rebindable, also under Sirkel in System Settings -> Shortcuts. Only
         // active while the trigger is held, so a plain key like Enter is

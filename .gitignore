@@ -11,3 +11,9 @@ timeline.md
 milestone.md
 # Written by ECM's KDEClangFormat at configure time.
 /.clang-format
+# makepkg output in the packaging folders.
+/packaging/*/src/
+/packaging/*/pkg/
+/packaging/*/Sirkel/
+/packaging/*/*.tar.gz
+/packaging/*/*.tar.zst

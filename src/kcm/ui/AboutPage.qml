@@ -84,8 +84,12 @@ FormPage {
         Kirigami.InlineMessage {
             Layout.fillWidth: true
             visible: true
-            type: kcm.keydOk ? Kirigami.MessageType.Positive : Kirigami.MessageType.Warning
-            text: kcm.keydOk ? i18n("keyd is set up.") : i18n("keyd isn't set up yet. Reopen these settings after setting it up to check again.")
+            // keyd only matters when Caps Lock is (or could become) the trigger.
+            type: kcm.triggerKind === "combination" ? Kirigami.MessageType.Information
+                : kcm.keydOk ? Kirigami.MessageType.Positive : Kirigami.MessageType.Warning
+            text: kcm.triggerKind === "combination"
+                ? i18n("keyd isn't needed: %1 is set as the trigger. Set it up only if you'd rather use Caps Lock.", kcm.triggerText)
+                : kcm.keydOk ? i18n("keyd is set up.") : i18n("keyd isn't set up yet. Reopen these settings after setting it up to check again.")
         }
 
         RowLayout {

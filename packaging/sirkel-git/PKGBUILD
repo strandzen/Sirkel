@@ -3,7 +3,8 @@
 # Maintainer: Strandzen <strandzen@gmail.com>
 #
 # Builds the latest commit on GitHub. For the latest release, use
-# packaging/sirkel/PKGBUILD.
+# packaging/sirkel/PKGBUILD. Kept in its own folder: makepkg works in a src/
+# next to the PKGBUILD, which in the repository root is Sirkel's own source.
 pkgname=sirkel-git
 _pkgname=Sirkel
 pkgver=0.5.2

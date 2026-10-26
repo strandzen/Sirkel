@@ -3,8 +3,8 @@
 
 # Maintainer: Strandzen <strandzen@gmail.com>
 #
-# Stable release build. For the latest commit, use the sirkel-git PKGBUILD in
-# the repository root. On a new release, update pkgver and the checksum
+# Stable release build. For the latest commit, use packaging/sirkel-git/PKGBUILD.
+# On a new release, update pkgver and the checksum
 # (updpkgsums).
 pkgname=sirkel
 pkgver=0.5.2

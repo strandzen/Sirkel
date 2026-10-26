@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-26 01:42+0100\n"
+"POT-Creation-Date: 2026-10-26 19:01+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/kcm/sirkelconfigmodule.cpp:144
+#: src/kcm/sirkelconfigmodule.cpp:156
 #, kde-format
 msgid "Caps Lock"
 msgstr ""
@@ -87,24 +87,31 @@ msgid ""
 "Lock on the Shortcuts page."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:88
+#: src/kcm/ui/AboutPage.qml:91
+#, kde-format
+msgid ""
+"keyd isn't needed: %1 is set as the trigger. Set it up only if you'd rather "
+"use Caps Lock."
+msgstr ""
+
+#: src/kcm/ui/AboutPage.qml:92
 #, kde-format
 msgid "keyd is set up."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:88
+#: src/kcm/ui/AboutPage.qml:92
 #, kde-format
 msgid ""
 "keyd isn't set up yet. Reopen these settings after setting it up to check "
 "again."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:95
+#: src/kcm/ui/AboutPage.qml:99
 #, kde-format
 msgid "Project page"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:100
+#: src/kcm/ui/AboutPage.qml:104
 #, kde-format
 msgid "Report a problem"
 msgstr ""
@@ -302,46 +309,53 @@ msgstr ""
 msgid "Resets just this page. The Defaults button resets everything."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:21
-#, kde-format
-msgid "Hold %1 to use Sirkel (set on the Shortcuts page). keyd isn't needed."
-msgstr ""
-
 #: src/kcm/ui/GeneralPage.qml:23
 #, kde-format
-msgid ""
-"Hold Caps Lock to use Sirkel. keyd is running and maps Caps Lock to F24."
+msgid "%1 is set as the trigger. Hold it to use Sirkel."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:24
+#: src/kcm/ui/GeneralPage.qml:27
 #, kde-format
 msgid ""
-"keyd doesn't seem to be running with Caps Lock mapped to F24, so Caps Lock "
-"won't work yet. See About for the setup steps, or use a key combination "
-"instead (Shortcuts page)."
+"Caps Lock is set as the trigger (keyd maps it to F24). Hold it to use Sirkel."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:33
+#: src/kcm/ui/GeneralPage.qml:28
+#, kde-format
+msgid ""
+"Caps Lock is set as the trigger, but keyd isn't mapping it to F24, so it "
+"won't work yet. Set a key combination on the Shortcuts page, or set up keyd "
+"(see About)."
+msgstr ""
+
+#: src/kcm/ui/GeneralPage.qml:30
+#, kde-format
+msgid ""
+"No trigger is set. Set a key combination on the Shortcuts page, or set up "
+"keyd to use Caps Lock (see About)."
+msgstr ""
+
+#: src/kcm/ui/GeneralPage.qml:40
 #, kde-format
 msgid "Picking"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:37
+#: src/kcm/ui/GeneralPage.qml:44
 #, kde-format
 msgid "How you pick a direction:"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:43
+#: src/kcm/ui/GeneralPage.qml:50
 #, kde-format
 msgid "Box (distance per axis)"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:44
+#: src/kcm/ui/GeneralPage.qml:51
 #, kde-format
 msgid "Angle (eight slices)"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:49
+#: src/kcm/ui/GeneralPage.qml:56
 #, kde-format
 msgid ""
 "Box: move a set distance left/right or up/down; corners need both. Angle: "
@@ -349,186 +363,186 @@ msgid ""
 "slices, so corners are as easy as edges."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:54 src/kcm/ui/ShortcutsPage.qml:85
+#: src/kcm/ui/GeneralPage.qml:61 src/kcm/ui/ShortcutsPage.qml:91
 #, kde-format
 msgid "Direction keys:"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:61
+#: src/kcm/ui/GeneralPage.qml:68
 #, kde-format
 msgid "Arrows"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:61
+#: src/kcm/ui/GeneralPage.qml:68
 #, kde-format
 msgid "WASD"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:61
+#: src/kcm/ui/GeneralPage.qml:68
 #, kde-format
 msgid "HJKL"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:61
+#: src/kcm/ui/GeneralPage.qml:68
 #, kde-format
 msgid "None (mouse only)"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:68 src/kcm/ui/ShortcutsPage.qml:111
+#: src/kcm/ui/GeneralPage.qml:75 src/kcm/ui/ShortcutsPage.qml:121
 #, kde-format
 msgid "Scroll wheel:"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:69
+#: src/kcm/ui/GeneralPage.qml:76
 #, kde-format
 msgid "Resize the target before releasing"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:73
+#: src/kcm/ui/GeneralPage.qml:80
 #, kde-format
 msgid ""
 "Cycles the size each direction controls: 1/4, 1/3, 1/2, 2/3. Never carries "
 "over to the next pick."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:79
+#: src/kcm/ui/GeneralPage.qml:86
 #, kde-format
 msgid "Target"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:83
+#: src/kcm/ui/GeneralPage.qml:90
 #, kde-format
 msgid "Act on:"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:88
+#: src/kcm/ui/GeneralPage.qml:95
 #, kde-format
 msgid "The active window"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:89
+#: src/kcm/ui/GeneralPage.qml:96
 #, kde-format
 msgid "The window under the cursor"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:94
+#: src/kcm/ui/GeneralPage.qml:101
 #, kde-format
 msgid ""
 "Under the cursor: point at a window and snap it without clicking it first. "
 "Falls back to the active window when the cursor isn't over one."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:99
+#: src/kcm/ui/GeneralPage.qml:106
 #, kde-format
 msgid "Snap on:"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:104
+#: src/kcm/ui/GeneralPage.qml:111
 #, kde-format
 msgid "The window's own monitor"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:105
+#: src/kcm/ui/GeneralPage.qml:112
 #, kde-format
 msgid "The monitor under the cursor"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:110
+#: src/kcm/ui/GeneralPage.qml:117
 #, kde-format
 msgid ""
 "Decided when you press the trigger; doesn't change if the cursor moves to "
 "another monitor mid-pick."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:116
+#: src/kcm/ui/GeneralPage.qml:123
 #, kde-format
 msgid "Gaps"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:120
+#: src/kcm/ui/GeneralPage.qml:127
 #, kde-format
 msgid "Horizontal:"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:130
+#: src/kcm/ui/GeneralPage.qml:137
 #, kde-format
 msgid "Vertical:"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:145
+#: src/kcm/ui/GeneralPage.qml:152
 #, kde-format
 msgid "Picking distances"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:149
+#: src/kcm/ui/GeneralPage.qml:156
 #, kde-format
 msgid "Center radius (px):"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:157
+#: src/kcm/ui/GeneralPage.qml:164
 #, kde-format
 msgid ""
 "How far the mouse has to move before a direction is picked. Inside this "
 "circle is Maximize."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:162
+#: src/kcm/ui/GeneralPage.qml:169
 #, kde-format
 msgid "Deadzone (px):"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:170
+#: src/kcm/ui/GeneralPage.qml:177
 #, kde-format
 msgid ""
 "How far the mouse has to move from the center, left/right or up/down, before "
 "that direction counts. Both directions for a corner."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:176 src/kcm/ui/ShortcutsPage.qml:29
+#: src/kcm/ui/GeneralPage.qml:183 src/kcm/ui/ShortcutsPage.qml:29
 #, kde-format
 msgid "Trigger"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:180
+#: src/kcm/ui/GeneralPage.qml:187
 #, kde-format
 msgid "Auto-cancel after (s):"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:187
+#: src/kcm/ui/GeneralPage.qml:194
 #, kde-format
 msgid ""
 "Cancels if nothing happens for this long while the trigger is held, in case "
 "its release was missed. 0 = never."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:193
+#: src/kcm/ui/GeneralPage.qml:200
 #, kde-format
 msgid "Excluded apps"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:197
+#: src/kcm/ui/GeneralPage.qml:204
 #, kde-format
 msgid "Add:"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:202
+#: src/kcm/ui/GeneralPage.qml:209
 #, kde-format
 msgid "e.g. steam or org.kde.konsole"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:218
+#: src/kcm/ui/GeneralPage.qml:225
 #, kde-format
 msgid ""
 "Ignore this app. Matched against the app's desktop file name or window class "
 "(Window Rules in System Settings can show both)."
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:226
+#: src/kcm/ui/GeneralPage.qml:233
 #, kde-format
 msgid "Ignored:"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:248
+#: src/kcm/ui/GeneralPage.qml:255
 #, kde-format
 msgid "Remove"
 msgstr ""
@@ -555,91 +569,106 @@ msgstr ""
 
 #: src/kcm/ui/ShortcutsPage.qml:70
 #, kde-format
-msgid ""
-"Record a combination, for example Meta+Z. Until then Caps Lock stays the "
-"trigger."
+msgid "Needs keyd to send Caps Lock as F24; see About."
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:71
+#: src/kcm/ui/ShortcutsPage.qml:73
 #, kde-format
 msgid ""
 "Hold the combination, pick a direction, release either key to snap. keyd "
 "isn't needed."
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:72
+#: src/kcm/ui/ShortcutsPage.qml:76
 #, kde-format
-msgid "Needs keyd to send Caps Lock as F24; see About."
+msgid ""
+"Record a combination, for example Meta+Z. Until then Caps Lock stays the "
+"trigger."
 msgstr ""
 
 #: src/kcm/ui/ShortcutsPage.qml:77
 #, kde-format
+msgid "No trigger is set yet. Record a combination, for example Meta+Z."
+msgstr ""
+
+#: src/kcm/ui/ShortcutsPage.qml:83
+#, kde-format
 msgid "While holding the trigger"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:81
+#: src/kcm/ui/ShortcutsPage.qml:87
 #, kde-format
 msgid "Move the mouse:"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:82
+#: src/kcm/ui/ShortcutsPage.qml:88
 #, kde-format
 msgid "Pick a direction"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:86
+#: src/kcm/ui/ShortcutsPage.qml:92
 #, kde-format
 msgid "Pick a direction; two at once for a corner"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:107
+#: src/kcm/ui/ShortcutsPage.qml:95
+#, kde-format
+msgid "Same key again:"
+msgstr ""
+
+#: src/kcm/ui/ShortcutsPage.qml:96
+#, kde-format
+msgid "Change the size (1/2, 1/3, 1/4, 2/3)"
+msgstr ""
+
+#: src/kcm/ui/ShortcutsPage.qml:117
 #, kde-format
 msgid "Cancel:"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:108
+#: src/kcm/ui/ShortcutsPage.qml:118
 #, kde-format
 msgid "Esc"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:112
+#: src/kcm/ui/ShortcutsPage.qml:122
 #, kde-format
 msgid "Resize the target"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:112
+#: src/kcm/ui/ShortcutsPage.qml:122
 #, kde-format
 msgid "Resize the target (turned off on General)"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:115
+#: src/kcm/ui/ShortcutsPage.qml:125
 #, kde-format
 msgid "Release:"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:116
+#: src/kcm/ui/ShortcutsPage.qml:126
 #, kde-format
 msgid "Snap the window"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:128
+#: src/kcm/ui/ShortcutsPage.qml:138
 #, kde-format
 msgid "Direct shortcuts"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:136
+#: src/kcm/ui/ShortcutsPage.qml:146
 #, kde-format
 msgid ""
 "Act on the active window at once, without the indicator. None are set by "
 "default."
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:155
+#: src/kcm/ui/ShortcutsPage.qml:165
 #, kde-format
 msgid "Open Shortcuts settings…"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:159
+#: src/kcm/ui/ShortcutsPage.qml:169
 #, kde-format
 msgid "All of these are also under Sirkel in System Settings → Shortcuts."
 msgstr ""

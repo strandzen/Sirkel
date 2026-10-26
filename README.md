@@ -17,12 +17,13 @@ This is version 0.5.2. It's early and I've only tested it on my own machine, so 
 
 - Snap to the left, right, top or bottom half, any of the four quarters, or full screen.
 - Pick a direction with the mouse or the keyboard (arrow keys, WASD or HJKL). Press two keys together, like Up and Left, for a corner.
-- Start it with any key combination you like, such as Meta+Space. If you want a dedicated key, you can turn Caps Lock into one with keyd.
+- Start it with any key combination you like, such as Meta+Z. If you want a dedicated key, you can turn Caps Lock into one with keyd.
 - Set your own shortcuts that snap straight away, without the ring. None are set out of the box.
 - Scroll while holding the trigger to change the size: 1/4, 1/3, 1/2 or 2/3 of the screen. Full screen goes 1/3, 1/2, full width. This is off by default.
 - Snap the active window or the one under the mouse, on its own monitor or the one the mouse is on.
 - Add gaps around windows. Two windows next to each other get the same gap between them as against the screen edge.
-- Windows that can't be resized are moved to the middle of the spot you picked. Fullscreen games and videos are left alone, and you can exclude apps.
+- Drag a snapped window away and it gets its old size back, like Plasma's own tiling.
+- Windows that can't be resized, or can't get as small or as big as the spot you picked, are centered on it and kept on screen. Fullscreen games and videos are left alone, and you can exclude apps.
 - Colors follow your Plasma accent color, or pick your own. The ring uses a darker, softer version of the accent so the pointer stands out.
 - Optional blur behind the preview, with adjustable animation speed and style.
 - A settings window with a live preview, so you can see changes as you make them.
@@ -51,7 +52,7 @@ On Arch and Arch-based systems you can build a package instead. For the latest r
 makepkg -si
 ```
 
-Running `makepkg -si` in the repository folder instead builds the latest development version from GitHub (`sirkel-git`), not the copy on your disk. Both packages run the tests while building, and come with a pacman hook that reminds you to rebuild Sirkel whenever KWin is upgraded.
+Running it in `packaging/sirkel-git` instead builds the latest development version from GitHub (`sirkel-git`), not the copy on your disk. Both packages run the tests while building, and come with a pacman hook that reminds you to rebuild Sirkel whenever KWin is upgraded.
 
 **After every Plasma update**, rebuild and reinstall, then log out and back in:
 
@@ -68,7 +69,9 @@ Go to **System Settings → Desktop Effects** and enable **Sirkel**.
 
 ### 3. Set a trigger
 
-Open Sirkel's settings, go to **Shortcuts** and record the key combination you want to hold, for example Meta+Space. That's all you need to start using it.
+Sirkel doesn't come with a key combination set. Out of the box its trigger is F24, which only Caps Lock sends once keyd is set up (below), so **without keyd, nothing starts Sirkel until you set a trigger yourself**. The General page in Sirkel's settings shows in orange when no working trigger is set.
+
+Open Sirkel's settings, go to **Shortcuts** and record the key combination you want to hold, for example Meta+Z. That's all you need to start using it.
 
 ### Optional: use Caps Lock instead
 
@@ -103,6 +106,7 @@ While you hold the trigger, you can also press:
 | Enter | Fill the screen |
 | Backspace | Minimize |
 | Esc | Cancel |
+| The same direction key again | Change the size: 1/2, 1/3, 1/4, 2/3 and round again (left, right, top and bottom) |
 | Scroll wheel | Change the size (if turned on) |
 
 Enter and Backspace can be changed to other keys, either on Sirkel's Shortcuts page or under Sirkel in **System Settings → Shortcuts**. They only do something while you hold the trigger.
@@ -119,6 +123,29 @@ You'll find them under **System Settings → Desktop Effects → Sirkel**, or by
 The Appearance and Colors pages have a preview on the right. Drag the window edge to make it bigger, or hide it with the button at the top.
 
 Every shortcut also shows up under Sirkel in **System Settings → Shortcuts**.
+
+## Troubleshooting
+
+**Sirkel stopped working after a Plasma update.** KWin only loads effects built for its exact version. Rebuild and reinstall (see [Installation](#installation)), then log out and back in. The About page in Sirkel's settings tells you whether this is the problem.
+
+**Nothing happens when I hold the trigger.** The General page in Sirkel's settings says which trigger is set and whether it works. If you use Caps Lock, check that keyd is running (`systemctl status keyd`) and that Caps Lock sends F24: `sudo keyd monitor` shows the key while you press it.
+
+**I want to see what Sirkel is doing.** Turn on its debug output in `kdebugsettings` (search for "sirkel"), log out and back in, then read KWin's log:
+
+```sh
+journalctl --user -b | grep -i sirkel
+```
+
+**KWin crashed.** Sirkel runs inside KWin, so a crash in Sirkel takes KWin down with it. Get the details with:
+
+```sh
+coredumpctl list kwin_wayland
+coredumpctl info
+```
+
+and add the output to a [bug report](https://github.com/strandzen/Sirkel/issues).
+
+**For developers:** `scripts/stress/stress-test.sh` runs Sirkel in a separate, headless KWin with simulated input and checks where windows end up, without touching your session.
 
 ## Uninstall
 

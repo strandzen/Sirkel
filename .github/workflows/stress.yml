@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# Runs the stress test (scripts/stress/) against the latest KWin on Arch Linux:
+# a headless KWin with Sirkel loaded, driven by simulated input, checking that
+# nothing crashes and windows end up where they should. Weekly, so a new
+# Plasma release that breaks Sirkel's behaviour (not only its build) shows up
+# early; can also be started by hand from the Actions tab.
+name: Stress test
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+jobs:
+  stress:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    timeout-minutes: 45
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm --needed \
+            base-devel git cmake extra-cmake-modules vulkan-headers gettext \
+            kwin qt6-base qt6-declarative qt6-wayland qt6-tools kconfig kcolorscheme \
+            kcoreaddons kglobalaccel ki18n kcmutils kwindowsystem kirigami kdeclarative \
+            libkscreen dbus wayland plasma-wayland-protocols mesa
+
+      - uses: actions/checkout@v4
+
+      - name: Show versions
+        run: pacman -Q kwin qt6-base mesa
+
+      # KWin and the test windows expect a normal user with a runtime folder.
+      - name: Set up a test user
+        run: |
+          useradd -m tester
+          chown -R tester "$GITHUB_WORKSPACE"
+          install -d -m 700 -o tester /tmp/runtime-tester
+
+      - name: Build
+        run: |
+          runuser -u tester -- cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTING=OFF
+          runuser -u tester -- cmake --build build -j"$(nproc)"
+
+      - name: Stress test
+        run: runuser -u tester -- env XDG_RUNTIME_DIR=/tmp/runtime-tester scripts/stress/stress-test.sh --rounds 15
+
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stress-results
+          path: build/stress/run-*/
+          if-no-files-found: ignore

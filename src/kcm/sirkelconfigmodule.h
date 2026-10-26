@@ -56,6 +56,9 @@ class SirkelConfigModule : public KQuickManagedConfigModule
     // combination; the direct actions have no defaults.
     Q_PROPERTY(QString triggerId READ triggerId CONSTANT)
     Q_PROPERTY(bool triggerIsHyperkey READ triggerIsHyperkey NOTIFY shortcutsChanged)
+    // "capslock" (F24), "combination" or "none" (cleared, e.g. in System
+    // Settings -> Shortcuts): what the status messages are based on.
+    Q_PROPERTY(QString triggerKind READ triggerKind NOTIFY shortcutsChanged)
     Q_PROPERTY(QString triggerText READ triggerText NOTIFY shortcutsChanged)
     // [{ id, text }] for every direct action, in display order; text is the
     // short label.
@@ -86,6 +89,7 @@ public:
     QString effectStatus() const;
     QString triggerId() const;
     bool triggerIsHyperkey() const;
+    QString triggerKind() const;
     QString triggerText() const;
     QVariantList shortcutActions() const;
     QVariantList holdKeyActions() const;

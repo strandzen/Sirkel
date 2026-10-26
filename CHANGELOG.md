@@ -2,6 +2,23 @@
 
 All notable changes to Sirkel. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [semantic versioning](https://semver.org/). Before 1.0, settings may still change between versions.
 
+## [Unreleased]
+
+### Added
+- Dragging a window Sirkel placed gives it back the size it had before, like Plasma's own tiling. A cancelled drag (Esc) leaves it in place.
+- The stress test checks where windows end up, that Enter and Backspace still reach apps outside a session, and that nothing works on the lock screen. It also runs weekly on GitHub against the latest KWin.
+- A Troubleshooting section in the README.
+- While holding the trigger, pressing the direction key that's already picked again changes the size: 1/2, 1/3, 1/4, 2/3 and round again (left, right, top and bottom).
+
+### Changed
+- The README says that no key combination is set out of the box: without keyd, a trigger has to be set in Sirkel's settings first.
+- The trigger status on the General page names the trigger that's set (for example "Meta+Z is set as the trigger"), and turns orange when nothing would start Sirkel: no trigger set, or Caps Lock without keyd.
+- Picking the direction opposite the current one (Left to Right) moves the pointer straight there instead of sweeping round half the ring.
+- The rule for which key release ends a session is now covered by tests, and the stress test includes a key-combination trigger (Meta+Space).
+
+### Fixed
+- Windows with a minimum or maximum size could end up partly off-screen, or somewhere other than the preview showed. They're now centered on the spot you picked and kept on screen.
+
 ## [0.5.2] - 2026-10-26
 
 ### Added

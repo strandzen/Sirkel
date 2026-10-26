@@ -7,6 +7,7 @@
 //   key <evdev code> <1|0>    press or release a key (F24 = 194)
 //   move <dx> <dy>            relative pointer motion
 //   abs <x> <y>               absolute pointer position
+//   button <code> <1|0>       press or release a mouse button (left = 272)
 //   sleep <ms>
 //   sync                      wait until KWin has handled everything
 // KWin only offers the protocol to trusted clients; the stress test runs its
@@ -74,6 +75,8 @@ int main(void)
             org_kde_kwin_fake_input_keyboard_key(fake, (uint32_t)a, (uint32_t)b);
         } else if (strcmp(cmd, "move") == 0 && n == 3) {
             org_kde_kwin_fake_input_pointer_motion(fake, wl_fixed_from_double(a), wl_fixed_from_double(b));
+        } else if (strcmp(cmd, "button") == 0 && n == 3) {
+            org_kde_kwin_fake_input_button(fake, (uint32_t)a, (uint32_t)b);
         } else if (strcmp(cmd, "abs") == 0 && n == 3) {
             org_kde_kwin_fake_input_pointer_motion_absolute(fake, wl_fixed_from_double(a), wl_fixed_from_double(b));
         } else if (strcmp(cmd, "sleep") == 0 && n >= 2) {

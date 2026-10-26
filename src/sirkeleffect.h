@@ -9,6 +9,7 @@
 
 #include <effect/effect.h>
 
+#include <QHash>
 #include <QKeySequence>
 #include <QList>
 #include <QPointF>
@@ -54,6 +55,13 @@ protected:
     void pointerAxis(KWin::PointerAxisEvent *event) override;
     void reconfigure(ReconfigureFlags flags) override;
 
+private Q_SLOTS:
+    // Dragging a window Sirkel placed, still where it was placed, gives it
+    // back its size from before (like Plasma's own tiling). A window found
+    // somewhere else is forgotten here, not when a drag ends: after a
+    // cancelled drag KWin reports the end before the window is back.
+    void onUserMoveStarted(KWin::EffectWindow *window);
+
 private:
     void arm();
     // Ends the session; snaps to the current pick if `apply`.
@@ -61,21 +69,28 @@ private:
     // The first real input of a session: shows the indicator.
     void engage();
     void pick(SnapDirection direction);
+    // Steps the current pick's size up (+1) or down (-1) through its sizes,
+    // wrapping round (scroll wheel, or the same direction key again).
+    void stepSize(int delta);
     void refreshPreview();
     // A key pressed while holding the trigger: Esc, or one of
     // holdKeyActions() (add a row there to bind another key).
     void runKeyAction(const WindowAction &action);
     // Does `action` to `window` within `area` (`step` = scroll-resize step,
     // -1 for the normal size).
-    static void perform(KWin::EffectWindow *window, const QRectF &area, const WindowAction &action, int step);
+    void perform(KWin::EffectWindow *window, const QRectF &area, const WindowAction &action, int step);
+    // Remembers the size `window` had before Sirkel placed it at `snapped`,
+    // so dragging it away restores that size (see onUserMoveStarted()).
+    void rememberSnap(KWin::EffectWindow *window, const QRectF &snapped);
     // Whether Sirkel may act on `window` at all (not special, fullscreen,
     // excluded, or during Overview and similar).
     bool isTargetable(KWin::EffectWindow *window) const;
     // The screen to snap on: the cursor's (SnapToCursorScreen) or the
     // window's own.
     KWin::LogicalOutput *screenFor(KWin::EffectWindow *window) const;
-    // Placement geometry for `window` in `area`, with fixed-size windows
-    // centered at their own size.
+    // Placement geometry for `window` in `area`: the placement rect, or for
+    // a window that can't take that size (fixed size, or a minimum/maximum
+    // size), its own size centered on it and kept inside the area.
     static QRectF geometryFor(KWin::EffectWindow *window, const QRectF &area, SnapDirection direction, int step);
     static void moveWindow(KWin::EffectWindow *window, const QRectF &geometry);
     // A per-action global shortcut fired: act on the active window directly.
@@ -115,6 +130,14 @@ private:
     SnapDirection m_direction = SnapDirection::None;
     // Scroll-resize step for m_direction; reset on every new pick.
     int m_sizeStep = 0;
+    // Windows Sirkel placed: their size from before (`restore`) and where
+    // Sirkel put them (`snapped`). Dropped when the window is closed, or
+    // when a drag finds it somewhere else.
+    struct SnapRecord {
+        QRectF restore;
+        QRectF snapped;
+    };
+    QHash<KWin::EffectWindow *, SnapRecord> m_snapped;
     // holdKeyActions() with their configured keys, read per session.
     QList<std::pair<QList<QKeySequence>, WindowAction>> m_holdKeys;
 };

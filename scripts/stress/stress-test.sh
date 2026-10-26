@@ -7,7 +7,10 @@
 # session's lock state) on its own D-Bus session with throwaway config folders,
 # loads Sirkel from the build folder, opens test windows and drives the
 # trigger with simulated input (sirkel-input.c, KWin's fake input protocol).
-# Nothing touches your real session or settings.
+# Window positions are read back with a small KWin script (probe.js), so the
+# scenarios check where windows actually end up, not only that KWin survives.
+# The last scenario restarts KWin locked, to check nothing works behind the
+# lock screen. Nothing touches your real session or settings.
 #
 # Usage: scripts/stress/stress-test.sh [--asan] [--rounds N] [--seed N]
 #   (STRESS_TRACE=1 traces every step, for debugging the script itself)
@@ -15,8 +18,11 @@
 #   --rounds   sessions per scenario (default 150)
 #   --seed     random seed, to repeat a run exactly
 #
+# Exits with 1 if anything crashed, failed a check, didn't test what it should,
+# or logged a warning or sanitizer report (so CI can use it).
+#
 # Needs: a configured build (cmake --build build), qml6, wayland-scanner,
-# kscreen-doctor, qdbus6. Results end up in build/stress/run-<time>/.
+# kscreen-doctor, qdbus6, dbus-send. Results end up in build/stress/run-<time>/.
 
 set -u
 
@@ -59,10 +65,6 @@ if [ "${1:-}" != "--inner" ]; then
             -DECM_ENABLE_SANITIZERS='address;undefined' >/dev/null || exit 1
         cmake --build "$ROOT/build-asan" -j"$(nproc)" >/dev/null || exit 1
         PLUGINS="$ROOT/build-asan/bin"
-        # kwin_wayland has a file capability (cap_sys_nice), and Linux ignores
-        # LD_PRELOAD for such programs. A plain copy has no capability.
-        cp /usr/bin/kwin_wayland "$RUN/kwin_wayland"
-        export KWIN_BIN="$RUN/kwin_wayland"
         export LD_PRELOAD_FOR_KWIN
         LD_PRELOAD_FOR_KWIN=$(gcc -print-file-name=libasan.so)
         export ASAN_OPTIONS="detect_leaks=0:halt_on_error=0:log_path=$RUN/asan"
@@ -72,6 +74,13 @@ if [ "${1:-}" != "--inner" ]; then
     fi
     [ -f "$PLUGINS/kwin/effects/plugins/kwin_effect_sirkel.so" ] \
         || { echo "no Sirkel build in $PLUGINS; run cmake --build build first"; exit 1; }
+
+    # Run a plain copy of kwin_wayland. The real one has a file capability
+    # (cap_sys_nice): Linux ignores LD_PRELOAD for such programs (--asan), and
+    # refuses to start them where the capability can't be granted (e.g. in a
+    # CI container). The test KWin doesn't need real-time scheduling.
+    cp "$(command -v kwin_wayland)" "$RUN/kwin_wayland"
+    export KWIN_BIN="$RUN/kwin_wayland"
 
     printf '[Plugins]\nkwin_effect_sirkelEnabled=true\n' > "$RUN/config/kwinrc"
 
@@ -96,10 +105,11 @@ if [ "${1:-}" != "--inner" ]; then
 BUS
     echo "Run folder: $RUN (seed $SEED, $ROUNDS rounds per scenario, asan=$ASAN)"
 
+    # js: the probe script's output.
     exec env XDG_CONFIG_HOME="$RUN/config" XDG_DATA_HOME="$RUN/data" \
         XDG_CACHE_HOME="$RUN/cache" XDG_STATE_HOME="$RUN/state" \
         QT_PLUGIN_PATH="$PLUGINS" KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 \
-        QT_LOGGING_RULES="sirkel*.debug=true" QT_FORCE_STDERR_LOGGING=1 \
+        QT_LOGGING_RULES="sirkel*.debug=true;js=true" QT_FORCE_STDERR_LOGGING=1 \
         STRESS_TRACE="${STRESS_TRACE:-}" STRESS_RUN="$RUN" STRESS_ROUNDS="$ROUNDS" STRESS_SEED="$SEED" STRESS_INPUT="$OUT/sirkel-input" \
         QT_NO_XDG_DESKTOP_PORTAL=1 KSCREEN_BACKEND_INPROCESS=1 \
         dbus-run-session --config-file="$RUN/session-bus.conf" -- "$0" --inner
@@ -111,23 +121,45 @@ fi
 RUN=$STRESS_RUN
 ROUNDS=$STRESS_ROUNDS
 RANDOM=$STRESS_SEED
-SOCKET=sirkel-stress-$$
 LOG="$RUN/kwin.log"
+STATUS=0
 trap '' PIPE
 
-# Evdev key codes.
-F24=194 LEFT=105 RIGHT=106 UP=103 DOWN=108 ENTER=28 BACKSPACE=14 ESC=1
+# Evdev key and button codes.
+F24=194 LEFT=105 RIGHT=106 UP=103 DOWN=108 ENTER=28 BACKSPACE=14 ESC=1 META=125 SPACE=57
+BTN_LEFT=272
+# Qt key codes, as the key-logging test window prints them.
+QT_RETURN=16777220 QT_BACKSPACE=16777219
 
-env ${LD_PRELOAD_FOR_KWIN:+LD_PRELOAD=$LD_PRELOAD_FOR_KWIN} \
-    "${KWIN_BIN:-kwin_wayland}" --virtual --no-lockscreen --socket "$SOCKET" --output-count 2 --width 1600 --height 900 >"$LOG" 2>&1 &
-KWIN=$!
-for _ in $(seq 100); do [ -S "$XDG_RUNTIME_DIR/$SOCKET" ] && break; sleep 0.1; done
-sleep 2
-
-export WAYLAND_DISPLAY=$SOCKET
 CLIENT_ENV=(env QT_QPA_PLATFORM=wayland QT_LOGGING_RULES= QT_FORCE_STDERR_LOGGING= LD_PRELOAD=)
+KWIN_STARTS=0
 
-coproc INPUT { "$STRESS_INPUT" 2>>"$RUN/input.log"; }
+# start_kwin [extra kwin_wayland options]: a fresh test KWin and an input
+# helper connected to it.
+start_kwin() {
+    SOCKET="sirkel-stress-$$-$((++KWIN_STARTS))"
+    env ${LD_PRELOAD_FOR_KWIN:+LD_PRELOAD=$LD_PRELOAD_FOR_KWIN} \
+        "${KWIN_BIN:-kwin_wayland}" --virtual "$@" --socket "$SOCKET" --output-count 2 --width 1600 --height 900 >>"$LOG" 2>&1 &
+    KWIN=$!
+    for _ in $(seq 100); do [ -S "$XDG_RUNTIME_DIR/$SOCKET" ] && break; sleep 0.1; done
+    sleep 2
+    export WAYLAND_DISPLAY=$SOCKET
+    coproc INPUT { "$STRESS_INPUT" 2>>"$RUN/input.log"; }
+}
+
+stop_kwin() {
+    close_windows
+    kill "$INPUT_PID" 2>/dev/null; wait "$INPUT_PID" 2>/dev/null
+    kill "$KWIN" 2>/dev/null; wait "$KWIN" 2>/dev/null
+}
+
+# Sets Sirkel's trigger on the test KWin's KGlobalAccel (Qt key code with
+# modifiers, e.g. Meta+Space = 0x10000020).
+set_trigger() {
+    dbus-send --session --print-reply --dest=org.kde.kglobalaccel /kglobalaccel \
+        org.kde.KGlobalAccel.setForeignShortcut \
+        array:string:sirkel,SirkelSnap,Sirkel,"Sirkel: hold to snap window" "array:int32:$1" >/dev/null 2>&1
+}
 
 send() { echo "$*" >&"${INPUT[1]}" 2>/dev/null; }
 sync_input() {
@@ -144,13 +176,29 @@ rnd() { echo $(( RANDOM % ($2 - $1 + 1) + $1 )); }
 
 WINDOWS=()
 spawn() { "${CLIENT_ENV[@]}" qml6 "$HERE/$1" >/dev/null 2>&1 & WINDOWS+=($!); sleep 0.6; }
-respawn_windows() {
+close_windows() {
     # Never a bare `wait`: with no ids it waits for KWin itself.
     if [ ${#WINDOWS[@]} -gt 0 ]; then
         kill "${WINDOWS[@]}" 2>/dev/null; wait "${WINDOWS[@]}" 2>/dev/null
     fi
     WINDOWS=()
+}
+respawn_windows() {
+    close_windows
     spawn window-normal.qml; spawn window-fixed.qml; spawn window-normal.qml
+}
+
+# probe <window title>: prints the window's frame geometry as "x y w h",
+# nothing if there's no such window. Runs probe.js in the test KWin.
+probe() {
+    local token="p$(date +%s%N)" id
+    sed "s/TOKEN/$token/" "$HERE/probe.js" > "$RUN/probe.js"
+    id=$(timeout 10 qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript "$RUN/probe.js" sirkelprobe 2>/dev/null)
+    [ -n "$id" ] || return 0
+    qd org.kde.KWin "/Scripting/Script$id" org.kde.kwin.Script.run
+    sleep 0.3
+    qd org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript sirkelprobe
+    grep "SIRKEL-PROBE $token $1|" "$LOG" | tail -1 | awk -F'|' '{print $2, $3, $4, $5}'
 }
 
 # One session: press the trigger, a few moves, release.
@@ -166,16 +214,79 @@ session() {
     send sleep "$(rnd 0 60)"
 }
 
+# snap <dx> <dy>: one session from the middle of the first output, moving by
+# dx/dy, then time for the window to take its new size.
+snap() {
+    send abs 800 450; send key $F24 1; send sleep 50
+    send move "$1" "$2"; send sleep 100
+    send key $F24 0; sync_input
+    sleep 0.8
+}
+
+# keysnap <key> <presses> [hold ms]: hold the trigger, press a direction key
+# that many times (the last one held for `hold` ms, to get key repeats), let
+# go of the trigger, then time for the window to take its new size.
+keysnap() {
+    send abs 800 450; send key $F24 1; send sleep 50
+    for i in $(seq "$2"); do
+        send key "$1" 1
+        if [ "$i" = "$2" ] && [ -n "${3:-}" ]; then send sleep "$3"; else send sleep 30; fi
+        send key "$1" 0; send sleep 30
+    done
+    send key $F24 0; sync_input
+    sleep 0.8
+}
+
+# drag <title> <dx> [esc]: Meta + left button drag of the window from its
+# middle by dx (the usual KWin move), optionally cancelled with Esc.
+drag() {
+    local geo x y w h
+    geo=$(probe "$1")
+    [ -n "$geo" ] || return
+    read -r x y w h <<<"$geo"
+    send abs "$(awk -v x="$x" -v w="$w" 'BEGIN { print int(x + w / 2) }')" "$(awk -v y="$y" -v h="$h" 'BEGIN { print int(y + h / 2) }')"
+    send key $META 1; send sleep 50
+    send button $BTN_LEFT 1; send sleep 50
+    # The move keeps going while the button is held; letting go of Meta
+    # makes a later Esc a plain Esc, which is what cancels a move.
+    send key $META 0
+    for _ in 1 2 3 4 5 6; do send move $(( $2 / 6 )) 0; send sleep 40; done
+    if [ "${3:-}" = esc ]; then
+        send key $ESC 1; send key $ESC 0; send sleep 50
+    fi
+    send button $BTN_LEFT 0; sync_input
+    sleep 0.8
+}
+
 RESULTS=()
+FAILS=()
 SCENARIO=""
 EXPECT=""
 count() { grep -c "$1" "$LOG"; }
+
+# check <description> <awk condition on x y w h> <x y w h>: records a failed
+# check (also when the window wasn't found).
+check() {
+    local desc=$1 cond=$2
+    shift 2
+    if [ $# -lt 4 ] || ! awk -v x="$1" -v y="$2" -v w="$3" -v h="$4" "BEGIN { exit !($cond) }"; then
+        FAILS+=("$desc; got: ${*:-no window}")
+    fi
+}
+# check_true <description> <command>: records a failed check if it fails.
+check_true() {
+    local desc=$1
+    shift
+    "$@" || FAILS+=("$desc")
+}
+
 # begin <name> [log line the scenario must produce, or it didn't test what
 # it's meant to]. Every scenario starts with fresh windows: once a window
 # closes, this bare KWin (no Plasma shell) doesn't activate another one.
 begin() {
     SCENARIO=$1
     EXPECT=${2:-}
+    FAILS=()
     echo "== $1"
     respawn_windows
     sync_input
@@ -190,8 +301,14 @@ end() {
         local started refused note=""
         started=$(( $(count "sirkel: session started") - STARTED_BEFORE ))
         refused=$(( $(count "sirkel: not starting") - REFUSED_BEFORE ))
-        if [ -n "$EXPECT" ] && [ $(( $(count "$EXPECT") - EXPECT_BEFORE )) -eq 0 ]; then
+        if [ ${#FAILS[@]} -gt 0 ]; then
+            RESULTS+=("FAILED      $SCENARIO")
+            local f
+            for f in "${FAILS[@]}"; do RESULTS+=("              - $f"); done
+            STATUS=1
+        elif [ -n "$EXPECT" ] && [ $(( $(count "$EXPECT") - EXPECT_BEFORE )) -eq 0 ]; then
             RESULTS+=("NOT TESTED  $SCENARIO (never saw: $EXPECT)")
+            STATUS=1
         else
             [ -n "$EXPECT" ] && note=", hit $(( $(count "$EXPECT") - EXPECT_BEFORE ))x"
             RESULTS+=("ok          $SCENARIO ($started sessions, $refused refused$note)")
@@ -199,6 +316,7 @@ end() {
     else
         RESULTS+=("CRASH       $SCENARIO")
         echo "KWin died during: $SCENARIO"
+        STATUS=1
         finish
     fi
 }
@@ -210,20 +328,24 @@ finish() {
     cancelled=$(grep -c "sirkel: session ended without a snap" "$LOG")
     warnings=$(grep -c "^sirkel.*:.*\(warning\|failed\)\|qt.qml.*\(Sirkel\|Overlay\|Outline\|Indicator\)" "$LOG")
     asan=$(cat "$RUN"/asan* "$RUN"/ubsan* 2>/dev/null | grep -cE "ERROR: AddressSanitizer|runtime error:")
+    [ "$warnings" -gt 0 ] && STATUS=1
+    [ "$asan" -gt 0 ] && STATUS=1
     {
         echo
         echo "Results (seed $STRESS_SEED):"
         printf '  %s\n' "${RESULTS[@]}"
         echo "Sessions started: $started, snapped: $snapped, ended without a snap: $cancelled"
-        echo "KWin memory (RSS): start ${RSS_START:-?} kB, end $(rss || echo '-') kB"
+        echo "KWin memory (RSS): start ${RSS_START:-?} kB, end ${RSS_END:-$(rss || echo '-')} kB"
         echo "Sirkel/QML warnings in the log: $warnings"
         echo "Sanitizer reports: $asan"
         echo "Log: $LOG"
+        [ "$STATUS" = 0 ] && echo "PASSED" || echo "FAILED"
     } | tee "$RUN/summary.txt"
-    kill "$KWIN" ${WINDOWS[@]+"${WINDOWS[@]}"} 2>/dev/null
-    exit 0
+    stop_kwin
+    exit "$STATUS"
 }
 
+start_kwin --no-lockscreen
 respawn_windows
 sync_input
 alive || { echo "KWin didn't start, see $LOG"; exit 1; }
@@ -337,6 +459,26 @@ for _ in $(seq "$ROUNDS"); do
 done
 end
 
+begin "key combination trigger (Meta+Space, releasing either key)" 'trigger is "Meta+Space"'
+set_trigger $((0x10000020))
+sleep 0.5
+for i in $(seq "$ROUNDS"); do
+    send abs "$(rnd 300 1300)" "$(rnd 200 700)"
+    send key $META 1; send key $SPACE 1; send sleep "$(rnd 0 30)"
+    send move "$(rnd -220 220)" "$(rnd -220 220)"; send sleep "$(rnd 0 30)"
+    # Alternate which key is let go first; either must end the session.
+    if [ $((i % 2)) = 0 ]; then
+        send key $META 0; send sleep "$(rnd 0 20)"; send key $SPACE 0
+    else
+        send key $SPACE 0; send sleep "$(rnd 0 20)"; send key $META 0
+    fi
+    send sleep "$(rnd 20 60)"
+done
+sync_input
+set_trigger $((0x01000047))
+sleep 0.5
+end
+
 begin "fullscreen window (sessions must be refused)" "not starting"
 "${CLIENT_ENV[@]}" qml6 "$HERE/window-fullscreen.qml" >/dev/null 2>&1 &
 full=$!
@@ -356,6 +498,107 @@ for _ in $(seq $((ROUNDS / 10))); do
     sleep 0.3
     session
 done
+end
+
+# ---- Where windows end up (geometry checks; screen 1 is 0,0 1600x900) ------
+
+begin "same direction key again steps the size (edges only)" "same direction again"
+send abs 800 450; sync_input
+spawn window-drag.qml
+# Left: 1 press = 1/2, then 1/3, 1/4, 2/3 and round to 1/2 (1600 px wide).
+widths=(0 800 533 400 1067 800)
+for presses in 1 2 3 4 5; do
+    keysnap $LEFT $presses
+    check "Left pressed $presses times: ${widths[$presses]} px wide at the left edge" \
+        "x <= 2 && w >= ${widths[$presses]} - 3 && w <= ${widths[$presses]} + 3" $(probe "sirkel-stress drag")
+done
+keysnap $UP 2
+check "Up pressed twice: a third of the height (300 px) at the top" "y <= 2 && h >= 297 && h <= 303 && w >= 1597" $(probe "sirkel-stress drag")
+# A corner takes two keys: hold Left, press Up twice. Corners don't step (yet).
+send abs 800 450; send key $F24 1; send sleep 50; send key $LEFT 1; send sleep 30
+send key $UP 1; send sleep 30; send key $UP 0; send sleep 30; send key $UP 1; send sleep 30; send key $UP 0; send sleep 30
+send key $LEFT 0; send key $F24 0; sync_input
+sleep 0.8
+check "a corner pressed again stays a plain quarter (800 x 450)" "x <= 2 && y <= 2 && w >= 797 && w <= 803 && h >= 447 && h <= 453" $(probe "sirkel-stress drag")
+# Holding the key: its automatic repeats must not keep stepping.
+steps=$(count "same direction again")
+keysnap $LEFT 2 1500
+check "Left pressed, then held for 1.5 s: one step (533 px)" "x <= 2 && w >= 530 && w <= 536" $(probe "sirkel-stress drag")
+check_true "held key stepped once, not on every repeat" [ $(( $(count "same direction again") - steps )) -eq 1 ]
+end
+
+begin "windows with a minimum size stay on screen"
+send abs 800 450; sync_input
+spawn window-minsize.qml
+for round in 1 2 3; do
+    snap 300 0
+    check "right half (round $round): on screen, at least 1000 px wide, against the right edge" \
+        "x >= -1 && x + w <= 1601 && w >= 999 && x + w >= 1598" $(probe "sirkel-stress minsize")
+    snap -300 0
+    check "left half (round $round): on screen, at least 1000 px wide, against the left edge" \
+        "x >= -1 && x <= 2 && w >= 999" $(probe "sirkel-stress minsize")
+done
+end
+
+begin "dragged away gets its size back" "dragged away: restoring"
+send abs 800 450; sync_input
+spawn window-drag.qml
+read -r _ _ w0 h0 <<<"$(probe "sirkel-stress drag")"
+for round in 1 2 3; do
+    snap -300 0
+    check "snapped to the left half (round $round)" "x <= 2 && w >= 790 && w <= 810" $(probe "sirkel-stress drag")
+    drag "sirkel-stress drag" 300
+    geo=$(probe "sirkel-stress drag")
+    check "size from before the snap after dragging (round $round, was ${w0:-?}x${h0:-?})" \
+        "w >= ${w0:-0} - 2 && w <= ${w0:-0} + 2 && h >= ${h0:-0} - 2 && h <= ${h0:-0} + 2" $geo
+    # The drag starts from the snapped window's middle (400, 450) and moves
+    # 300 px: the cursor must still be on the window.
+    check "cursor still on the window after the drag (round $round)" "x <= 700 && x + w >= 700 && y <= 450 && y + h >= 450" $geo
+done
+snap -300 0
+drag "sirkel-stress drag" 300 esc
+check "a cancelled drag leaves it snapped" "x <= 2 && w >= 790 && w <= 810" $(probe "sirkel-stress drag")
+drag "sirkel-stress drag" 300
+check "and the next drag still restores the size" "w >= ${w0:-0} - 2 && w <= ${w0:-0} + 2" $(probe "sirkel-stress drag")
+end
+
+begin "Enter and Backspace reach apps outside a session"
+: > "$RUN/keys.log"
+env QT_QPA_PLATFORM=wayland QT_LOGGING_RULES= QT_FORCE_STDERR_LOGGING=1 LD_PRELOAD= \
+    qml6 "$HERE/window-keys.qml" >>"$RUN/keys.log" 2>&1 &
+WINDOWS+=($!)
+sleep 1
+send key $ENTER 1; send key $ENTER 0; send key $BACKSPACE 1; send key $BACKSPACE 0; sync_input
+sleep 0.5
+check_true "Enter reached the app" grep -q "SIRKEL-KEY $QT_RETURN" "$RUN/keys.log"
+check_true "Backspace reached the app" grep -q "SIRKEL-KEY $QT_BACKSPACE" "$RUN/keys.log"
+# While a session holds the keyboard, Enter belongs to Sirkel (it maximizes
+# and ends the session) and must not reach the app.
+enters=$(grep -c "SIRKEL-KEY $QT_RETURN" "$RUN/keys.log")
+send abs 800 450; send key $F24 1; send move 100 0; send sleep 50
+send key $ENTER 1; send key $ENTER 0; send key $F24 0; sync_input
+sleep 0.5
+check_true "Enter during a session stayed with Sirkel" [ "$(grep -c "SIRKEL-KEY $QT_RETURN" "$RUN/keys.log")" -eq "$enters" ]
+end
+
+# ---- Locked screen: a KWin started locked; nothing may start or move -------
+
+RSS_END=$(rss)
+stop_kwin
+start_kwin --lockscreen
+alive || { RESULTS+=("CRASH       starting KWin locked"); STATUS=1; finish; }
+
+begin "locked screen (nothing starts, nothing moves)" "screen is locked"
+spawn window-drag.qml
+before=$(probe "sirkel-stress drag")
+for _ in 1 2 3 4 5; do snap 300 0; done
+for n in SirkelSnapLeft SirkelSnapRight SirkelMaximize SirkelMinimize; do
+    qd org.kde.kglobalaccel /component/sirkel org.kde.kglobalaccel.Component.invokeShortcut "$n"
+done
+sleep 0.5
+after=$(probe "sirkel-stress drag")
+check_true "no session started" [ $(( $(count "sirkel: session started") - STARTED_BEFORE )) -eq 0 ]
+check_true "the window didn't move (before: ${before:-?}, after: ${after:-?})" [ -n "$before" ] && [ "$before" = "$after" ]
 end
 
 finish

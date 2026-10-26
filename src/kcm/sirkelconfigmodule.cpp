@@ -135,13 +135,25 @@ QString SirkelConfigModule::triggerId() const
 
 bool SirkelConfigModule::triggerIsHyperkey() const
 {
+    return shortcut(triggerId()) == QKeySequence(Qt::Key_F24);
+}
+
+QString SirkelConfigModule::triggerKind() const
+{
     const QKeySequence trigger = shortcut(triggerId());
-    return trigger.isEmpty() || trigger == QKeySequence(Qt::Key_F24);
+    if (trigger.isEmpty()) {
+        return QStringLiteral("none");
+    }
+    return trigger == QKeySequence(Qt::Key_F24) ? QStringLiteral("capslock") : QStringLiteral("combination");
 }
 
 QString SirkelConfigModule::triggerText() const
 {
-    return triggerIsHyperkey() ? i18n("Caps Lock") : shortcut(triggerId()).toString(QKeySequence::NativeText);
+    const QString kind = triggerKind();
+    if (kind == QLatin1String("none")) {
+        return QString();
+    }
+    return kind == QLatin1String("capslock") ? i18n("Caps Lock") : shortcut(triggerId()).toString(QKeySequence::NativeText);
 }
 
 QVariantList SirkelConfigModule::shortcutActions() const

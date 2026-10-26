@@ -77,6 +77,11 @@ QList<QKeySequence> parseStoredShortcuts(const QString &keys);
 // held. The keypad flag is ignored, so Enter matches either Enter key.
 bool matchesKey(const QKeySequence &binding, int key, Qt::KeyboardModifiers held);
 
+// Whether releasing `key` ends a session started with `trigger`: the
+// trigger's own key, or for a combination like Meta+Space any of its
+// modifiers (releasing either key ends the snap).
+bool isTriggerRelease(QKeyCombination trigger, int key);
+
 // A lazy string from this file, translated in Sirkel's own "sirkel" domain.
 // KLazyLocalizedString::toString() uses the caller's domain, which for the
 // settings is a different one.

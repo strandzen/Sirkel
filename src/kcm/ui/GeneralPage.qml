@@ -10,18 +10,25 @@ import org.kde.kirigami as Kirigami
 FormPage {
     id: root
 
-    // Whether keyd is set up, as one status line instead of a warning
-    // banner. The setup steps live on the About page.
+    // Which trigger is set and whether it works, as one status line. Green
+    // when Sirkel can be used; orange when nothing would start it (no
+    // trigger, or Caps Lock without keyd). The keyd steps are on About.
     Kirigami.InlineMessage {
+        readonly property bool working: kcm.triggerKind === "combination" || (kcm.triggerKind === "capslock" && kcm.keydOk)
         Layout.fillWidth: true
         visible: true
-        type: !kcm.triggerIsHyperkey ? Kirigami.MessageType.Information
-            : kcm.keydOk ? Kirigami.MessageType.Positive : Kirigami.MessageType.Warning
-        text: !kcm.triggerIsHyperkey
-            ? i18n("Hold %1 to use Sirkel (set on the Shortcuts page). keyd isn't needed.", kcm.triggerText)
-            : kcm.keydOk
-                ? i18n("Hold Caps Lock to use Sirkel. keyd is running and maps Caps Lock to F24.")
-                : i18n("keyd doesn't seem to be running with Caps Lock mapped to F24, so Caps Lock won't work yet. See About for the setup steps, or use a key combination instead (Shortcuts page).")
+        type: working ? Kirigami.MessageType.Positive : Kirigami.MessageType.Warning
+        text: {
+            if (kcm.triggerKind === "combination") {
+                return i18n("%1 is set as the trigger. Hold it to use Sirkel.", kcm.triggerText);
+            }
+            if (kcm.triggerKind === "capslock") {
+                return kcm.keydOk
+                    ? i18n("Caps Lock is set as the trigger (keyd maps it to F24). Hold it to use Sirkel.")
+                    : i18n("Caps Lock is set as the trigger, but keyd isn't mapping it to F24, so it won't work yet. Set a key combination on the Shortcuts page, or set up keyd (see About).");
+            }
+            return i18n("No trigger is set. Set a key combination on the Shortcuts page, or set up keyd to use Caps Lock (see About).");
+        }
     }
 
     Kirigami.FormLayout {

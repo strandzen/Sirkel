@@ -59,6 +59,17 @@ bool matchesKey(const QKeySequence &binding, int key, Qt::KeyboardModifiers held
     return (held & wanted) == wanted;
 }
 
+bool isTriggerRelease(QKeyCombination trigger, int key)
+{
+    if (key == trigger.key()) {
+        return true;
+    }
+    const Qt::KeyboardModifiers mods = trigger.keyboardModifiers();
+    return ((mods & Qt::MetaModifier) && (key == Qt::Key_Meta || key == Qt::Key_Super_L || key == Qt::Key_Super_R))
+        || ((mods & Qt::ControlModifier) && key == Qt::Key_Control) || ((mods & Qt::AltModifier) && key == Qt::Key_Alt)
+        || ((mods & Qt::ShiftModifier) && key == Qt::Key_Shift);
+}
+
 QString translatedText(const KLazyLocalizedString &text)
 {
     return text.toString();

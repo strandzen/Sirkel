@@ -65,6 +65,7 @@ SirkelEffect::SirkelEffect()
     // Both signals fire while the object is still valid, so cancelling here
     // means nothing touches it afterwards.
     connect(KWin::effects, &KWin::EffectsHandler::windowClosed, this, [this](KWin::EffectWindow *w) {
+        m_snapped.remove(w);
         if (m_active && w == m_targetWindow) {
             qCDebug(SIRKEL) << "target window closed, cancelling";
             finish(false);
@@ -111,9 +112,13 @@ void SirkelEffect::reconfigure(ReconfigureFlags flags)
 
 void SirkelEffect::arm()
 {
+    if (m_active) {
+        return;
+    }
     // Global shortcuts don't fire on the lock screen anyway; this makes sure
     // nothing is grabbed or moved behind it.
-    if (m_active || KWin::effects->isScreenLocked()) {
+    if (KWin::effects->isScreenLocked()) {
+        qCDebug(SIRKEL) << "not starting: the screen is locked";
         return;
     }
     KWin::EffectWindow *window = SirkelConfig::targetWindowUnderCursor() ? windowUnderCursor() : nullptr;
@@ -281,10 +286,19 @@ QRectF SirkelEffect::geometryFor(KWin::EffectWindow *window, const QRectF &area,
 {
     const QRectF target = placementGeometry(direction, area, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), step);
     KWin::Window *w = window ? window->window() : nullptr;
-    if (w && !w->isResizable()) {
-        return centeredFixedSize(target, w->frameGeometry().size(), area);
+    if (!w) {
+        return target;
     }
-    return target;
+    // The size the window will actually take: its own size if it can't be
+    // resized, otherwise the target limited to its minimum and maximum
+    // size (as KWin itself will limit it). If that differs from the target,
+    // it goes centered on the target and pulled back inside the area, rather
+    // than starting at the target's corner and hanging off the screen.
+    const QSizeF size = w->isResizable() ? w->constrainFrameSize(target.size()) : QSizeF(w->frameGeometry().size());
+    if (qAbs(size.width() - target.width()) < 1 && qAbs(size.height() - target.height()) < 1) {
+        return target;
+    }
+    return centeredFixedSize(target, size, area);
 }
 
 QRectF SirkelEffect::targetGeometry(SnapDirection direction, int step) const
@@ -304,20 +318,93 @@ void SirkelEffect::perform(KWin::EffectWindow *window, const QRectF &area, const
         return;
     }
     switch (action.kind) {
-    case WindowAction::Kind::Place:
-        moveWindow(window, geometryFor(window, area, action.direction, step));
+    case WindowAction::Kind::Place: {
+        const QRectF geometry = geometryFor(window, area, action.direction, step);
+        rememberSnap(window, geometry);
+        moveWindow(window, geometry);
         // A window picked by pointing may not be the active one; give it
         // focus, as you'd expect after moving it.
         if (window != KWin::effects->activeWindow()) {
             KWin::effects->activateWindow(window);
         }
         break;
+    }
     case WindowAction::Kind::Minimize:
         window->setMinimized(true);
         break;
     case WindowAction::Kind::Cancel:
         break;
     }
+}
+
+namespace
+{
+// Whether `a` and `b` are the same placement, give or take what clients and
+// rounding change about the size Sirkel asked for (e.g. a terminal sizing
+// itself in whole character cells).
+bool samePlace(const QRectF &a, const QRectF &b)
+{
+    constexpr qreal tolerance = 16;
+    return qAbs(a.left() - b.left()) <= tolerance && qAbs(a.top() - b.top()) <= tolerance && qAbs(a.right() - b.right()) <= tolerance
+        && qAbs(a.bottom() - b.bottom()) <= tolerance;
+}
+}
+
+void SirkelEffect::rememberSnap(KWin::EffectWindow *window, const QRectF &snapped)
+{
+    KWin::Window *w = window->window();
+    if (!w) {
+        return;
+    }
+    const QRectF frame = w->frameGeometry();
+    SnapRecord record{frame, snapped};
+    const auto it = m_snapped.constFind(window);
+    if (it != m_snapped.constEnd() && samePlace(frame, it->snapped)) {
+        // Snapped again from a Sirkel placement: keep the size from before
+        // the first snap, not the previous placement.
+        record.restore = it->restore;
+    } else if (w->maximizeMode() != KWin::MaximizeRestore || w->quickTileMode() != KWin::QuickTileMode(KWin::QuickTileFlag::None)) {
+        // Maximized or tiled by KWin: its size from before that.
+        const QRectF before = w->geometryRestore();
+        if (before.isValid()) {
+            record.restore = before;
+        }
+    }
+    m_snapped.insert(window, record);
+    connect(window, &KWin::EffectWindow::windowStartUserMovedResized, this, &SirkelEffect::onUserMoveStarted, Qt::UniqueConnection);
+}
+
+void SirkelEffect::onUserMoveStarted(KWin::EffectWindow *window)
+{
+    const auto it = m_snapped.find(window);
+    KWin::Window *w = window->window();
+    if (it == m_snapped.end() || !w || !window->isUserMove()) {
+        return;
+    }
+    const QRectF frame = w->frameGeometry();
+    if (!samePlace(frame, it->snapped)) {
+        // Moved or resized some other way since Sirkel placed it.
+        m_snapped.erase(it);
+        return;
+    }
+    // Its size from before, no larger than its screen and within its own
+    // size limits.
+    KWin::LogicalOutput *screen = window->screen();
+    QSizeF size = it->restore.size();
+    if (screen) {
+        size = size.boundedTo(KWin::effects->clientArea(KWin::MaximizeArea, screen).size());
+    }
+    size = w->constrainFrameSize(size);
+    if (qAbs(size.width() - frame.width()) < 1 && qAbs(size.height() - frame.height()) < 1) {
+        return;
+    }
+    // Keep the cursor at the same relative spot on the window; KWin keeps
+    // the grab point relative to the window's size during the move.
+    const QPointF cursor = KWin::effects->cursorPos();
+    const QPointF anchor((cursor.x() - frame.x()) / frame.width(), (cursor.y() - frame.y()) / frame.height());
+    const QRectF restored(cursor - QPointF(anchor.x() * size.width(), anchor.y() * size.height()), size);
+    qCDebug(SIRKEL) << "dragged away: restoring" << window->windowClass() << "to" << restored.size();
+    w->moveResize(restored);
 }
 
 void SirkelEffect::moveWindow(KWin::EffectWindow *window, const QRectF &geometry)
@@ -334,7 +421,11 @@ void SirkelEffect::runShortcutAction(const ShortcutAction &shortcut)
 {
     // Not while a hyperkey session is running (that session owns the
     // window), and never on the lock screen.
-    if (m_active || KWin::effects->isScreenLocked()) {
+    if (m_active) {
+        return;
+    }
+    if (KWin::effects->isScreenLocked()) {
+        qCDebug(SIRKEL) << "shortcut" << shortcut.id << "ignored: the screen is locked";
         return;
     }
     KWin::EffectWindow *window = KWin::effects->activeWindow();
@@ -366,7 +457,20 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
     if (axis != KeyAxis::None && (press || release)) {
         engage();
         if (const auto direction = m_input.keyEvent(axis, press, m_edgeOverflow.current())) {
-            pick(*direction);
+            // Pressing the direction that's already picked again steps its
+            // size, like scrolling down: 1/2, 1/3, 1/4, 2/3 and round again.
+            // Only for the four edges for now (a corner takes two keys), and
+            // never for a held key's automatic repeats.
+            const bool edge = *direction == SnapDirection::Left || *direction == SnapDirection::Right || *direction == SnapDirection::Top
+                || *direction == SnapDirection::Bottom;
+            if (press && edge && *direction == m_direction) {
+                if (!event->isAutoRepeat()) {
+                    qCDebug(SIRKEL) << "same direction again: next size";
+                    stepSize(-1);
+                }
+            } else {
+                pick(*direction);
+            }
         }
         return;
     }
@@ -414,7 +518,12 @@ void SirkelEffect::pointerAxis(KWin::PointerAxisEvent *event)
         return;
     }
     // Scrolling up (negative delta) grows the target.
-    const int step = cycleStep(m_direction, m_sizeStep, event->delta < 0 ? +1 : -1);
+    stepSize(event->delta < 0 ? +1 : -1);
+}
+
+void SirkelEffect::stepSize(int delta)
+{
+    const int step = cycleStep(m_direction, m_sizeStep, delta);
     if (step != m_sizeStep) {
         m_sizeStep = step;
         refreshPreview();
