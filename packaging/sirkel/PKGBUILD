@@ -7,7 +7,7 @@
 # On a new release, update pkgver and the checksum
 # (updpkgsums).
 pkgname=sirkel
-pkgver=0.5.2
+pkgver=0.5.3
 pkgrel=1
 pkgdesc="Loop-inspired directional window snapping for KDE Plasma (KWin effect)"
 arch=('x86_64' 'aarch64')
@@ -20,7 +20,7 @@ optdepends=('keyd: use Caps Lock as the trigger (otherwise pick a key combinatio
 conflicts=('sirkel-git')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
         "sirkel-rebuild.hook")
-sha256sums=('a71362f3b6fb16369fe8d2e267132363b0cc0d5089037a7f102d9da025ec897d'
+sha256sums=('eb6fb35d52d8f7473228288692febbbe8350998b2bb2670ea7ed8ff5ae89cf96'
             '0ec0d6d01cfec80cf2da03f7984b01ca997e55c9016b01a7198e319db1332eb8')
 
 build() {
