@@ -8,6 +8,7 @@ version = 1
 path = [
     "README.md",
     "CHANGELOG.md",
+    "CONTRIBUTING.md",
     "LICENSE",
     "assets/icon-sirkel.svg",
     "src/metadata.json.in",
