@@ -11,6 +11,7 @@
         "BugReportUrl": "https://github.com/strandzen/Sirkel/issues",
         "Description": "Loop-style window snapping: hold your trigger, move the mouse toward a side or corner, and let go to snap the window there.",
         "EnabledByDefault": false,
+        "Icon": "io.github.strandzen.sirkel",
         "License": "GPL-2.0-or-later",
         "Name": "Sirkel",
         "Version": "@PROJECT_VERSION@",

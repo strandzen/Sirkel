@@ -17,9 +17,18 @@ FormPage {
         Layout.fillWidth: true
         spacing: Kirigami.Units.largeSpacing
 
-        Kirigami.Heading {
-            level: 1
-            text: i18n("Sirkel %1", kcm.version)
+        RowLayout {
+            spacing: Kirigami.Units.largeSpacing
+
+            Kirigami.Icon {
+                source: "io.github.strandzen.sirkel"
+                implicitWidth: Kirigami.Units.iconSizes.huge
+                implicitHeight: Kirigami.Units.iconSizes.huge
+            }
+            Kirigami.Heading {
+                level: 1
+                text: i18n("Sirkel %1", kcm.version)
+            }
         }
 
         QQC2.Label {

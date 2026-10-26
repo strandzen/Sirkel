@@ -66,3 +66,9 @@ target_link_libraries(kwin_effect_sirkel_config PRIVATE
 
 # Launcher entry: opens the same settings in their own window.
 install(FILES io.github.strandzen.sirkel.settings.desktop DESTINATION ${KDE_INSTALL_APPDIR})
+
+# Sirkel's icon, named after the app id: the launcher, the settings window
+# and the effect's entry in Desktop Effects all use it.
+install(FILES ${CMAKE_SOURCE_DIR}/assets/icon-sirkel.svg
+    DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps
+    RENAME io.github.strandzen.sirkel.svg)

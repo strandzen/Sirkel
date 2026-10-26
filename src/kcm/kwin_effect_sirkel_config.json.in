@@ -7,7 +7,7 @@
             }
         ],
         "Description": "Configure Sirkel directional window snapping",
-        "Icon": "preferences-system-windows",
+        "Icon": "io.github.strandzen.sirkel",
         "License": "GPL-2.0-or-later",
         "Name": "Sirkel",
         "Version": "@PROJECT_VERSION@"

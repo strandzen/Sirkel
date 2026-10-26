@@ -7,6 +7,6 @@ Name=Sirkel
 GenericName=Window Snapping Settings
 Comment=Settings for Sirkel, Loop-style window snapping
 Exec=kcmshell6 kwin/effects/configs/kwin_effect_sirkel_config
-Icon=preferences-system-windows
+Icon=io.github.strandzen.sirkel
 Categories=Qt;KDE;Settings;DesktopSettings;
 Keywords=window;snap;tiling;loop;hyperkey;

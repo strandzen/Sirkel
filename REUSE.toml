@@ -9,6 +9,7 @@ path = [
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
+    "assets/icon-sirkel.svg",
     "src/metadata.json.in",
     "src/kcm/kwin_effect_sirkel_config.json.in",
     "po/*.pot",
