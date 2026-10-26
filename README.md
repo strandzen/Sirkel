@@ -3,11 +3,10 @@
     <h1><b>Sirkel</b></h1>
 </div>
 
-Window snapping for KDE Plasma 6.7+ on Wayland, inspired by [Loop](https://github.com/MrKai77/Loop) on macOS.
+Window tiling for KDE Plasma 6.7+ on Wayland, inspired by [Loop](https://github.com/MrKai77/Loop) for macOS.
 
-Hold a shortcut of your choice (or Caps Lock), move the mouse toward where you want the window, and let go. It snaps to that half or quarter of the screen, or fills the screen if you leave the mouse in the middle. A small ring follows your direction and an outline shows where the window will end up, so you know what you'll get before you let go.
-
-This is version 0.5.3. It's early and I've only tested it on my own machine, so settings may still change.
+Hold custom key combination or Caps Lock (via keyd), move the mouse toward where you want the window, and let go of key. Window tiles to that half or quarter of the screen. Can maximize the window if you move the mouse to the center of the indicator. A small ring-indicator follows your direction and a window-outline shows where the window will go.
+This is version 0.5.3. It's early and I've only tested it on my own machine and in a VM, so settings may still change.
 
 > [!WARNING]
 > You have to rebuild Sirkel after every Plasma update, even small ones like 6.8.0 to 6.8.1. KWin refuses to load effects that were built for a different version. See [Installation](#installation).
@@ -19,25 +18,25 @@ This is version 0.5.3. It's early and I've only tested it on my own machine, so 
 ## Features
 
 - Snap to the left, right, top or bottom half, any of the four quarters, or full screen.
-- Pick a direction with the mouse or the keyboard (arrow keys, WASD or HJKL). Press two keys together, like Up and Left, for a corner.
-- Start it with any key combination you like, such as Meta+Z. If you want a dedicated key, you can turn Caps Lock into one with keyd.
+- Pick a direction with the mouse or the keyboard (arrow keys, WASD or HJKL).
+- Start it with any key combination you like. If you want a dedicated key, you can turn Caps Lock into one with keyd.
 - Set your own shortcuts that snap straight away, without the ring. None are set out of the box.
 - Scroll while holding the trigger to change the size: 1/4, 1/3, 1/2 or 2/3 of the screen. Full screen goes 1/3, 1/2, full width. This is off by default.
 - Snap the active window or the one under the mouse, on its own monitor or the one the mouse is on.
 - Add gaps around windows. Two windows next to each other get the same gap between them as against the screen edge.
-- Drag a snapped window away and it gets its old size back, like Plasma's own tiling.
-- Windows that can't be resized, or can't get as small or as big as the spot you picked, are centered on it and kept on screen. Fullscreen games and videos are left alone, and you can exclude apps.
-- Colors follow your Plasma accent color, or pick your own. The ring uses a darker, softer version of the accent so the pointer stands out.
-- Optional blur behind the preview, with adjustable animation speed and style.
+- Drag a snapped window away and it recovers its previous size.
+- Windows that can't be resized, or can't get as small or big as the spot you picked, are centered within outline. Fullscreen (F11, Games, Movies, etc) are excluded, and you can manually exclude apps.
+- Colors follow your Plasma accent color, or you can pick your own.
+- Optional blur behind the preview, with adjustable animation speed and easing options.
 - A settings window with a live preview, so you can see changes as you make them.
 
 ## Requirements
 
-- KDE Plasma 6.7 or newer, on Wayland
+- KDE Plasma 6.7 or newer, Wayland only.
 - Optional: [keyd](https://github.com/rvaiya/keyd), if you want to use Caps Lock as the trigger
-- To build it: CMake, Extra CMake Modules, Qt 6 (Core, Gui, Qml, Quick, DBus, Test, Widgets), KDE Frameworks 6 (Config, ColorScheme, CoreAddons, GlobalAccel, I18n, KCMUtils, WindowSystem) and the KWin development headers
+- To build: `cmake extra-cmake-modules qt6-base qt6-declarative kconfig kcolorscheme kcoreaddons kglobalaccel ki18n kcmutils kwindowsystem kwin`
 
-[Geometry Change](https://github.com/peterfajdiga/kwin4_effect_geometry_change) works well alongside Sirkel if you want the window itself to animate into place.
+[Geometry Change](https://github.com/peterfajdiga/kwin4_effect_geometry_change) is not required but is a nice addition if you want some additional window animations.
 
 ## Installation
 
@@ -72,11 +71,11 @@ Go to **System Settings → Desktop Effects** and enable **Sirkel**.
 
 ### 3. Set a trigger
 
-Sirkel doesn't come with a key combination set. Out of the box its trigger is F24, which only Caps Lock sends once keyd is set up (below), so **without keyd, nothing starts Sirkel until you set a trigger yourself**. The General page in Sirkel's settings shows in orange when no working trigger is set.
+Sirkel doesn't come with a key combination set. Out of the box its trigger is F24 (Caps-Lock), so **without keyd, nothing starts Sirkel until you set a trigger yourself**. The General page in Sirkel's settings shows an inline message when no working trigger is set.
 
-Open Sirkel's settings, go to **Shortcuts** and record the key combination you want to hold, for example Meta+Z. That's all you need to start using it.
+Open Sirkel's settings, go to **Shortcuts** and record the key combination you want, for example Meta+Z. That's all you need to start using it.
 
-### Optional: use Caps Lock instead
+### Recommended: use Caps Lock instead
 
 Most people never use Caps Lock, which makes it a great trigger: one key, right under your finger, with nothing else on it. Sirkel listens for the F24 key, and [keyd](https://github.com/rvaiya/keyd) can turn Caps Lock into F24. Add this to `/etc/keyd/default.conf` (Sirkel never touches that file itself):
 
@@ -100,7 +99,7 @@ Finally, in Sirkel's settings under **Shortcuts**, set **Start Sirkel with** to 
 
 1. Hold the trigger.
 2. Move the mouse toward an edge or corner, or press a direction key. Keep the mouse near the middle of the ring to fill the screen.
-3. Let go to snap.
+3. Let go of trigger to tile.
 
 While you hold the trigger, you can also press:
 
@@ -118,10 +117,10 @@ Enter and Backspace can be changed to other keys, either on Sirkel's Shortcuts p
 
 You'll find them under **System Settings → Desktop Effects → Sirkel**, or by searching for **Sirkel** in the app launcher. Changes apply right away.
 
-- **General:** how you pick a direction, which keys to use, scrolling to resize, which window and monitor to snap, gaps, auto-cancel and excluded apps
+- **General:** how you pick a direction, which keys to use, scrolling to resize, which window and monitor to tile, gaps, auto-cancel and excluded apps
 - **Appearance:** size, shape and look of the ring and the outline, plus animation speed and style
 - **Colors:** colors for the outline, the pointer and the ring
-- **Shortcuts:** the trigger and your own snap shortcuts
+- **Shortcuts:** the trigger and your own key bindings.
 
 The Appearance and Colors pages have a preview on the right. Drag the window edge to make it bigger, or hide it with the button at the top.
 
@@ -177,7 +176,7 @@ If you used the package, run `sudo pacman -R sirkel-git` instead. To get Caps Lo
 ## Planned
 
 - Animate the window move in Sirkel itself, and a live mode where the window moves as you pick
-- Fill the gap: hold a key while picking to fill an empty space between your windows
+- Fill missing tiling gaps: hold a key while picking automatically find and fill empty available space between your tiled windows
 
 ## Translations
 
