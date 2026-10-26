@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-26 01:39+0100\n"
+"POT-Creation-Date: 2026-10-26 01:42+0100\n"
 "PO-Revision-Date: 2026-10-26 01:40\n"
 "Last-Translator: Strandzen <strandzen@gmail.com>\n"
 "Language-Team: Norwegian Bokmål\n"
@@ -17,6 +17,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/kcm/sirkelconfigmodule.cpp:144
+#, kde-format
+msgid "Caps Lock"
+msgstr "Caps Lock"
 
 #: src/kcm/ui/AboutPage.qml:22
 #, kde-format
@@ -27,8 +32,8 @@ msgstr "Sirkel %1"
 #, kde-format
 msgid ""
 "Loop-inspired window snapping for KDE Plasma. Hold your trigger (set on the "
-"Shortcuts page), move the mouse or press a direction key, and let go to snap"
-" the window there."
+"Shortcuts page), move the mouse or press a direction key, and let go to snap "
+"the window there."
 msgstr ""
 "Loop-inspirert vindusfesting for KDE Plasma. Hold inne utløseren (velges på "
 "siden Snarveier), flytt musa eller trykk en retningstast, og slipp for å "
@@ -45,14 +50,13 @@ msgid ""
 "Sirkel was built for KWin %1, but KWin %2 is installed, so KWin won't load "
 "it. Rebuild and reinstall Sirkel, then log out and back in."
 msgstr ""
-"Sirkel ble bygget for KWin %1, men KWin %2 er installert, så KWin laster den"
-" ikke. Bygg og installer Sirkel på nytt, og logg så ut og inn igjen."
+"Sirkel ble bygget for KWin %1, men KWin %2 er installert, så KWin laster den "
+"ikke. Bygg og installer Sirkel på nytt, og logg så ut og inn igjen."
 
 #: src/kcm/ui/AboutPage.qml:45
 #, kde-format
 msgid "Sirkel matches KWin %1 but isn't running yet. Log out and back in."
-msgstr ""
-"Sirkel passer til KWin %1, men kjører ikke ennå. Logg ut og inn igjen."
+msgstr "Sirkel passer til KWin %1, men kjører ikke ennå. Logg ut og inn igjen."
 
 #: src/kcm/ui/AboutPage.qml:46
 #, kde-format
@@ -85,8 +89,8 @@ msgstr "Valgfritt: Caps Lock som utløser"
 #: src/kcm/ui/AboutPage.qml:67
 #, kde-format
 msgid ""
-"Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to "
-"/etc/keyd/default.conf (Sirkel never writes there itself):"
+"Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to /"
+"etc/keyd/default.conf (Sirkel never writes there itself):"
 msgstr ""
 "Sirkel lytter etter F24, og keyd kan gjøre Caps Lock om til F24. Legg dette "
 "til i /etc/keyd/default.conf (Sirkel skriver aldri dit selv):"
@@ -124,260 +128,10 @@ msgstr "Prosjektside"
 msgid "Report a problem"
 msgstr "Rapporter et problem"
 
-#: src/kcm/ui/GeneralPage.qml:21
+#: src/kcm/ui/AdvancedFold.qml:15
 #, kde-format
-msgid "Hold %1 to use Sirkel (set on the Shortcuts page). keyd isn't needed."
-msgstr ""
-"Hold inne %1 for å bruke Sirkel (velges på siden Snarveier). keyd trengs "
-"ikke."
-
-#: src/kcm/ui/GeneralPage.qml:23
-#, kde-format
-msgid ""
-"Hold Caps Lock to use Sirkel. keyd is running and maps Caps Lock to F24."
-msgstr ""
-"Hold inne Caps Lock for å bruke Sirkel. keyd kjører og gjør Caps Lock om til"
-" F24."
-
-#: src/kcm/ui/GeneralPage.qml:24
-#, kde-format
-msgid ""
-"keyd doesn't seem to be running with Caps Lock mapped to F24, so Caps Lock "
-"won't work yet. See About for the setup steps, or use a key combination "
-"instead (Shortcuts page)."
-msgstr ""
-"keyd ser ikke ut til å kjøre med Caps Lock satt til F24, så Caps Lock virker"
-" ikke ennå. Se Om for oppsettet, eller bruk en tastekombinasjon i stedet "
-"(siden Snarveier)."
-
-#: src/kcm/ui/GeneralPage.qml:33
-#, kde-format
-msgid "Picking"
-msgstr "Valg av retning"
-
-#: src/kcm/ui/GeneralPage.qml:37
-#, kde-format
-msgid "How you pick a direction:"
-msgstr "Slik velger du retning:"
-
-#: src/kcm/ui/GeneralPage.qml:43
-#, kde-format
-msgid "Box (distance per axis)"
-msgstr "Boks (avstand per akse)"
-
-#: src/kcm/ui/GeneralPage.qml:44
-#, kde-format
-msgid "Angle (eight slices)"
-msgstr "Vinkel (åtte sektorer)"
-
-#: src/kcm/ui/GeneralPage.qml:49
-#, kde-format
-msgid ""
-"Box: move a set distance left/right or up/down; corners need both. Angle: "
-"move past one center radius, then the direction you moved picks one of eight"
-" slices, so corners are as easy as edges."
-msgstr ""
-"Boks: flytt en fast avstand til venstre/høyre eller opp/ned; hjørner krever "
-"begge. Vinkel: flytt forbi én radius fra midten, så velger retningen du "
-"flyttet én av åtte sektorer, slik at hjørner er like lette som kanter."
-
-#: src/kcm/ui/GeneralPage.qml:54 src/kcm/ui/ShortcutsPage.qml:85
-#, kde-format
-msgid "Direction keys:"
-msgstr "Retningstaster:"
-
-#: src/kcm/ui/GeneralPage.qml:61
-#, kde-format
-msgid "Arrows"
-msgstr "Piltaster"
-
-#: src/kcm/ui/GeneralPage.qml:61
-#, kde-format
-msgid "WASD"
-msgstr "WASD"
-
-#: src/kcm/ui/GeneralPage.qml:61
-#, kde-format
-msgid "HJKL"
-msgstr "HJKL"
-
-#: src/kcm/ui/GeneralPage.qml:61
-#, kde-format
-msgid "None (mouse only)"
-msgstr "Ingen (bare mus)"
-
-#: src/kcm/ui/GeneralPage.qml:68 src/kcm/ui/ShortcutsPage.qml:111
-#, kde-format
-msgid "Scroll wheel:"
-msgstr "Rullehjul:"
-
-#: src/kcm/ui/GeneralPage.qml:69
-#, kde-format
-msgid "Resize the target before releasing"
-msgstr "Endre størrelsen på målet før du slipper"
-
-#: src/kcm/ui/GeneralPage.qml:73
-#, kde-format
-msgid ""
-"Cycles the size each direction controls: 1/4, 1/3, 1/2, 2/3. Never carries "
-"over to the next pick."
-msgstr ""
-"Går gjennom størrelsene hver retning styrer: 1/4, 1/3, 1/2, 2/3. Følger "
-"aldri med til neste valg."
-
-#: src/kcm/ui/GeneralPage.qml:79
-#, kde-format
-msgid "Target"
-msgstr "Mål"
-
-#: src/kcm/ui/GeneralPage.qml:83
-#, kde-format
-msgid "Act on:"
-msgstr "Virker på:"
-
-#: src/kcm/ui/GeneralPage.qml:88
-#, kde-format
-msgid "The active window"
-msgstr "Det aktive vinduet"
-
-#: src/kcm/ui/GeneralPage.qml:89
-#, kde-format
-msgid "The window under the cursor"
-msgstr "Vinduet under pekeren"
-
-#: src/kcm/ui/GeneralPage.qml:94
-#, kde-format
-msgid ""
-"Under the cursor: point at a window and snap it without clicking it first. "
-"Falls back to the active window when the cursor isn't over one."
-msgstr ""
-"Under pekeren: pek på et vindu og fest det uten å klikke på det først. "
-"Bruker det aktive vinduet når pekeren ikke er over et vindu."
-
-#: src/kcm/ui/GeneralPage.qml:99
-#, kde-format
-msgid "Snap on:"
-msgstr "Fest på:"
-
-#: src/kcm/ui/GeneralPage.qml:104
-#, kde-format
-msgid "The window's own monitor"
-msgstr "Vinduets egen skjerm"
-
-#: src/kcm/ui/GeneralPage.qml:105
-#, kde-format
-msgid "The monitor under the cursor"
-msgstr "Skjermen under pekeren"
-
-#: src/kcm/ui/GeneralPage.qml:110
-#, kde-format
-msgid ""
-"Decided when you press the trigger; doesn't change if the cursor moves to "
-"another monitor mid-pick."
-msgstr ""
-"Bestemmes når du trykker utløseren; endres ikke om pekeren flyttes til en "
-"annen skjerm underveis."
-
-#: src/kcm/ui/GeneralPage.qml:116
-#, kde-format
-msgid "Gaps"
-msgstr "Mellomrom"
-
-#: src/kcm/ui/GeneralPage.qml:120
-#, kde-format
-msgid "Horizontal:"
-msgstr "Vannrett:"
-
-#: src/kcm/ui/GeneralPage.qml:130
-#, kde-format
-msgid "Vertical:"
-msgstr "Loddrett:"
-
-#: src/kcm/ui/GeneralPage.qml:145
-#, kde-format
-msgid "Picking distances"
-msgstr "Avstander for valg"
-
-#: src/kcm/ui/GeneralPage.qml:149
-#, kde-format
-msgid "Center radius (px):"
-msgstr "Radius i midten (px):"
-
-#: src/kcm/ui/GeneralPage.qml:157
-#, kde-format
-msgid ""
-"How far the mouse has to move before a direction is picked. Inside this "
-"circle is Maximize."
-msgstr ""
-"Hvor langt musa må flyttes før en retning velges. Innenfor denne sirkelen er"
-" Maksimer."
-
-#: src/kcm/ui/GeneralPage.qml:162
-#, kde-format
-msgid "Deadzone (px):"
-msgstr "Dødsone (px):"
-
-#: src/kcm/ui/GeneralPage.qml:170
-#, kde-format
-msgid ""
-"How far the mouse has to move from the center, left/right or up/down, before"
-" that direction counts. Both directions for a corner."
-msgstr ""
-"Hvor langt musa må flyttes fra midten, til venstre/høyre eller opp/ned, før "
-"den retningen teller. Begge retninger for et hjørne."
-
-#: src/kcm/ui/GeneralPage.qml:176 src/kcm/ui/ShortcutsPage.qml:29
-#, kde-format
-msgid "Trigger"
-msgstr "Utløser"
-
-#: src/kcm/ui/GeneralPage.qml:180
-#, kde-format
-msgid "Auto-cancel after (s):"
-msgstr "Avbryt automatisk etter (s):"
-
-#: src/kcm/ui/GeneralPage.qml:187
-#, kde-format
-msgid ""
-"Cancels if nothing happens for this long while the trigger is held, in case "
-"its release was missed. 0 = never."
-msgstr ""
-"Avbryter hvis ingenting skjer så lenge mens utløseren holdes inne, i "
-"tilfelle slippet ikke ble fanget opp. 0 = aldri."
-
-#: src/kcm/ui/GeneralPage.qml:193
-#, kde-format
-msgid "Excluded apps"
-msgstr "Unntatte programmer"
-
-#: src/kcm/ui/GeneralPage.qml:197
-#, kde-format
-msgid "Add:"
-msgstr "Legg til:"
-
-#: src/kcm/ui/GeneralPage.qml:202
-#, kde-format
-msgid "e.g. steam or org.kde.konsole"
-msgstr "f.eks. steam eller org.kde.konsole"
-
-#: src/kcm/ui/GeneralPage.qml:218
-#, kde-format
-msgid ""
-"Ignore this app. Matched against the app's desktop file name or window class"
-" (Window Rules in System Settings can show both)."
-msgstr ""
-"Ignorer dette programmet. Sammenlignes med programmets .desktop-filnavn "
-"eller vindusklasse (Vindusregler i Systeminnstillinger kan vise begge)."
-
-#: src/kcm/ui/GeneralPage.qml:226
-#, kde-format
-msgid "Ignored:"
-msgstr "Ignorert:"
-
-#: src/kcm/ui/GeneralPage.qml:248
-#, kde-format
-msgid "Remove"
-msgstr "Fjern"
+msgid "Advanced"
+msgstr "Avansert"
 
 #: src/kcm/ui/AppearancePage.qml:20
 #, kde-format
@@ -514,53 +268,23 @@ msgid ""
 "Smooth: plain ease out. Overshoot: eases past the target then settles back."
 msgstr ""
 "Flytende: rask start, lang og rolig avslutning, ingen sprett. Lineær: jevn "
-"fart. Myk: enkel nedbremsing. Overskyting: går litt forbi målet og faller så"
-" tilbake."
-
-#: src/kcm/ui/AdvancedFold.qml:15
-#, kde-format
-msgid "Advanced"
-msgstr "Avansert"
+"fart. Myk: enkel nedbremsing. Overskyting: går litt forbi målet og faller så "
+"tilbake."
 
 #: src/kcm/ui/ColorPickerRow.qml:25
 #, kde-format
 msgid "Choose a color"
 msgstr "Velg en farge"
 
-#: src/kcm/ui/main.qml:82
+#: src/kcm/ui/ColorSourceCombo.qml:20 src/kcm/ui/ColorsPage.qml:65
 #, kde-format
-msgid "Hide preview"
-msgstr "Skjul forhåndsvisning"
+msgid "Custom"
+msgstr "Egendefinert"
 
-#: src/kcm/ui/main.qml:82
+#: src/kcm/ui/ColorSourceCombo.qml:21
 #, kde-format
-msgid "Show preview"
-msgstr "Vis forhåndsvisning"
-
-#: src/kcm/ui/main.qml:90
-#, kde-format
-msgid "General"
-msgstr "Generelt"
-
-#: src/kcm/ui/main.qml:91
-#, kde-format
-msgid "Appearance"
-msgstr "Utseende"
-
-#: src/kcm/ui/main.qml:92
-#, kde-format
-msgid "Colors"
-msgstr "Farger"
-
-#: src/kcm/ui/main.qml:93
-#, kde-format
-msgid "Shortcuts"
-msgstr "Snarveier"
-
-#: src/kcm/ui/main.qml:94
-#, kde-format
-msgid "About"
-msgstr "Om"
+msgid "Theme accent"
+msgstr "Temaets aksentfarge"
 
 #: src/kcm/ui/ColorsPage.qml:20
 #, kde-format
@@ -589,11 +313,6 @@ msgstr "Viser"
 msgid "Ring"
 msgstr "Ring"
 
-#: src/kcm/ui/ColorsPage.qml:65 src/kcm/ui/ColorSourceCombo.qml:20
-#, kde-format
-msgid "Custom"
-msgstr "Egendefinert"
-
 #: src/kcm/ui/ColorsPage.qml:66
 #, kde-format
 msgid "Theme accent, muted"
@@ -609,6 +328,261 @@ msgstr "Tilbakestill fargene"
 msgid "Resets just this page. The Defaults button resets everything."
 msgstr ""
 "Tilbakestiller bare denne siden. Knappen Standardverdier tilbakestiller alt."
+
+#: src/kcm/ui/GeneralPage.qml:21
+#, kde-format
+msgid "Hold %1 to use Sirkel (set on the Shortcuts page). keyd isn't needed."
+msgstr ""
+"Hold inne %1 for å bruke Sirkel (velges på siden Snarveier). keyd trengs "
+"ikke."
+
+#: src/kcm/ui/GeneralPage.qml:23
+#, kde-format
+msgid ""
+"Hold Caps Lock to use Sirkel. keyd is running and maps Caps Lock to F24."
+msgstr ""
+"Hold inne Caps Lock for å bruke Sirkel. keyd kjører og gjør Caps Lock om til "
+"F24."
+
+#: src/kcm/ui/GeneralPage.qml:24
+#, kde-format
+msgid ""
+"keyd doesn't seem to be running with Caps Lock mapped to F24, so Caps Lock "
+"won't work yet. See About for the setup steps, or use a key combination "
+"instead (Shortcuts page)."
+msgstr ""
+"keyd ser ikke ut til å kjøre med Caps Lock satt til F24, så Caps Lock virker "
+"ikke ennå. Se Om for oppsettet, eller bruk en tastekombinasjon i stedet "
+"(siden Snarveier)."
+
+#: src/kcm/ui/GeneralPage.qml:33
+#, kde-format
+msgid "Picking"
+msgstr "Valg av retning"
+
+#: src/kcm/ui/GeneralPage.qml:37
+#, kde-format
+msgid "How you pick a direction:"
+msgstr "Slik velger du retning:"
+
+#: src/kcm/ui/GeneralPage.qml:43
+#, kde-format
+msgid "Box (distance per axis)"
+msgstr "Boks (avstand per akse)"
+
+#: src/kcm/ui/GeneralPage.qml:44
+#, kde-format
+msgid "Angle (eight slices)"
+msgstr "Vinkel (åtte sektorer)"
+
+#: src/kcm/ui/GeneralPage.qml:49
+#, kde-format
+msgid ""
+"Box: move a set distance left/right or up/down; corners need both. Angle: "
+"move past one center radius, then the direction you moved picks one of eight "
+"slices, so corners are as easy as edges."
+msgstr ""
+"Boks: flytt en fast avstand til venstre/høyre eller opp/ned; hjørner krever "
+"begge. Vinkel: flytt forbi én radius fra midten, så velger retningen du "
+"flyttet én av åtte sektorer, slik at hjørner er like lette som kanter."
+
+#: src/kcm/ui/GeneralPage.qml:54 src/kcm/ui/ShortcutsPage.qml:85
+#, kde-format
+msgid "Direction keys:"
+msgstr "Retningstaster:"
+
+#: src/kcm/ui/GeneralPage.qml:61
+#, kde-format
+msgid "Arrows"
+msgstr "Piltaster"
+
+#: src/kcm/ui/GeneralPage.qml:61
+#, kde-format
+msgid "WASD"
+msgstr "WASD"
+
+#: src/kcm/ui/GeneralPage.qml:61
+#, kde-format
+msgid "HJKL"
+msgstr "HJKL"
+
+#: src/kcm/ui/GeneralPage.qml:61
+#, kde-format
+msgid "None (mouse only)"
+msgstr "Ingen (bare mus)"
+
+#: src/kcm/ui/GeneralPage.qml:68 src/kcm/ui/ShortcutsPage.qml:111
+#, kde-format
+msgid "Scroll wheel:"
+msgstr "Rullehjul:"
+
+#: src/kcm/ui/GeneralPage.qml:69
+#, kde-format
+msgid "Resize the target before releasing"
+msgstr "Endre størrelsen på målet før du slipper"
+
+#: src/kcm/ui/GeneralPage.qml:73
+#, kde-format
+msgid ""
+"Cycles the size each direction controls: 1/4, 1/3, 1/2, 2/3. Never carries "
+"over to the next pick."
+msgstr ""
+"Går gjennom størrelsene hver retning styrer: 1/4, 1/3, 1/2, 2/3. Følger "
+"aldri med til neste valg."
+
+#: src/kcm/ui/GeneralPage.qml:79
+#, kde-format
+msgid "Target"
+msgstr "Mål"
+
+#: src/kcm/ui/GeneralPage.qml:83
+#, kde-format
+msgid "Act on:"
+msgstr "Virker på:"
+
+#: src/kcm/ui/GeneralPage.qml:88
+#, kde-format
+msgid "The active window"
+msgstr "Det aktive vinduet"
+
+#: src/kcm/ui/GeneralPage.qml:89
+#, kde-format
+msgid "The window under the cursor"
+msgstr "Vinduet under pekeren"
+
+#: src/kcm/ui/GeneralPage.qml:94
+#, kde-format
+msgid ""
+"Under the cursor: point at a window and snap it without clicking it first. "
+"Falls back to the active window when the cursor isn't over one."
+msgstr ""
+"Under pekeren: pek på et vindu og fest det uten å klikke på det først. "
+"Bruker det aktive vinduet når pekeren ikke er over et vindu."
+
+#: src/kcm/ui/GeneralPage.qml:99
+#, kde-format
+msgid "Snap on:"
+msgstr "Fest på:"
+
+#: src/kcm/ui/GeneralPage.qml:104
+#, kde-format
+msgid "The window's own monitor"
+msgstr "Vinduets egen skjerm"
+
+#: src/kcm/ui/GeneralPage.qml:105
+#, kde-format
+msgid "The monitor under the cursor"
+msgstr "Skjermen under pekeren"
+
+#: src/kcm/ui/GeneralPage.qml:110
+#, kde-format
+msgid ""
+"Decided when you press the trigger; doesn't change if the cursor moves to "
+"another monitor mid-pick."
+msgstr ""
+"Bestemmes når du trykker utløseren; endres ikke om pekeren flyttes til en "
+"annen skjerm underveis."
+
+#: src/kcm/ui/GeneralPage.qml:116
+#, kde-format
+msgid "Gaps"
+msgstr "Mellomrom"
+
+#: src/kcm/ui/GeneralPage.qml:120
+#, kde-format
+msgid "Horizontal:"
+msgstr "Vannrett:"
+
+#: src/kcm/ui/GeneralPage.qml:130
+#, kde-format
+msgid "Vertical:"
+msgstr "Loddrett:"
+
+#: src/kcm/ui/GeneralPage.qml:145
+#, kde-format
+msgid "Picking distances"
+msgstr "Avstander for valg"
+
+#: src/kcm/ui/GeneralPage.qml:149
+#, kde-format
+msgid "Center radius (px):"
+msgstr "Radius i midten (px):"
+
+#: src/kcm/ui/GeneralPage.qml:157
+#, kde-format
+msgid ""
+"How far the mouse has to move before a direction is picked. Inside this "
+"circle is Maximize."
+msgstr ""
+"Hvor langt musa må flyttes før en retning velges. Innenfor denne sirkelen er "
+"Maksimer."
+
+#: src/kcm/ui/GeneralPage.qml:162
+#, kde-format
+msgid "Deadzone (px):"
+msgstr "Dødsone (px):"
+
+#: src/kcm/ui/GeneralPage.qml:170
+#, kde-format
+msgid ""
+"How far the mouse has to move from the center, left/right or up/down, before "
+"that direction counts. Both directions for a corner."
+msgstr ""
+"Hvor langt musa må flyttes fra midten, til venstre/høyre eller opp/ned, før "
+"den retningen teller. Begge retninger for et hjørne."
+
+#: src/kcm/ui/GeneralPage.qml:176 src/kcm/ui/ShortcutsPage.qml:29
+#, kde-format
+msgid "Trigger"
+msgstr "Utløser"
+
+#: src/kcm/ui/GeneralPage.qml:180
+#, kde-format
+msgid "Auto-cancel after (s):"
+msgstr "Avbryt automatisk etter (s):"
+
+#: src/kcm/ui/GeneralPage.qml:187
+#, kde-format
+msgid ""
+"Cancels if nothing happens for this long while the trigger is held, in case "
+"its release was missed. 0 = never."
+msgstr ""
+"Avbryter hvis ingenting skjer så lenge mens utløseren holdes inne, i "
+"tilfelle slippet ikke ble fanget opp. 0 = aldri."
+
+#: src/kcm/ui/GeneralPage.qml:193
+#, kde-format
+msgid "Excluded apps"
+msgstr "Unntatte programmer"
+
+#: src/kcm/ui/GeneralPage.qml:197
+#, kde-format
+msgid "Add:"
+msgstr "Legg til:"
+
+#: src/kcm/ui/GeneralPage.qml:202
+#, kde-format
+msgid "e.g. steam or org.kde.konsole"
+msgstr "f.eks. steam eller org.kde.konsole"
+
+#: src/kcm/ui/GeneralPage.qml:218
+#, kde-format
+msgid ""
+"Ignore this app. Matched against the app's desktop file name or window class "
+"(Window Rules in System Settings can show both)."
+msgstr ""
+"Ignorer dette programmet. Sammenlignes med programmets .desktop-filnavn "
+"eller vindusklasse (Vindusregler i Systeminnstillinger kan vise begge)."
+
+#: src/kcm/ui/GeneralPage.qml:226
+#, kde-format
+msgid "Ignored:"
+msgstr "Ignorert:"
+
+#: src/kcm/ui/GeneralPage.qml:248
+#, kde-format
+msgid "Remove"
+msgstr "Fjern"
 
 #: src/kcm/ui/ShortcutsPage.qml:33
 #, kde-format
@@ -725,15 +699,39 @@ msgstr "Åpne innstillinger for snarveier …"
 #: src/kcm/ui/ShortcutsPage.qml:159
 #, kde-format
 msgid "All of these are also under Sirkel in System Settings → Shortcuts."
-msgstr ""
-"Alle disse finnes også under Sirkel i Systeminnstillinger → Snarveier."
+msgstr "Alle disse finnes også under Sirkel i Systeminnstillinger → Snarveier."
 
-#: src/kcm/ui/ColorSourceCombo.qml:21
+#: src/kcm/ui/main.qml:82
 #, kde-format
-msgid "Theme accent"
-msgstr "Temaets aksentfarge"
+msgid "Hide preview"
+msgstr "Skjul forhåndsvisning"
 
-#: src/kcm/sirkelconfigmodule.cpp:144
+#: src/kcm/ui/main.qml:82
 #, kde-format
-msgid "Caps Lock"
-msgstr "Caps Lock"
+msgid "Show preview"
+msgstr "Vis forhåndsvisning"
+
+#: src/kcm/ui/main.qml:90
+#, kde-format
+msgid "General"
+msgstr "Generelt"
+
+#: src/kcm/ui/main.qml:91
+#, kde-format
+msgid "Appearance"
+msgstr "Utseende"
+
+#: src/kcm/ui/main.qml:92
+#, kde-format
+msgid "Colors"
+msgstr "Farger"
+
+#: src/kcm/ui/main.qml:93
+#, kde-format
+msgid "Shortcuts"
+msgstr "Snarveier"
+
+#: src/kcm/ui/main.qml:94
+#, kde-format
+msgid "About"
+msgstr "Om"

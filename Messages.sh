@@ -4,9 +4,10 @@
 
 # Extracts translatable strings into one template per translation domain.
 # KDE's tooling calls this with $XGETTEXT and $podir set; to run it by hand,
-# use scripts/update-translations.sh.
+# use scripts/update-translations.sh. Files are sorted so the templates come
+# out the same on every machine (find's order depends on the filesystem).
 
 # The effect and the code it shares with the settings.
-$XGETTEXT $(find src -maxdepth 1 \( -name '*.cpp' -o -name '*.h' \)) -o $podir/sirkel.pot
+$XGETTEXT $(find src -maxdepth 1 \( -name '*.cpp' -o -name '*.h' \) | LC_ALL=C sort) -o $podir/sirkel.pot
 # The settings window: its C++ and its QML pages.
-$XGETTEXT $(find src/kcm \( -name '*.cpp' -o -name '*.h' -o -name '*.qml' \)) -o $podir/kwin_effect_sirkel_config.pot
+$XGETTEXT $(find src/kcm \( -name '*.cpp' -o -name '*.h' -o -name '*.qml' \) | LC_ALL=C sort) -o $podir/kwin_effect_sirkel_config.pot

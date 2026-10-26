@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-26 01:38+0100\n"
+"POT-Creation-Date: 2026-10-26 01:42+0100\n"
 "PO-Revision-Date: 2026-10-26 01:40\n"
 "Last-Translator: Strandzen <strandzen@gmail.com>\n"
 "Language-Team: Norwegian Bokmål\n"
@@ -17,10 +17,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-#: src/shortcutactions.h:25
-msgid "Sirkel: hold to snap window"
-msgstr "Sirkel: hold for å feste vindu"
 
 #: src/shortcutactions.cpp:10
 msgid "Sirkel: Snap to left half"
@@ -109,3 +105,7 @@ msgstr "Sirkel: Maksimer (mens utløseren holdes inne)"
 #: src/shortcutactions.cpp:33
 msgid "Sirkel: Minimize (while holding the trigger)"
 msgstr "Sirkel: Minimer (mens utløseren holdes inne)"
+
+#: src/shortcutactions.h:25
+msgid "Sirkel: hold to snap window"
+msgstr "Sirkel: hold for å feste vindu"

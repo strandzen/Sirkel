@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-26 01:41+0100\n"
+"POT-Creation-Date: 2026-10-26 01:42+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,11 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: src/kcm/sirkelconfigmodule.cpp:144
+#, kde-format
+msgid "Caps Lock"
+msgstr ""
 
 #: src/kcm/ui/AboutPage.qml:22
 #, kde-format
@@ -102,6 +107,199 @@ msgstr ""
 #: src/kcm/ui/AboutPage.qml:100
 #, kde-format
 msgid "Report a problem"
+msgstr ""
+
+#: src/kcm/ui/AdvancedFold.qml:15
+#, kde-format
+msgid "Advanced"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:20
+#, kde-format
+msgid "Indicator"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:24 src/kcm/ui/AppearancePage.qml:84
+#, kde-format
+msgid "Show:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:25
+#, kde-format
+msgid "Show the direction indicator"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:31
+#, kde-format
+msgid "Position:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:32
+#, kde-format
+msgid "Appear at the cursor (otherwise screen center)"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:38
+#, kde-format
+msgid "Size:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:48
+#, kde-format
+msgid "Thickness:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:59 src/kcm/ui/AppearancePage.qml:101
+#, kde-format
+msgid "Roundness:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:69
+#, kde-format
+msgid "Ring opacity:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:80
+#, kde-format
+msgid "Outline preview"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:85
+#, kde-format
+msgid "Show where the window will go"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:91
+#, kde-format
+msgid "Border:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:111
+#, kde-format
+msgid "Fill opacity:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:121
+#, kde-format
+msgid "Blur:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:122
+#, kde-format
+msgid "Blur the desktop behind the fill"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:126
+#, kde-format
+msgid ""
+"Needs Desktop Effects' Blur enabled. Fill opacity controls how much shows "
+"through."
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:132
+#, kde-format
+msgid "Motion"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:136
+#, kde-format
+msgid "Animation duration (ms):"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:144
+#, kde-format
+msgid ""
+"Sets the pace for every animation (glide, pointer slide, entrance, exit). "
+"Also follows the global animation speed. 0 = instant."
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:149
+#, kde-format
+msgid "Easing:"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:154
+#, kde-format
+msgid "Fluid"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:155
+#, kde-format
+msgid "Linear"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:156
+#, kde-format
+msgid "Smooth"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:157
+#, kde-format
+msgid "Overshoot"
+msgstr ""
+
+#: src/kcm/ui/AppearancePage.qml:162
+#, kde-format
+msgid ""
+"Fluid: fast start, long gentle settle, no bounce. Linear: constant speed. "
+"Smooth: plain ease out. Overshoot: eases past the target then settles back."
+msgstr ""
+
+#: src/kcm/ui/ColorPickerRow.qml:25
+#, kde-format
+msgid "Choose a color"
+msgstr ""
+
+#: src/kcm/ui/ColorSourceCombo.qml:20 src/kcm/ui/ColorsPage.qml:65
+#, kde-format
+msgid "Custom"
+msgstr ""
+
+#: src/kcm/ui/ColorSourceCombo.qml:21
+#, kde-format
+msgid "Theme accent"
+msgstr ""
+
+#: src/kcm/ui/ColorsPage.qml:20
+#, kde-format
+msgid "Outline"
+msgstr ""
+
+#: src/kcm/ui/ColorsPage.qml:24 src/kcm/ui/ColorsPage.qml:42
+#: src/kcm/ui/ColorsPage.qml:62
+#, kde-format
+msgid "Color from:"
+msgstr ""
+
+#: src/kcm/ui/ColorsPage.qml:31 src/kcm/ui/ColorsPage.qml:49
+#: src/kcm/ui/ColorsPage.qml:73
+#, kde-format
+msgid "Color:"
+msgstr ""
+
+#: src/kcm/ui/ColorsPage.qml:38
+#, kde-format
+msgid "Pointer"
+msgstr ""
+
+#: src/kcm/ui/ColorsPage.qml:56
+#, kde-format
+msgid "Ring"
+msgstr ""
+
+#: src/kcm/ui/ColorsPage.qml:66
+#, kde-format
+msgid "Theme accent, muted"
+msgstr ""
+
+#: src/kcm/ui/ColorsPage.qml:80
+#, kde-format
+msgid "Reset colors to defaults"
+msgstr ""
+
+#: src/kcm/ui/ColorsPage.qml:84
+#, kde-format
+msgid "Resets just this page. The Defaults button resets everything."
 msgstr ""
 
 #: src/kcm/ui/GeneralPage.qml:21
@@ -335,229 +533,6 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: src/kcm/ui/AppearancePage.qml:20
-#, kde-format
-msgid "Indicator"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:24 src/kcm/ui/AppearancePage.qml:84
-#, kde-format
-msgid "Show:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:25
-#, kde-format
-msgid "Show the direction indicator"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:31
-#, kde-format
-msgid "Position:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:32
-#, kde-format
-msgid "Appear at the cursor (otherwise screen center)"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:38
-#, kde-format
-msgid "Size:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:48
-#, kde-format
-msgid "Thickness:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:59 src/kcm/ui/AppearancePage.qml:101
-#, kde-format
-msgid "Roundness:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:69
-#, kde-format
-msgid "Ring opacity:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:80
-#, kde-format
-msgid "Outline preview"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:85
-#, kde-format
-msgid "Show where the window will go"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:91
-#, kde-format
-msgid "Border:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:111
-#, kde-format
-msgid "Fill opacity:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:121
-#, kde-format
-msgid "Blur:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:122
-#, kde-format
-msgid "Blur the desktop behind the fill"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:126
-#, kde-format
-msgid ""
-"Needs Desktop Effects' Blur enabled. Fill opacity controls how much shows "
-"through."
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:132
-#, kde-format
-msgid "Motion"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:136
-#, kde-format
-msgid "Animation duration (ms):"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:144
-#, kde-format
-msgid ""
-"Sets the pace for every animation (glide, pointer slide, entrance, exit). "
-"Also follows the global animation speed. 0 = instant."
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:149
-#, kde-format
-msgid "Easing:"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:154
-#, kde-format
-msgid "Fluid"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:155
-#, kde-format
-msgid "Linear"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:156
-#, kde-format
-msgid "Smooth"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:157
-#, kde-format
-msgid "Overshoot"
-msgstr ""
-
-#: src/kcm/ui/AppearancePage.qml:162
-#, kde-format
-msgid ""
-"Fluid: fast start, long gentle settle, no bounce. Linear: constant speed. "
-"Smooth: plain ease out. Overshoot: eases past the target then settles back."
-msgstr ""
-
-#: src/kcm/ui/AdvancedFold.qml:15
-#, kde-format
-msgid "Advanced"
-msgstr ""
-
-#: src/kcm/ui/ColorPickerRow.qml:25
-#, kde-format
-msgid "Choose a color"
-msgstr ""
-
-#: src/kcm/ui/main.qml:82
-#, kde-format
-msgid "Hide preview"
-msgstr ""
-
-#: src/kcm/ui/main.qml:82
-#, kde-format
-msgid "Show preview"
-msgstr ""
-
-#: src/kcm/ui/main.qml:90
-#, kde-format
-msgid "General"
-msgstr ""
-
-#: src/kcm/ui/main.qml:91
-#, kde-format
-msgid "Appearance"
-msgstr ""
-
-#: src/kcm/ui/main.qml:92
-#, kde-format
-msgid "Colors"
-msgstr ""
-
-#: src/kcm/ui/main.qml:93
-#, kde-format
-msgid "Shortcuts"
-msgstr ""
-
-#: src/kcm/ui/main.qml:94
-#, kde-format
-msgid "About"
-msgstr ""
-
-#: src/kcm/ui/ColorsPage.qml:20
-#, kde-format
-msgid "Outline"
-msgstr ""
-
-#: src/kcm/ui/ColorsPage.qml:24 src/kcm/ui/ColorsPage.qml:42
-#: src/kcm/ui/ColorsPage.qml:62
-#, kde-format
-msgid "Color from:"
-msgstr ""
-
-#: src/kcm/ui/ColorsPage.qml:31 src/kcm/ui/ColorsPage.qml:49
-#: src/kcm/ui/ColorsPage.qml:73
-#, kde-format
-msgid "Color:"
-msgstr ""
-
-#: src/kcm/ui/ColorsPage.qml:38
-#, kde-format
-msgid "Pointer"
-msgstr ""
-
-#: src/kcm/ui/ColorsPage.qml:56
-#, kde-format
-msgid "Ring"
-msgstr ""
-
-#: src/kcm/ui/ColorsPage.qml:65 src/kcm/ui/ColorSourceCombo.qml:20
-#, kde-format
-msgid "Custom"
-msgstr ""
-
-#: src/kcm/ui/ColorsPage.qml:66
-#, kde-format
-msgid "Theme accent, muted"
-msgstr ""
-
-#: src/kcm/ui/ColorsPage.qml:80
-#, kde-format
-msgid "Reset colors to defaults"
-msgstr ""
-
-#: src/kcm/ui/ColorsPage.qml:84
-#, kde-format
-msgid "Resets just this page. The Defaults button resets everything."
-msgstr ""
-
 #: src/kcm/ui/ShortcutsPage.qml:33
 #, kde-format
 msgid "Start Sirkel with:"
@@ -669,12 +644,37 @@ msgstr ""
 msgid "All of these are also under Sirkel in System Settings → Shortcuts."
 msgstr ""
 
-#: src/kcm/ui/ColorSourceCombo.qml:21
+#: src/kcm/ui/main.qml:82
 #, kde-format
-msgid "Theme accent"
+msgid "Hide preview"
 msgstr ""
 
-#: src/kcm/sirkelconfigmodule.cpp:144
+#: src/kcm/ui/main.qml:82
 #, kde-format
-msgid "Caps Lock"
+msgid "Show preview"
+msgstr ""
+
+#: src/kcm/ui/main.qml:90
+#, kde-format
+msgid "General"
+msgstr ""
+
+#: src/kcm/ui/main.qml:91
+#, kde-format
+msgid "Appearance"
+msgstr ""
+
+#: src/kcm/ui/main.qml:92
+#, kde-format
+msgid "Colors"
+msgstr ""
+
+#: src/kcm/ui/main.qml:93
+#, kde-format
+msgid "Shortcuts"
+msgstr ""
+
+#: src/kcm/ui/main.qml:94
+#, kde-format
+msgid "About"
 msgstr ""
