@@ -17,7 +17,7 @@ This is version 0.5.3. It's early and I've only tested it on my own machine and 
 
 ## Features
 
-- Snap to the left, right, top or bottom half, any of the four quarters, or full screen.
+- Tile to the left, right, top or bottom half, any of the four quarters, or full screen.
 - Pick a direction with the mouse or the keyboard (arrow keys, WASD or HJKL).
 - Start it with any key combination you like. If you want a dedicated key, you can turn Caps Lock into one with keyd.
 - Set your own shortcuts that snap straight away, without the ring. None are set out of the box.
