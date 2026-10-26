@@ -1,6 +1,7 @@
-#include "placement.h"
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <KLazyLocalizedString>
+#include "placement.h"
 
 #include <algorithm>
 #include <array>
@@ -12,34 +13,19 @@ namespace
 const QList<qreal> kEdgeSteps = {1.0 / 4.0, 1.0 / 3.0, 1.0 / 2.0, 2.0 / 3.0};
 const QList<qreal> kMaximizeSteps = {1.0 / 3.0, 1.0 / 2.0, 1.0};
 
-struct PlacementRow {
-    Placement placement;
-    KLazyLocalizedString label;
-};
-
 // Corners resize width only; their height always stays at half.
-const std::array<PlacementRow, 9> kPlacements{{
-    {{SnapDirection::Left, "left", Anchor::Start, Anchor::Start, 0.5, 1.0, ResizeAxis::Width, &kEdgeSteps, 2, 6}, kli18n("Left")},
-    {{SnapDirection::Right, "right", Anchor::End, Anchor::Start, 0.5, 1.0, ResizeAxis::Width, &kEdgeSteps, 2, 2}, kli18n("Right")},
-    {{SnapDirection::Top, "top", Anchor::Start, Anchor::Start, 1.0, 0.5, ResizeAxis::Height, &kEdgeSteps, 2, 0}, kli18n("Top")},
-    {{SnapDirection::Bottom, "bottom", Anchor::Start, Anchor::End, 1.0, 0.5, ResizeAxis::Height, &kEdgeSteps, 2, 4}, kli18n("Bottom")},
-    {{SnapDirection::TopLeft, "topLeft", Anchor::Start, Anchor::Start, 0.5, 0.5, ResizeAxis::Width, &kEdgeSteps, 2, 7}, kli18n("Top\nLeft")},
-    {{SnapDirection::TopRight, "topRight", Anchor::End, Anchor::Start, 0.5, 0.5, ResizeAxis::Width, &kEdgeSteps, 2, 1}, kli18n("Top\nRight")},
-    {{SnapDirection::BottomLeft, "bottomLeft", Anchor::Start, Anchor::End, 0.5, 0.5, ResizeAxis::Width, &kEdgeSteps, 2, 5}, kli18n("Bottom\nLeft")},
-    {{SnapDirection::BottomRight, "bottomRight", Anchor::End, Anchor::End, 0.5, 0.5, ResizeAxis::Width, &kEdgeSteps, 2, 3}, kli18n("Bottom\nRight")},
+const std::array<Placement, 9> kPlacements{{
+    {SnapDirection::Left, "left", Anchor::Start, Anchor::Start, 0.5, 1.0, ResizeAxis::Width, &kEdgeSteps, 2, 6},
+    {SnapDirection::Right, "right", Anchor::End, Anchor::Start, 0.5, 1.0, ResizeAxis::Width, &kEdgeSteps, 2, 2},
+    {SnapDirection::Top, "top", Anchor::Start, Anchor::Start, 1.0, 0.5, ResizeAxis::Height, &kEdgeSteps, 2, 0},
+    {SnapDirection::Bottom, "bottom", Anchor::Start, Anchor::End, 1.0, 0.5, ResizeAxis::Height, &kEdgeSteps, 2, 4},
+    {SnapDirection::TopLeft, "topLeft", Anchor::Start, Anchor::Start, 0.5, 0.5, ResizeAxis::Width, &kEdgeSteps, 2, 7},
+    {SnapDirection::TopRight, "topRight", Anchor::End, Anchor::Start, 0.5, 0.5, ResizeAxis::Width, &kEdgeSteps, 2, 1},
+    {SnapDirection::BottomLeft, "bottomLeft", Anchor::Start, Anchor::End, 0.5, 0.5, ResizeAxis::Width, &kEdgeSteps, 2, 5},
+    {SnapDirection::BottomRight, "bottomRight", Anchor::End, Anchor::End, 0.5, 0.5, ResizeAxis::Width, &kEdgeSteps, 2, 3},
     // Shrinks in from both sides, centered, height stays full.
-    {{SnapDirection::Maximize, "maximize", Anchor::Center, Anchor::Start, 1.0, 1.0, ResizeAxis::Width, &kMaximizeSteps, 2, -1}, kli18n("Maximize")},
+    {SnapDirection::Maximize, "maximize", Anchor::Center, Anchor::Start, 1.0, 1.0, ResizeAxis::Width, &kMaximizeSteps, 2, -1},
 }};
-
-const PlacementRow *rowFor(SnapDirection direction)
-{
-    for (const PlacementRow &row : kPlacements) {
-        if (row.placement.direction == direction) {
-            return &row;
-        }
-    }
-    return nullptr;
-}
 
 qreal anchoredStart(Anchor anchor, qreal areaStart, qreal areaLength, qreal length)
 {
@@ -57,8 +43,12 @@ qreal anchoredStart(Anchor anchor, qreal areaStart, qreal areaLength, qreal leng
 
 const Placement *placementFor(SnapDirection direction)
 {
-    const PlacementRow *row = rowFor(direction);
-    return row ? &row->placement : nullptr;
+    for (const Placement &placement : kPlacements) {
+        if (placement.direction == direction) {
+            return &placement;
+        }
+    }
+    return nullptr;
 }
 
 QString placementName(SnapDirection direction)
@@ -69,18 +59,12 @@ QString placementName(SnapDirection direction)
 
 SnapDirection directionFromName(const QString &name)
 {
-    for (const PlacementRow &row : kPlacements) {
-        if (name == QLatin1String(row.placement.name)) {
-            return row.placement.direction;
+    for (const Placement &placement : kPlacements) {
+        if (name == QLatin1String(placement.name)) {
+            return placement.direction;
         }
     }
     return SnapDirection::None;
-}
-
-QString placementLabel(SnapDirection direction)
-{
-    const PlacementRow *row = rowFor(direction);
-    return row ? row->label.toString() : QString();
 }
 
 int normalStep(SnapDirection direction)
@@ -136,10 +120,10 @@ QRectF centeredFixedSize(const QRectF &target, const QSizeF &size, const QRectF 
     return rect;
 }
 
-SnapDirection directionForDelta(const QPointF &delta, qreal horizontalDeadzone, qreal verticalDeadzone)
+SnapDirection directionForDelta(const QPointF &delta, qreal deadzone)
 {
-    const bool hasHorizontal = std::abs(delta.x()) >= horizontalDeadzone;
-    const bool hasVertical = std::abs(delta.y()) >= verticalDeadzone;
+    const bool hasHorizontal = std::abs(delta.x()) >= deadzone;
+    const bool hasVertical = std::abs(delta.y()) >= deadzone;
     const bool right = delta.x() > 0;
     const bool down = delta.y() > 0;
 

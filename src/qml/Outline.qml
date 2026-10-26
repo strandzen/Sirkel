@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 import QtQuick.Effects
 
@@ -18,10 +21,6 @@ Item {
     property int easingType: Easing.OutBack
     // Bezier control points, used when easingType is BezierSpline.
     property var easingCurve: [0.22, 1, 0.47, 1, 1, 1]
-    property bool shadowEnabled: true
-    // Fill shades from borderColor into secondColor.
-    property bool twoTone: false
-    readonly property color secondColor: Qt.rgba(borderColor.r * 0.55, borderColor.g * 0.55, borderColor.b * 0.55, borderColor.a)
 
     property real targetX: 0
     property real targetY: 0
@@ -99,22 +98,6 @@ Item {
         easing.type: Easing.InCubic
     }
 
-    // Two-tone: the fill shades from borderColor into secondColor, top to
-    // bottom. Several stops instead of two: a 2-stop ramp bands at low alpha.
-    function gradientStop(position) {
-        const c = Qt.tint(borderColor, Qt.rgba(secondColor.r, secondColor.g, secondColor.b, position));
-        return Qt.rgba(c.r, c.g, c.b, fillOpacity / 100);
-    }
-
-    Gradient {
-        id: fillGradient
-        GradientStop { position: 0.00; color: root.gradientStop(0.00) }
-        GradientStop { position: 0.25; color: root.gradientStop(0.25) }
-        GradientStop { position: 0.50; color: root.gradientStop(0.50) }
-        GradientStop { position: 0.75; color: root.gradientStop(0.75) }
-        GradientStop { position: 1.00; color: root.gradientStop(1.00) }
-    }
-
     Rectangle {
         id: fillRect
         x: root.visualRect.x + root.borderWidth / 2
@@ -122,14 +105,13 @@ Item {
         width: Math.max(0, root.visualRect.width - root.borderWidth)
         height: Math.max(0, root.visualRect.height - root.borderWidth)
         color: Qt.rgba(root.borderColor.r, root.borderColor.g, root.borderColor.b, root.fillOpacity / 100)
-        gradient: root.twoTone ? fillGradient : null
         border.color: root.borderColor
         border.width: root.borderWidth
         radius: root.cornerRadius
 
         // Soft drop shadow (Loop uses about black 20%, radius 10).
         // Skipped on the software renderer, where it would hide the item.
-        layer.enabled: root.shadowEnabled && width > 0 && height > 0 && GraphicsInfo.api !== GraphicsInfo.Software
+        layer.enabled: width > 0 && height > 0 && GraphicsInfo.api !== GraphicsInfo.Software
         layer.effect: MultiEffect {
             shadowEnabled: true
             shadowColor: "black"

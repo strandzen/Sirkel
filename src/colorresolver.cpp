@@ -1,37 +1,14 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "colorresolver.h"
 #include "sirkelconfig.h"
 
 #include <KColorScheme>
 #include <KSharedConfig>
 
-#include <QDir>
-#include <QFile>
-#include <QJsonDocument>
-#include <QJsonObject>
-
 namespace
 {
-// pywal's default output (colors.color1 of ~/.cache/wal/colors.json) when
-// WallpaperColorPath is empty, otherwise a file holding one plain hex color
-// (covers matugen templates and similar). Invalid QColor if unreadable.
-QColor readWallpaperColor()
-{
-    const QString configuredPath = SirkelConfig::wallpaperColorPath();
-    if (configuredPath.isEmpty()) {
-        QFile file(QDir::homePath() + QStringLiteral("/.cache/wal/colors.json"));
-        if (!file.open(QIODevice::ReadOnly)) {
-            return QColor();
-        }
-        const QJsonObject root = QJsonDocument::fromJson(file.readAll()).object();
-        return QColor(root.value(QStringLiteral("colors")).toObject().value(QStringLiteral("color1")).toString());
-    }
-    QFile file(configuredPath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        return QColor();
-    }
-    return QColor(QString::fromUtf8(file.readAll()).trimmed());
-}
-
 KSharedConfigPtr globals()
 {
     return KSharedConfig::openConfig(QStringLiteral("kdeglobals"));
@@ -73,12 +50,7 @@ QColor resolveColor(ColorTarget target)
         source = SirkelConfig::indicatorRingColorSource();
         break;
     }
-    if (source == QStringLiteral("wallpaper")) {
-        const QColor wallpaper = readWallpaperColor();
-        if (wallpaper.isValid()) {
-            return wallpaper;
-        }
-    } else if (source == QStringLiteral("manual")) {
+    if (source == QStringLiteral("manual")) {
         switch (target) {
         case ColorTarget::Outline:
             return SirkelConfig::outlineColor();

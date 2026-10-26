@@ -8,10 +8,12 @@
             }
         ],
         "Category": "Window Management",
-        "Description": "Loop-style directional window snapping: hold the hyperkey, move the mouse to pick a direction, release to snap.",
+        "BugReportUrl": "https://github.com/strandzen/Sirkel/issues",
+        "Description": "Loop-style window snapping: hold your trigger, move the mouse toward a side or corner, and let go to snap the window there.",
         "EnabledByDefault": false,
         "License": "GPL-2.0-or-later",
         "Name": "Sirkel",
-        "Version": "@PROJECT_VERSION@"
+        "Version": "@PROJECT_VERSION@",
+        "Website": "https://github.com/strandzen/Sirkel"
     }
 }

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
@@ -22,7 +25,7 @@ FormPage {
         QQC2.Label {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            text: i18n("Loop-inspired window snapping for KDE Plasma. Hold Caps Lock, move the mouse or press a direction key, release to snap the window there.")
+            text: i18n("Loop-inspired window snapping for KDE Plasma. Hold your trigger (set on the Shortcuts page), move the mouse or press a direction key, and let go to snap the window there.")
         }
 
         // KWin only loads Sirkel if it was built for the exact KWin version,
@@ -55,13 +58,13 @@ FormPage {
 
         Kirigami.Heading {
             level: 3
-            text: i18n("Setting up the hyperkey")
+            text: i18n("Optional: Caps Lock as the trigger")
         }
 
         QQC2.Label {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            text: i18n("Sirkel listens for F24. keyd turns Caps Lock into F24. Add this to /etc/keyd/default.conf (Sirkel never writes there itself):")
+            text: i18n("Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to /etc/keyd/default.conf (Sirkel never writes there itself):")
         }
 
         QQC2.TextArea {
@@ -75,7 +78,7 @@ FormPage {
         QQC2.Label {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            text: i18n("Then enable it once with: sudo systemctl enable --now keyd")
+            text: i18n("Then enable it once with: sudo systemctl enable --now keyd, and choose Caps Lock on the Shortcuts page.")
         }
 
         Kirigami.InlineMessage {

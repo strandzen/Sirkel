@@ -1,5 +1,9 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "overlaycontroller.h"
 #include "colorresolver.h"
+#include "sirkel_debug.h"
 #include "sirkelconfig.h"
 
 #include <effect/effecthandler.h>
@@ -8,6 +12,7 @@
 
 #include <QGuiApplication>
 #include <QPainterPath>
+#include <QQmlError>
 #include <QQuickItem>
 #include <QQuickView>
 #include <QRegion>
@@ -28,6 +33,12 @@ OverlayController::OverlayController()
     m_view->setFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool | Qt::WindowDoesNotAcceptFocus | Qt::WindowTransparentForInput);
     m_view->setColor(Qt::transparent);
     m_view->setResizeMode(QQuickView::SizeRootObjectToView);
+    if (m_view->status() == QQuickView::Error) {
+        // Without the overlay, snapping still works, just with nothing drawn.
+        for (const QQmlError &error : m_view->errors()) {
+            qCWarning(SIRKEL) << "overlay failed to load:" << error.toString();
+        }
+    }
 
     if (QQuickItem *item = root()) {
         m_outline = item->findChild<QQuickItem *>(QStringLiteral("outlinePart"));
@@ -92,14 +103,10 @@ void OverlayController::applyStyle()
         const qreal motionScale = SirkelConfig::outlineAnimationDuration() / kReferenceDuration * KWin::effects->animationTimeFactor();
         item->setProperty("motionScale", motionScale);
         item->setProperty("easing", SirkelConfig::easing());
-        item->setProperty("shadowEnabled", SirkelConfig::shadow());
-        item->setProperty("twoTone", SirkelConfig::twoTone());
     }
     if (m_indicator) {
         m_indicator->setProperty("cornerRadius", SirkelConfig::indicatorCornerRadius());
         m_indicator->setProperty("ringWidth", SirkelConfig::indicatorRingWidth());
-        m_indicator->setProperty("pointerLength", SirkelConfig::indicatorPointerLength());
-        m_indicator->setProperty("showText", SirkelConfig::showIndicatorText());
         m_indicator->setProperty("highlightColor", resolveColor(ColorTarget::Pointer));
         m_indicator->setProperty("ringColor", resolveColor(ColorTarget::Ring));
         m_indicator->setProperty("baseOpacity", SirkelConfig::indicatorRingFillOpacity() / 100.0);
@@ -146,7 +153,6 @@ void OverlayController::showPlacement(SnapDirection direction, const QRectF &tar
     const Placement *p = placementFor(direction);
     if (m_indicator) {
         // ringIndex before direction: Indicator.qml reads it when direction changes.
-        m_indicator->setProperty("label", placementLabel(direction));
         m_indicator->setProperty("ringIndex", p ? p->ringIndex : -1);
         m_indicator->setProperty("direction", placementName(direction));
     }
@@ -159,7 +165,12 @@ void OverlayController::showPlacement(SnapDirection direction, const QRectF &tar
         m_outlineShown = true;
         // Grow out of the window itself on the first pick of a session.
         const QRectF start = windowFrame.isValid() ? windowFrame.translated(-origin) : QRectF(m_area.center() - origin, QSizeF());
-        QMetaObject::invokeMethod(m_outline, "jumpTo", Q_ARG(QVariant, start.x()), Q_ARG(QVariant, start.y()), Q_ARG(QVariant, start.width()), Q_ARG(QVariant, start.height()));
+        QMetaObject::invokeMethod(m_outline,
+                                  "jumpTo",
+                                  Q_ARG(QVariant, start.x()),
+                                  Q_ARG(QVariant, start.y()),
+                                  Q_ARG(QVariant, start.width()),
+                                  Q_ARG(QVariant, start.height()));
         QMetaObject::invokeMethod(m_outline, "playEntrance");
     }
     const QRectF local = target.translated(-origin);

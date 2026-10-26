@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
@@ -28,7 +31,6 @@ FormPage {
             Kirigami.FormData.label: i18n("Color:")
             colorValue: kcm.resolvedOutlineColor
             target: "outline"
-            popup: colorPopup
         }
 
         Kirigami.Separator {
@@ -47,7 +49,6 @@ FormPage {
             Kirigami.FormData.label: i18n("Color:")
             colorValue: kcm.resolvedPointerColor
             target: "pointer"
-            popup: colorPopup
         }
 
         Kirigami.Separator {
@@ -55,14 +56,14 @@ FormPage {
             Kirigami.FormData.label: i18n("Ring")
         }
 
-        // No wallpaper option: the ring is meant to keep its own neutral
-        // identity. The theme option is a dark, muted accent.
+        // The ring's theme option is a dark, muted version of the accent,
+        // so the pointer stands out against it.
         ColorSourceCombo {
             Kirigami.FormData.label: i18n("Color from:")
             Layout.preferredWidth: root.fieldWidth
             sourceOptions: [
                 { value: "manual", text: i18n("Custom") },
-                { value: "theme", text: i18n("Theme accent, muted (live)") },
+                { value: "theme", text: i18n("Theme accent, muted") },
             ]
             sourceValue: kcm.settings.indicatorRingColorSource
             onSourcePicked: (value) => kcm.settings.indicatorRingColorSource = value
@@ -72,7 +73,6 @@ FormPage {
             Kirigami.FormData.label: i18n("Color:")
             colorValue: kcm.resolvedRingColor
             target: "ring"
-            popup: colorPopup
         }
 
         QQC2.Button {
@@ -84,25 +84,5 @@ FormPage {
             QQC2.ToolTip.text: i18n("Resets just this page. The Defaults button resets everything.")
             QQC2.ToolTip.visible: hovered
         }
-    }
-
-    AdvancedFold {
-        twin: mainForm
-
-        QQC2.TextField {
-            Kirigami.FormData.label: i18n("Wallpaper color file:")
-            Layout.preferredWidth: root.fieldWidth
-            placeholderText: i18n("Empty: pywal's default output")
-            text: kcm.settings.wallpaperColorPath
-            onEditingFinished: kcm.settings.wallpaperColorPath = text
-
-            QQC2.ToolTip.text: i18n("Used when a color comes from the wallpaper. Empty = pywal's default output. A path = a file with one hex color (matugen, etc.).")
-            QQC2.ToolTip.visible: hovered
-        }
-    }
-
-    ColorPopup {
-        id: colorPopup
-        parent: root
     }
 }

@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 # kconf_update script (see sirkel.upd): clean up Sirkel settings renamed or
 # removed during 0.1/0.2 development. Uses kreadconfig6/kwriteconfig6 so
 # kwinrc's format is handled by KConfig itself. Only touches keys that exist,

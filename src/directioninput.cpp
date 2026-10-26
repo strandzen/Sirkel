@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "directioninput.h"
 
 #include <QHash>
@@ -18,7 +21,8 @@ using Scheme = std::array<KeyBinding, 4>;
 const QHash<QString, Scheme> &schemeTable()
 {
     static const QHash<QString, Scheme> table{
-        {QStringLiteral("arrows"), {{{Qt::Key_Left, KeyAxis::Left}, {Qt::Key_Right, KeyAxis::Right}, {Qt::Key_Up, KeyAxis::Up}, {Qt::Key_Down, KeyAxis::Down}}}},
+        {QStringLiteral("arrows"),
+         {{{Qt::Key_Left, KeyAxis::Left}, {Qt::Key_Right, KeyAxis::Right}, {Qt::Key_Up, KeyAxis::Up}, {Qt::Key_Down, KeyAxis::Down}}}},
         {QStringLiteral("wasd"), {{{Qt::Key_A, KeyAxis::Left}, {Qt::Key_D, KeyAxis::Right}, {Qt::Key_W, KeyAxis::Up}, {Qt::Key_S, KeyAxis::Down}}}},
         {QStringLiteral("hjkl"), {{{Qt::Key_H, KeyAxis::Left}, {Qt::Key_L, KeyAxis::Right}, {Qt::Key_K, KeyAxis::Up}, {Qt::Key_J, KeyAxis::Down}}}},
     };
@@ -85,8 +89,8 @@ QPointF EdgeOverflow::update(const QPointF &position, const QPointF &motion)
         }
         return std::clamp(overflow + move, -kMaxOverflow, kMaxOverflow);
     };
-    m_overflow = QPointF(axis(position.x(), m_lastPosition.x(), motion.x(), m_overflow.x()),
-                         axis(position.y(), m_lastPosition.y(), motion.y(), m_overflow.y()));
+    m_overflow =
+        QPointF(axis(position.x(), m_lastPosition.x(), motion.x(), m_overflow.x()), axis(position.y(), m_lastPosition.y(), motion.y(), m_overflow.y()));
     m_lastPosition = position;
     return current();
 }
@@ -104,10 +108,9 @@ void DirectionInput::reset()
     m_lastPickFromKey = false;
 }
 
-void DirectionInput::setDeadzones(qreal horizontal, qreal vertical)
+void DirectionInput::setDeadzone(qreal deadzone)
 {
-    m_horizontalDeadzone = horizontal;
-    m_verticalDeadzone = vertical;
+    m_deadzone = deadzone;
 }
 
 void DirectionInput::setAngleMode(qreal centerRadius)
@@ -151,9 +154,8 @@ std::optional<SnapDirection> DirectionInput::pointerMoved(const QPointF &cursor,
 {
     if (m_keyPickCursor) {
         const QPointF moved = cursor - *m_keyPickCursor;
-        const bool stillNear = m_centerRadius > 0
-            ? std::hypot(moved.x(), moved.y()) < m_centerRadius
-            : std::abs(moved.x()) < m_horizontalDeadzone && std::abs(moved.y()) < m_verticalDeadzone;
+        const bool stillNear =
+            m_centerRadius > 0 ? std::hypot(moved.x(), moved.y()) < m_centerRadius : std::abs(moved.x()) < m_deadzone && std::abs(moved.y()) < m_deadzone;
         if (stillNear) {
             return std::nullopt;
         }
@@ -161,8 +163,7 @@ std::optional<SnapDirection> DirectionInput::pointerMoved(const QPointF &cursor,
     }
     m_lastDelta = delta;
     m_lastPickFromKey = false;
-    const SnapDirection candidate = m_centerRadius > 0 ? directionForAngle(delta, m_centerRadius)
-                                                       : directionForDelta(delta, m_horizontalDeadzone, m_verticalDeadzone);
+    const SnapDirection candidate = m_centerRadius > 0 ? directionForAngle(delta, m_centerRadius) : directionForDelta(delta, m_deadzone);
     return candidate == SnapDirection::None ? SnapDirection::Maximize : candidate;
 }
 
@@ -172,14 +173,13 @@ qreal DirectionInput::intensity() const
         return 1.0;
     }
     // Distance past the center relative to its size; 1.0 = right at the
-    // boundary. Box mode normalizes each axis by its own deadzone.
+    // boundary. Box mode uses the larger of the two axes.
     qreal raw;
     if (m_centerRadius > 0) {
         raw = std::hypot(m_lastDelta.x(), m_lastDelta.y()) / m_centerRadius;
     } else {
-        const qreal h = std::max<qreal>(1.0, m_horizontalDeadzone);
-        const qreal v = std::max<qreal>(1.0, m_verticalDeadzone);
-        raw = std::max(std::abs(m_lastDelta.x()) / h, std::abs(m_lastDelta.y()) / v);
+        const qreal d = std::max<qreal>(1.0, m_deadzone);
+        raw = std::max(std::abs(m_lastDelta.x()), std::abs(m_lastDelta.y())) / d;
     }
     const qreal t = std::clamp((raw - 1.0) / 2.0, 0.0, 1.0);
     return 0.55 + 0.45 * t;

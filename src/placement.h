@@ -1,5 +1,9 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #pragma once
 
+#include <QList>
 #include <QPoint>
 #include <QPointF>
 #include <QRectF>
@@ -21,15 +25,22 @@ enum class SnapDirection {
 };
 
 // Where a placement sits along one axis of the screen area.
-enum class Anchor { Start, Center, End };
+enum class Anchor {
+    Start,
+    Center,
+    End
+};
 
 // Which dimension scroll-resize changes for a placement.
-enum class ResizeAxis { Width, Height };
+enum class ResizeAxis {
+    Width,
+    Height
+};
 
 // Everything that defines one placement. Adding a new placement means adding
 // an enum value and one row to the table in placement.cpp - geometry,
-// padding, scroll-resize, the indicator label and ring position all derive
-// from it.
+// padding, scroll-resize and the indicator's ring position all derive from
+// it.
 struct Placement {
     SnapDirection direction;
     // Stable id shared with QML (Outline/Indicator) and debug output.
@@ -55,8 +66,6 @@ const Placement *placementFor(SnapDirection direction);
 QString placementName(SnapDirection direction);
 // Inverse of placementName(); None for an unknown name.
 SnapDirection directionFromName(const QString &name);
-// Translated, user-facing. Corner labels are split over two lines.
-QString placementLabel(SnapDirection direction);
 
 int normalStep(SnapDirection direction);
 // Wraps around in both directions - scroll-resize cycles rather than clamps.
@@ -75,9 +84,9 @@ QRectF placementGeometry(SnapDirection direction, const QRectF &area, qreal padd
 QRectF centeredFixedSize(const QRectF &target, const QSizeF &size, const QRectF &area);
 
 // Which placement a pointer displacement from the indicator's center selects.
-// Each axis arms independently once past its own deadzone, so a diagonal drag
-// selects a corner. Returns None inside both deadzones.
-SnapDirection directionForDelta(const QPointF &delta, qreal horizontalDeadzone, qreal verticalDeadzone);
+// Each axis arms independently once past `deadzone`, so a diagonal drag
+// selects a corner. Returns None while both axes are inside it.
+SnapDirection directionForDelta(const QPointF &delta, qreal deadzone);
 
 // Angle-based alternative to directionForDelta(): None within `centerRadius`
 // of the center, otherwise one of eight 45 degree slices around it. The four

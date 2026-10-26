@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 # Generated here as well: a custom command's outputs are only usable by
 # targets in the directory that defines it, so reusing src/'s copy breaks
 # clean (and parallel) builds.
@@ -28,7 +31,19 @@ qt6_add_resources(kwin_effect_sirkel_config sirkel_preview_qml
 
 # KWin loads an effect only if it was built for its exact version; the About
 # page compares this against the installed KWin.
-target_compile_definitions(kwin_effect_sirkel_config PRIVATE SIRKEL_KWIN_VERSION="${KWin_VERSION}")
+target_compile_definitions(kwin_effect_sirkel_config PRIVATE
+    SIRKEL_KWIN_VERSION="${KWin_VERSION}"
+    TRANSLATION_DOMAIN="kwin_effect_sirkel_config"
+)
+
+ecm_qt_declare_logging_category(kwin_effect_sirkel_config
+    HEADER sirkel_kcm_debug.h
+    IDENTIFIER SIRKEL_KCM
+    CATEGORY_NAME sirkel.settings
+    DESCRIPTION "Sirkel settings"
+    DEFAULT_SEVERITY Warning
+    EXPORT SIRKEL
+)
 
 target_include_directories(kwin_effect_sirkel_config PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src)
 
@@ -50,4 +65,4 @@ target_link_libraries(kwin_effect_sirkel_config PRIVATE
 )
 
 # Launcher entry: opens the same settings in their own window.
-install(FILES org.kde.sirkel.settings.desktop DESTINATION ${KDE_INSTALL_APPDIR})
+install(FILES io.github.strandzen.sirkel.settings.desktop DESTINATION ${KDE_INSTALL_APPDIR})

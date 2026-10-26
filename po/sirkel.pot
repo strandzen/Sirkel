@@ -1,0 +1,110 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the sirkel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: sirkel\n"
+"Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
+"POT-Creation-Date: 2026-10-26 01:41+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/shortcutactions.h:25
+msgid "Sirkel: hold to snap window"
+msgstr ""
+
+#: src/shortcutactions.cpp:10
+msgid "Sirkel: Snap to left half"
+msgstr ""
+
+#: src/shortcutactions.cpp:10
+msgid "Left half"
+msgstr ""
+
+#: src/shortcutactions.cpp:11
+msgid "Sirkel: Snap to right half"
+msgstr ""
+
+#: src/shortcutactions.cpp:11
+msgid "Right half"
+msgstr ""
+
+#: src/shortcutactions.cpp:12
+msgid "Sirkel: Snap to top half"
+msgstr ""
+
+#: src/shortcutactions.cpp:12
+msgid "Top half"
+msgstr ""
+
+#: src/shortcutactions.cpp:13
+msgid "Sirkel: Snap to bottom half"
+msgstr ""
+
+#: src/shortcutactions.cpp:13
+msgid "Bottom half"
+msgstr ""
+
+#: src/shortcutactions.cpp:14
+msgid "Sirkel: Snap to top-left quarter"
+msgstr ""
+
+#: src/shortcutactions.cpp:14
+msgid "Top-left quarter"
+msgstr ""
+
+#: src/shortcutactions.cpp:15
+msgid "Sirkel: Snap to top-right quarter"
+msgstr ""
+
+#: src/shortcutactions.cpp:15
+msgid "Top-right quarter"
+msgstr ""
+
+#: src/shortcutactions.cpp:16
+msgid "Sirkel: Snap to bottom-left quarter"
+msgstr ""
+
+#: src/shortcutactions.cpp:16
+msgid "Bottom-left quarter"
+msgstr ""
+
+#: src/shortcutactions.cpp:17
+msgid "Sirkel: Snap to bottom-right quarter"
+msgstr ""
+
+#: src/shortcutactions.cpp:17
+msgid "Bottom-right quarter"
+msgstr ""
+
+#: src/shortcutactions.cpp:18
+msgid "Sirkel: Maximize"
+msgstr ""
+
+#: src/shortcutactions.cpp:18 src/shortcutactions.cpp:30
+msgid "Maximize"
+msgstr ""
+
+#: src/shortcutactions.cpp:19
+msgid "Sirkel: Minimize"
+msgstr ""
+
+#: src/shortcutactions.cpp:19 src/shortcutactions.cpp:33
+msgid "Minimize"
+msgstr ""
+
+#: src/shortcutactions.cpp:29
+msgid "Sirkel: Maximize (while holding the trigger)"
+msgstr ""
+
+#: src/shortcutactions.cpp:33
+msgid "Sirkel: Minimize (while holding the trigger)"
+msgstr ""

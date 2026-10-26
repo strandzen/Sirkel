@@ -1,7 +1,12 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "sirkeleffect.h"
+#include "globalshortcuts.h"
 #include "hyperkeytrigger.h"
 #include "overlaycontroller.h"
 #include "shortcutactions.h"
+#include "sirkel_debug.h"
 #include "sirkelconfig.h"
 
 #include <core/output.h>
@@ -10,15 +15,9 @@
 #include <input_event.h>
 #include <window.h>
 
-#include <KGlobalAccel>
-
 #include <QAction>
-#include <QHash>
 #include <QKeyEvent>
-#include <QLoggingCategory>
 #include <QTimer>
-
-Q_LOGGING_CATEGORY(SIRKEL, "sirkel")
 
 SirkelEffect::SirkelEffect()
 {
@@ -33,11 +32,22 @@ SirkelEffect::SirkelEffect()
         auto *action = new QAction(this);
         action->setObjectName(QString::fromLatin1(def.id));
         action->setText(def.text.toString());
-        KGlobalAccel::self()->setDefaultShortcut(action, {});
-        KGlobalAccel::self()->setShortcut(action, {});
+        registerGlobalAction(action, {});
         connect(action, &QAction::triggered, this, [this, def]() {
             runShortcutAction(def);
         });
+    }
+
+    // Keys that act while the trigger is held. Registered and then released
+    // straight away (the QAction goes out of scope): KGlobalAccel keeps an
+    // action whose QAction is gone as an inactive entry, listed and
+    // editable in System Settings -> Shortcuts but never grabbed, so Enter
+    // and Backspace keep working normally outside a session.
+    for (const HoldKeyAction &def : holdKeyActions()) {
+        QAction action;
+        action.setObjectName(QString::fromLatin1(def.id));
+        action.setText(def.text.toString());
+        registerGlobalAction(&action, def.defaults);
     }
 
     // Safety net for a missed key release: cancels a session that has seen
@@ -56,11 +66,13 @@ SirkelEffect::SirkelEffect()
     // means nothing touches it afterwards.
     connect(KWin::effects, &KWin::EffectsHandler::windowClosed, this, [this](KWin::EffectWindow *w) {
         if (m_active && w == m_targetWindow) {
+            qCDebug(SIRKEL) << "target window closed, cancelling";
             finish(false);
         }
     });
     connect(KWin::effects, &KWin::EffectsHandler::screenRemoved, this, [this](KWin::LogicalOutput *screen) {
         if (m_active && screen == m_targetScreen) {
+            qCDebug(SIRKEL) << "target screen removed, cancelling";
             finish(false);
         }
     });
@@ -94,11 +106,14 @@ void SirkelEffect::reconfigure(ReconfigureFlags flags)
     // so the cached values have to be re-read from kwinrc.
     SirkelConfig::self()->config()->reparseConfiguration();
     SirkelConfig::self()->load();
+    qCDebug(SIRKEL) << "settings reloaded";
 }
 
 void SirkelEffect::arm()
 {
-    if (m_active) {
+    // Global shortcuts don't fire on the lock screen anyway; this makes sure
+    // nothing is grabbed or moved behind it.
+    if (m_active || KWin::effects->isScreenLocked()) {
         return;
     }
     KWin::EffectWindow *window = SirkelConfig::targetWindowUnderCursor() ? windowUnderCursor() : nullptr;
@@ -107,6 +122,7 @@ void SirkelEffect::arm()
     }
     KWin::LogicalOutput *screen = isTargetable(window) ? screenFor(window) : nullptr;
     if (!screen) {
+        qCDebug(SIRKEL) << "not starting: no window Sirkel may move" << (window ? window->windowClass() : QStringLiteral("(none)"));
         m_trigger->releaseGrab();
         return;
     }
@@ -123,7 +139,7 @@ void SirkelEffect::arm()
     m_active = true;
     m_engaged = false;
     m_input.reset();
-    m_input.setDeadzones(SirkelConfig::horizontalDeadzone(), SirkelConfig::verticalDeadzone());
+    m_input.setDeadzone(SirkelConfig::deadzone());
     m_input.setAngleMode(SirkelConfig::pickingMode() == QStringLiteral("angle") ? SirkelConfig::centerRadius() : 0);
 
     // The usable area's center, not the screen's: that's where the indicator
@@ -138,9 +154,19 @@ void SirkelEffect::arm()
     m_overlay->applyStyle();
     m_overlay->placeIndicator(m_origin);
     m_edgeOverflow.reset(KWin::effects->cursorPos());
+    readHoldKeys();
 
     KWin::effects->startMouseInterception(this, Qt::CrossCursor);
     restartIdleTimer();
+    qCDebug(SIRKEL) << "session started for" << window->windowClass() << "in" << m_area;
+}
+
+void SirkelEffect::readHoldKeys()
+{
+    m_holdKeys.clear();
+    for (const HoldKeyAction &def : holdKeyActions()) {
+        m_holdKeys.append({storedShortcuts(QString::fromLatin1(def.id), def.defaults), def.action});
+    }
 }
 
 void SirkelEffect::restartIdleTimer()
@@ -226,7 +252,10 @@ void SirkelEffect::finish(bool apply)
     m_active = false;
 
     if (apply && m_targetWindow && m_direction != SnapDirection::None) {
+        qCDebug(SIRKEL) << "snapping to" << placementName(m_direction) << "step" << m_sizeStep;
         perform(m_targetWindow, m_area, {WindowAction::Kind::Place, m_direction}, m_sizeStep);
+    } else {
+        qCDebug(SIRKEL) << "session ended without a snap";
     }
     m_overlay->end();
 
@@ -303,12 +332,14 @@ void SirkelEffect::moveWindow(KWin::EffectWindow *window, const QRectF &geometry
 
 void SirkelEffect::runShortcutAction(const ShortcutAction &shortcut)
 {
-    // Not while a hyperkey session is running; that session owns the window.
-    if (m_active) {
+    // Not while a hyperkey session is running (that session owns the
+    // window), and never on the lock screen.
+    if (m_active || KWin::effects->isScreenLocked()) {
         return;
     }
     KWin::EffectWindow *window = KWin::effects->activeWindow();
     KWin::LogicalOutput *screen = isTargetable(window) ? screenFor(window) : nullptr;
+    qCDebug(SIRKEL) << "shortcut" << shortcut.id << (screen ? "on" : "ignored for") << (window ? window->windowClass() : QStringLiteral("(none)"));
     if (screen) {
         perform(window, KWin::effects->clientArea(KWin::MaximizeArea, screen), shortcut.action, -1);
     }
@@ -323,17 +354,10 @@ void SirkelEffect::runKeyAction(const WindowAction &action)
 
 void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
 {
-    if (m_trigger->handlePendingKey(event) || !m_active) {
+    if (!m_active) {
         return;
     }
     restartIdleTimer();
-
-    static const QHash<int, WindowAction> keyActions{
-        {Qt::Key_Return, {WindowAction::Kind::Place, SnapDirection::Maximize}},
-        {Qt::Key_Enter, {WindowAction::Kind::Place, SnapDirection::Maximize}},
-        {Qt::Key_Backspace, {WindowAction::Kind::Minimize}},
-        {Qt::Key_Escape, {WindowAction::Kind::Cancel}},
-    };
 
     const bool press = event->type() == QEvent::KeyPress;
     const bool release = event->type() == QEvent::KeyRelease;
@@ -348,9 +372,18 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
     }
 
     if (press) {
-        const auto it = keyActions.constFind(event->key());
-        if (it != keyActions.constEnd()) {
-            runKeyAction(it.value());
+        // Esc always cancels; the others are rebindable (holdKeyActions()).
+        if (event->key() == Qt::Key_Escape) {
+            runKeyAction({WindowAction::Kind::Cancel});
+            return;
+        }
+        for (const auto &[keys, action] : std::as_const(m_holdKeys)) {
+            for (const QKeySequence &binding : keys) {
+                if (matchesKey(binding, event->key(), event->modifiers())) {
+                    runKeyAction(action);
+                    return;
+                }
+            }
         }
     } else if (m_trigger->isRelease(event)) {
         finish(true);

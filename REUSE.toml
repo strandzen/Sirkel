@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# License info for files that can't carry an SPDX header themselves.
+version = 1
+
+[[annotations]]
+path = [
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "src/metadata.json.in",
+    "src/kcm/kwin_effect_sirkel_config.json.in",
+    "po/*.pot",
+    "po/*/*.po",
+]
+SPDX-FileCopyrightText = "2026 Strandzen <strandzen@gmail.com>"
+SPDX-License-Identifier = "GPL-2.0-or-later"

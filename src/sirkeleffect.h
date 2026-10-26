@@ -1,18 +1,23 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #pragma once
 
 #include "directioninput.h"
 #include "placement.h"
+#include "shortcutactions.h"
 
 #include <effect/effect.h>
 
+#include <QKeySequence>
+#include <QList>
 #include <QPointF>
 #include <QRectF>
 
 #include <memory>
+#include <utility>
 
 class HyperkeyTrigger;
-struct ShortcutAction;
-struct WindowAction;
 class QTimer;
 class OverlayController;
 
@@ -57,8 +62,8 @@ private:
     void engage();
     void pick(SnapDirection direction);
     void refreshPreview();
-    // A key pressed while holding the trigger (table in
-    // grabbedKeyboardEvent(); add a row to bind another key).
+    // A key pressed while holding the trigger: Esc, or one of
+    // holdKeyActions() (add a row there to bind another key).
     void runKeyAction(const WindowAction &action);
     // Does `action` to `window` within `area` (`step` = scroll-resize step,
     // -1 for the normal size).
@@ -83,6 +88,8 @@ private:
     KWin::EffectWindow *windowUnderCursor() const;
     // (Re)starts the SessionTimeout countdown; called on every input.
     void restartIdleTimer();
+    // Reads the configured keys for holdKeyActions() into m_holdKeys.
+    void readHoldKeys();
     // Where the target window actually ends up for a placement: the
     // placement rect, or for a window that can't be resized, its own size
     // centered in that rect.
@@ -108,4 +115,6 @@ private:
     SnapDirection m_direction = SnapDirection::None;
     // Scroll-resize step for m_direction; reset on every new pick.
     int m_sizeStep = 0;
+    // holdKeyActions() with their configured keys, read per session.
+    QList<std::pair<QList<QKeySequence>, WindowAction>> m_holdKeys;
 };

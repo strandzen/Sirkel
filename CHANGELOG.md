@@ -2,6 +2,41 @@
 
 All notable changes to Sirkel. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [semantic versioning](https://semver.org/). Before 1.0, settings may still change between versions.
 
+## [Unreleased]
+
+### Added
+- Sirkel can be translated. See `po/README.md` for how to add a language.
+- Debug logging, which you can turn on in KDebugSettings (`sirkel` and `sirkel.settings`).
+- Automatic builds and tests on GitHub, including a weekly build against the latest KWin.
+- The keys for maximize (Enter) and minimize (Backspace) while holding the trigger can be changed, on the Shortcuts page or in System Settings → Shortcuts.
+- Norwegian (Bokmål) translation.
+- A pacman hook in both PKGBUILDs that reminds you to rebuild Sirkel when KWin is upgraded.
+- A PKGBUILD for the latest release (`packaging/sirkel`), next to the development one.
+- Links to the project page and bug tracker in System Settings → Desktop Effects.
+
+### Changed
+- Sirkel's shortcuts have their own **Sirkel** group in System Settings → Shortcuts instead of being listed under KWin. Existing bindings move over automatically.
+- Auto-cancel is on by default (10 seconds), so a missed key release can't keep the keyboard grabbed.
+- Sirkel never starts on the lock screen.
+- Both PKGBUILDs run the tests while building and also build on aarch64.
+- The ring now follows the Plasma accent by default, in a dark, muted version.
+- One deadzone setting instead of separate horizontal and vertical ones.
+- The pointer's length follows the indicator size.
+- The shadow under the indicator and outline is always on.
+- Colors are picked with Plasma's standard color dialog.
+- The preview gets the wallpaper from Plasma directly.
+- The settings launcher is now `io.github.strandzen.sirkel.settings.desktop`.
+- The README leads with a key combination as the trigger; Caps Lock with keyd is optional.
+
+### Removed
+- The direction label inside the indicator.
+- The "start after holding briefly" trigger option. Sirkel always starts immediately.
+- The Two-tone and Shadow switches.
+- Colors from the wallpaper, and the wallpaper color file setting.
+
+### Fixed
+- The PKGBUILD failed on systems without `vulkan-headers` installed.
+
 ## [0.5.1] - 2026-10-26
 
 ### Added

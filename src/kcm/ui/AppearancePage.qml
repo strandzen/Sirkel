@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
@@ -126,25 +129,6 @@ FormPage {
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Style")
-        }
-
-        QQC2.Switch {
-            Kirigami.FormData.label: i18n("Shadow:")
-            text: i18n("Soft shadow under indicator and outline")
-            checked: kcm.settings.shadow
-            onToggled: kcm.settings.shadow = checked
-        }
-
-        QQC2.Switch {
-            Kirigami.FormData.label: i18n("Two-tone:")
-            text: i18n("Shade pointer and fill into a darker color")
-            checked: kcm.settings.twoTone
-            onToggled: kcm.settings.twoTone = checked
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Motion")
         }
 
@@ -177,27 +161,6 @@ FormPage {
 
             QQC2.ToolTip.text: i18n("Fluid: fast start, long gentle settle, no bounce. Linear: constant speed. Smooth: plain ease out. Overshoot: eases past the target then settles back.")
             QQC2.ToolTip.visible: hovered
-        }
-    }
-
-    AdvancedFold {
-        twin: mainForm
-
-        SliderRow {
-            Kirigami.FormData.label: i18n("Pointer length:")
-            fieldWidth: root.fieldWidth
-            from: 6
-            to: 200
-            unit: " px"
-            value: kcm.settings.indicatorPointerLength
-            onMoved: (v) => kcm.settings.indicatorPointerLength = v
-        }
-
-        QQC2.Switch {
-            Kirigami.FormData.label: i18n("Label:")
-            text: i18n("Show the direction name inside the indicator")
-            checked: kcm.settings.showIndicatorText
-            onToggled: kcm.settings.showIndicatorText = checked
         }
     }
 }

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #pragma once
 
 #include "sirkelconfig.h"
@@ -7,12 +10,12 @@
 
 #include <QColor>
 #include <QHash>
-#include <QPointer>
 #include <QKeySequence>
+#include <QPointer>
+#include <QStringList>
 #include <QUrl>
 #include <QVariantList>
 #include <QVariantMap>
-#include <QStringList>
 
 class QPropertyAnimation;
 class QTimer;
@@ -48,7 +51,7 @@ class SirkelConfigModule : public KQuickManagedConfigModule
     Q_PROPERTY(QString kwinBuildVersion READ kwinBuildVersion CONSTANT)
     Q_PROPERTY(QString kwinInstalledVersion READ kwinInstalledVersion NOTIFY effectStatusChanged)
     Q_PROPERTY(QString effectStatus READ effectStatus NOTIFY effectStatusChanged)
-    // Shortcuts (stored by KGlobalAccel under the "kwin" component, not in
+    // Shortcuts (stored by KGlobalAccel under Sirkel's own component, not in
     // kwinrc). The trigger is either F24 (Caps Lock via keyd) or a key
     // combination; the direct actions have no defaults.
     Q_PROPERTY(QString triggerId READ triggerId CONSTANT)
@@ -57,12 +60,16 @@ class SirkelConfigModule : public KQuickManagedConfigModule
     // [{ id, text }] for every direct action, in display order; text is the
     // short label.
     Q_PROPERTY(QVariantList shortcutActions READ shortcutActions CONSTANT)
+    // [{ id, text }] for the keys that act while the trigger is held
+    // (Enter, Backspace by default).
+    Q_PROPERTY(QVariantList holdKeyActions READ holdKeyActions CONSTANT)
     // Bumped on every shortcut change, so QML bindings calling shortcut()
     // re-read (a reassignment can change another action's shortcut too).
     Q_PROPERTY(int shortcutsRevision READ shortcutsRevision NOTIFY shortcutsChanged)
     // The primary screen's Plasma wallpaper (an image file), for the
-    // preview's background. Empty if it isn't a plain image wallpaper.
-    Q_PROPERTY(QUrl wallpaperUrl READ wallpaperUrl CONSTANT)
+    // preview's background. Empty until Plasma has answered, or if it isn't
+    // a plain image wallpaper.
+    Q_PROPERTY(QUrl wallpaperUrl READ wallpaperUrl NOTIFY wallpaperUrlChanged)
 
 public:
     SirkelConfigModule(QObject *parent, const KPluginMetaData &metaData);
@@ -81,6 +88,7 @@ public:
     bool triggerIsHyperkey() const;
     QString triggerText() const;
     QVariantList shortcutActions() const;
+    QVariantList holdKeyActions() const;
     int shortcutsRevision() const;
     QUrl wallpaperUrl() const;
 
@@ -92,7 +100,7 @@ public:
 
     // Everything the preview needs for placement `name` (placementName()) on
     // a width x height screen, from the same code the effect uses:
-    // { rect, ringIndex, label }. Padding from the settings.
+    // { rect, ringIndex }. Padding from the settings.
     Q_INVOKABLE QVariantMap previewPlacement(const QString &name, qreal width, qreal height) const;
 
     Q_INVOKABLE QKeySequence shortcut(const QString &actionId) const;
@@ -117,7 +125,12 @@ Q_SIGNALS:
     void colorsChanged();
     void keydOkChanged();
     void effectStatusChanged();
+    void wallpaperUrlChanged();
     void shortcutsChanged();
+
+private Q_SLOTS:
+    // Also called when Plasma reports a wallpaper change.
+    void fetchWallpaper();
 
 private:
     void checkKeyd();
@@ -128,6 +141,7 @@ private:
     QPointer<QPropertyAnimation> m_resizeAnimation;
     bool m_keydOk = true;
     QString m_kwinInstalledVersion;
+    QUrl m_wallpaperUrl;
     QString m_effectStatus = QStringLiteral("checking");
     int m_shortcutsRevision = 0;
     // Action id -> shortcut, see reloadShortcuts().

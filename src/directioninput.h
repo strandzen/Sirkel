@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #pragma once
 
 #include "placement.h"
@@ -8,7 +11,13 @@
 #include <optional>
 
 // Which role a physical key plays in direction selection.
-enum class KeyAxis { None, Up, Down, Left, Right };
+enum class KeyAxis {
+    None,
+    Up,
+    Down,
+    Left,
+    Right
+};
 
 // The direction-key presets offered in the KCM ("none" = mouse only).
 QStringList keybindSchemes();
@@ -51,7 +60,7 @@ class DirectionInput
 {
 public:
     void reset();
-    void setDeadzones(qreal horizontal, qreal vertical);
+    void setDeadzone(qreal deadzone);
     // Switches pointer picking to angle slices around a center of
     // `centerRadius` (see directionForAngle()); 0 = the per-axis deadzone box.
     void setAngleMode(qreal centerRadius);
@@ -70,8 +79,7 @@ public:
     qreal intensity() const;
 
 private:
-    qreal m_horizontalDeadzone = 48;
-    qreal m_verticalDeadzone = 48;
+    qreal m_deadzone = 48;
     // > 0 when picking by angle.
     qreal m_centerRadius = 0;
     bool m_up = false;

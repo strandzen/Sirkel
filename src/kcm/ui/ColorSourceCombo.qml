@@ -1,8 +1,11 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 
-// The manual / theme / wallpaper source dropdown. Never touches `kcm`
+// The custom / theme accent source dropdown. Never touches `kcm`
 // itself: the caller passes the current value in and handles sourcePicked.
 QQC2.ComboBox {
     id: root
@@ -15,8 +18,7 @@ QQC2.ComboBox {
     property string sourceValue
     property var sourceOptions: [
         { value: "manual", text: i18n("Custom") },
-        { value: "theme", text: i18n("Theme accent (live)") },
-        { value: "wallpaper", text: i18n("From wallpaper (live)") },
+        { value: "theme", text: i18n("Theme accent") },
     ]
 
     signal sourcePicked(string value)

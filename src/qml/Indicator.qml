@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
@@ -12,11 +15,10 @@ Item {
     transformOrigin: Item.Center
     visible: false
 
-    // Placement name (placementName() in placement.cpp), its translated
-    // label, and its position on the ring (0..7 clockwise from top, -1 for
-    // none). ringIndex is set before direction.
+    // Placement name (placementName() in placement.cpp) and its position on
+    // the ring (0..7 clockwise from top, -1 for none). ringIndex is set
+    // before direction.
     property string direction: "none"
-    property string label: ""
     property int ringIndex: -1
 
     property real cornerRadius: 60
@@ -24,11 +26,12 @@ Item {
     // The thickness actually drawn: at most half the indicator, or the
     // ring would fill it and the pointer band fold over itself.
     readonly property real band: Math.max(0, Math.min(ringWidth, width / 2, height / 2))
-    property real pointerLength: 36
-    property bool showText: false
+    // Length of the pointer along the ring: follows the indicator's size
+    // (36 px at the default 120 px).
+    readonly property real pointerLength: width * 0.3
     property color highlightColor: "#3daee9"
     property color ringColor: "#2e3440"
-    // Ring opacity only; the pointer and text always stay at full strength.
+    // Ring opacity only; the pointer always stays at full strength.
     property real baseOpacity: 1.0
     // How committed the current pick reads, in [0.55, 1.0] (see
     // DirectionInput::intensity()). Dims the pointer for edges/corners.
@@ -37,14 +40,11 @@ Item {
     property int easingType: Easing.OutBack
     // Bezier control points, used when easingType is BezierSpline.
     property var easingCurve: [0.22, 1, 0.36, 1, 1, 1]
-    property bool shadowEnabled: true
-    // Pointer shades from its color into a darker one.
-    property bool twoTone: false
 
     // Soft drop shadow under the whole indicator.
     // The shadow needs a GPU renderer; with Qt Quick's software renderer
     // a layer effect makes the whole item vanish, so it's skipped there.
-    layer.enabled: shadowEnabled && width > 0 && GraphicsInfo.api !== GraphicsInfo.Software
+    layer.enabled: width > 0 && GraphicsInfo.api !== GraphicsInfo.Software
     layer.effect: MultiEffect {
         shadowEnabled: true
         shadowColor: "black"
@@ -302,37 +302,11 @@ Item {
         // Analytic antialiasing; the default renderer leaves jagged edges.
         preferredRendererType: Shape.CurveRenderer
 
-        property LinearGradient twoToneGradient: LinearGradient {
-            x1: 0
-            y1: 0
-            x2: root.width
-            y2: root.height
-            GradientStop { position: 0; color: root.markerFillColor }
-            GradientStop { position: 1; color: Qt.rgba(root.markerFillColor.r * 0.55, root.markerFillColor.g * 0.55, root.markerFillColor.b * 0.55, root.markerFillColor.a) }
-        }
-
         ShapePath {
             strokeWidth: 0
             strokeColor: "transparent"
             fillColor: root.markerFillColor
-            fillGradient: root.twoTone ? markerShape.twoToneGradient : null
             PathPolyline { path: root.markerPolygon }
         }
-    }
-
-    // System font, scaled with the indicator (16px at the default size of
-    // 120). HorizontalFit shrinks a label that would cross the ring.
-    Text {
-        anchors.centerIn: parent
-        width: Math.max(0, root.width - 2 * root.band - 8)
-        horizontalAlignment: Text.AlignHCenter
-        lineHeight: 0.9
-        color: "white"
-        font.family: Qt.application.font.family
-        font.pixelSize: Math.max(8, Math.round(root.width * 16 / 120))
-        fontSizeMode: Text.HorizontalFit
-        minimumPixelSize: 8
-        text: root.label
-        visible: root.showText && root.direction !== "none"
     }
 }

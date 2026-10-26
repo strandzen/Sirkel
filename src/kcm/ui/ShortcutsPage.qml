@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
@@ -8,7 +11,7 @@ import org.kde.kquickcontrols as KQuickControls
 // for setups without keyd), direct shortcuts for each action, and the keys
 // that work while holding the trigger. Shortcut changes apply immediately;
 // they're stored by KGlobalAccel, also editable in System Settings ->
-// Shortcuts -> KWin.
+// Shortcuts -> Sirkel.
 FormPage {
     id: root
 
@@ -82,17 +85,27 @@ FormPage {
             Kirigami.FormData.label: i18n("Direction keys:")
             text: i18n("Pick a direction; two at once for a corner")
         }
-        QQC2.Label {
-            Kirigami.FormData.label: i18n("Enter:")
-            text: i18n("Maximize")
+        // Rebindable, also under Sirkel in System Settings -> Shortcuts. Only
+        // active while the trigger is held, so a plain key like Enter is
+        // fine. Two explicit rows rather than a Repeater, which
+        // Kirigami.FormLayout would move to the end of the form.
+        KQuickControls.KeySequenceItem {
+            Kirigami.FormData.label: kcm.holdKeyActions[0].text + ":"
+            modifierlessAllowed: true
+            checkForConflictsAgainst: KQuickControls.ShortcutType.GlobalShortcuts
+            keySequence: kcm.shortcutsRevision, kcm.shortcut(kcm.holdKeyActions[0].id)
+            onKeySequenceModified: kcm.setShortcut(kcm.holdKeyActions[0].id, keySequence)
+        }
+        KQuickControls.KeySequenceItem {
+            Kirigami.FormData.label: kcm.holdKeyActions[1].text + ":"
+            modifierlessAllowed: true
+            checkForConflictsAgainst: KQuickControls.ShortcutType.GlobalShortcuts
+            keySequence: kcm.shortcutsRevision, kcm.shortcut(kcm.holdKeyActions[1].id)
+            onKeySequenceModified: kcm.setShortcut(kcm.holdKeyActions[1].id, keySequence)
         }
         QQC2.Label {
-            Kirigami.FormData.label: i18n("Backspace:")
-            text: i18n("Minimize")
-        }
-        QQC2.Label {
-            Kirigami.FormData.label: i18n("Esc:")
-            text: i18n("Cancel")
+            Kirigami.FormData.label: i18n("Cancel:")
+            text: i18n("Esc")
         }
         QQC2.Label {
             Kirigami.FormData.label: i18n("Scroll wheel:")
@@ -143,7 +156,7 @@ FormPage {
         icon.name: "preferences-desktop-keyboard-shortcut"
         onClicked: kcm.openShortcutsSettings()
 
-        QQC2.ToolTip.text: i18n("All of these are also under KWin in System Settings → Shortcuts.")
+        QQC2.ToolTip.text: i18n("All of these are also under Sirkel in System Settings → Shortcuts.")
         QQC2.ToolTip.visible: hovered
     }
 

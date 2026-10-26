@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# Builds and tests Sirkel against the latest KWin on Arch Linux. KWin's
+# effect API changes between Plasma releases, so this also runs weekly to
+# catch a new Plasma version breaking the build before users hit it.
+name: Build
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm --needed \
+            base-devel git cmake extra-cmake-modules vulkan-headers gettext clang \
+            kwin qt6-base qt6-declarative kconfig kcolorscheme kcoreaddons \
+            kglobalaccel ki18n kcmutils kwindowsystem kirigami kdeclarative
+
+      - uses: actions/checkout@v4
+
+      - name: Show versions
+        run: pacman -Q kwin qt6-base kcmutils
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+
+      - name: Check formatting (KDE style)
+        run: |
+          cmake --build build --target clang-format
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git diff --exit-code -- src autotests \
+            || { echo "Run: cmake --build build --target clang-format"; exit 1; }
+
+      - name: Build
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Test
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Check the translation templates are up to date
+        run: |
+          ./scripts/update-translations.sh
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git diff --ignore-matching-lines='^"POT-Creation-Date' --exit-code po/ \
+            || { echo "Run scripts/update-translations.sh and commit po/"; exit 1; }
+
+  reuse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: fsfe/reuse-action@v5

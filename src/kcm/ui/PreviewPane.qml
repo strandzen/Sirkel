@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
@@ -31,7 +34,6 @@ Item {
         // Geometry, ring position and label come from the same C++ code the
         // effect uses.
         const p = kcm.previewPlacement(dir, screenW, screenH);
-        ind.label = p.label;
         ind.ringIndex = p.ringIndex;
         ind.direction = dir;
         if (first) {
@@ -147,8 +149,6 @@ Item {
             id: overlay
             motionScale: kcm.settings.outlineAnimationDuration / 75
             easing: kcm.settings.easing
-            shadowEnabled: kcm.settings.shadow
-            twoTone: kcm.settings.twoTone
         }
     }
 
@@ -159,8 +159,6 @@ Item {
     Binding { target: overlay.indicatorItem; property: "height"; value: kcm.settings.indicatorSize }
     Binding { target: overlay.indicatorItem; property: "cornerRadius"; value: kcm.settings.indicatorCornerRadius }
     Binding { target: overlay.indicatorItem; property: "ringWidth"; value: kcm.settings.indicatorRingWidth }
-    Binding { target: overlay.indicatorItem; property: "pointerLength"; value: kcm.settings.indicatorPointerLength }
-    Binding { target: overlay.indicatorItem; property: "showText"; value: kcm.settings.showIndicatorText }
     Binding { target: overlay.indicatorItem; property: "highlightColor"; value: kcm.resolvedPointerColor }
     Binding { target: overlay.indicatorItem; property: "ringColor"; value: kcm.resolvedRingColor }
     Binding { target: overlay.indicatorItem; property: "baseOpacity"; value: kcm.settings.indicatorRingFillOpacity / 100 }

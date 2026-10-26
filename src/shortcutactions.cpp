@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "shortcutactions.h"
 
 const QList<ShortcutAction> &shortcutActions()
@@ -16,4 +19,47 @@ const QList<ShortcutAction> &shortcutActions()
         {"SirkelMinimize", kli18n("Sirkel: Minimize"), kli18n("Minimize"), {K::Minimize}},
     };
     return actions;
+}
+
+const QList<HoldKeyAction> &holdKeyActions()
+{
+    using K = WindowAction::Kind;
+    static const QList<HoldKeyAction> actions{
+        {"SirkelHoldMaximize",
+         kli18n("Sirkel: Maximize (while holding the trigger)"),
+         kli18n("Maximize"),
+         {QKeySequence(Qt::Key_Return), QKeySequence(Qt::Key_Enter)},
+         {K::Place, SnapDirection::Maximize}},
+        {"SirkelHoldMinimize", kli18n("Sirkel: Minimize (while holding the trigger)"), kli18n("Minimize"), {QKeySequence(Qt::Key_Backspace)}, {K::Minimize}},
+    };
+    return actions;
+}
+
+QList<QKeySequence> parseStoredShortcuts(const QString &keys)
+{
+    QList<QKeySequence> result;
+    if (keys.isEmpty() || keys == QLatin1String("none")) {
+        return result;
+    }
+    for (const QString &part : keys.split(QLatin1Char('\t'), Qt::SkipEmptyParts)) {
+        const QKeySequence sequence = QKeySequence::fromString(part, QKeySequence::PortableText);
+        if (!sequence.isEmpty()) {
+            result.append(sequence);
+        }
+    }
+    return result;
+}
+
+bool matchesKey(const QKeySequence &binding, int key, Qt::KeyboardModifiers held)
+{
+    if (binding.isEmpty() || binding[0].key() != key) {
+        return false;
+    }
+    const Qt::KeyboardModifiers wanted = binding[0].keyboardModifiers() & ~Qt::KeypadModifier;
+    return (held & wanted) == wanted;
+}
+
+QString translatedText(const KLazyLocalizedString &text)
+{
+    return text.toString();
 }

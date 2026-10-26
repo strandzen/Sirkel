@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "placement.h"
 
 #include <QTest>
@@ -72,8 +75,14 @@ void PlacementTest::cycleWraps()
 void PlacementTest::ringIndicesAreUnique()
 {
     QSet<int> seen;
-    for (auto d : {SnapDirection::Left, SnapDirection::Right, SnapDirection::Top, SnapDirection::Bottom, SnapDirection::TopLeft, SnapDirection::TopRight,
-                   SnapDirection::BottomLeft, SnapDirection::BottomRight}) {
+    for (auto d : {SnapDirection::Left,
+                   SnapDirection::Right,
+                   SnapDirection::Top,
+                   SnapDirection::Bottom,
+                   SnapDirection::TopLeft,
+                   SnapDirection::TopRight,
+                   SnapDirection::BottomLeft,
+                   SnapDirection::BottomRight}) {
         const int index = placementFor(d)->ringIndex;
         QVERIFY(index >= 0 && index < 8);
         QVERIFY(!seen.contains(index));
@@ -84,8 +93,15 @@ void PlacementTest::ringIndicesAreUnique()
 
 void PlacementTest::namesRoundTrip()
 {
-    for (auto d : {SnapDirection::Left, SnapDirection::Right, SnapDirection::Top, SnapDirection::Bottom, SnapDirection::TopLeft, SnapDirection::TopRight,
-                   SnapDirection::BottomLeft, SnapDirection::BottomRight, SnapDirection::Maximize}) {
+    for (auto d : {SnapDirection::Left,
+                   SnapDirection::Right,
+                   SnapDirection::Top,
+                   SnapDirection::Bottom,
+                   SnapDirection::TopLeft,
+                   SnapDirection::TopRight,
+                   SnapDirection::BottomLeft,
+                   SnapDirection::BottomRight,
+                   SnapDirection::Maximize}) {
         QCOMPARE(directionFromName(placementName(d)), d);
     }
     QCOMPARE(directionFromName(QStringLiteral("bogus")), SnapDirection::None);
@@ -149,7 +165,7 @@ void PlacementTest::directionForDelta()
 {
     QFETCH(QPointF, delta);
     QFETCH(SnapDirection, expected);
-    QCOMPARE(::directionForDelta(delta, 48, 48), expected);
+    QCOMPARE(::directionForDelta(delta, 48), expected);
 }
 
 QTEST_GUILESS_MAIN(PlacementTest)

@@ -1,29 +1,32 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "sirkelconfigmodule.h"
 #include "colorresolver.h"
 #include "directioninput.h"
 #include "placement.h"
 #include "shortcutactions.h"
+#include "sirkel_kcm_debug.h"
 
-#include <KConfig>
 #include <KConfigGroup>
 #include <KConfigWatcher>
 #include <KGlobalAccel>
 #include <KPluginFactory>
 #include <KSharedConfig>
 
+#include <QApplication>
 #include <QDBusConnection>
 #include <QDBusMessage>
 #include <QDBusPendingCall>
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
-#include <QApplication>
 #include <QDialog>
 #include <QDir>
 #include <QDirIterator>
-#include <QPropertyAnimation>
 #include <QFile>
 #include <QFileInfo>
 #include <QProcess>
+#include <QPropertyAnimation>
 #include <QRegularExpression>
 #include <QTimer>
 
@@ -51,8 +54,7 @@ SirkelConfigModule::SirkelConfigModule(QObject *parent, const KPluginMetaData &m
                         &SirkelConfig::IndicatorPointerColorChanged,
                         &SirkelConfig::IndicatorPointerColorSourceChanged,
                         &SirkelConfig::IndicatorRingColorChanged,
-                        &SirkelConfig::IndicatorRingColorSourceChanged,
-                        &SirkelConfig::WallpaperColorPathChanged}) {
+                        &SirkelConfig::IndicatorRingColorSourceChanged}) {
         connect(config, signal, this, &SirkelConfigModule::colorsChanged);
     }
 
@@ -65,6 +67,13 @@ SirkelConfigModule::SirkelConfigModule(QObject *parent, const KPluginMetaData &m
     });
 
     reloadShortcuts();
+    fetchWallpaper();
+    QDBusConnection::sessionBus().connect(QStringLiteral("org.kde.plasmashell"),
+                                          QStringLiteral("/PlasmaShell"),
+                                          QStringLiteral("org.kde.PlasmaShell"),
+                                          QStringLiteral("wallpaperChanged"),
+                                          this,
+                                          SLOT(fetchWallpaper()));
     checkKeyd();
     checkEffect();
 }
@@ -139,7 +148,16 @@ QVariantList SirkelConfigModule::shortcutActions() const
 {
     QVariantList list;
     for (const ShortcutAction &action : ::shortcutActions()) {
-        list.append(QVariantMap{{QStringLiteral("id"), QString::fromLatin1(action.id)}, {QStringLiteral("text"), action.label.toString()}});
+        list.append(QVariantMap{{QStringLiteral("id"), QString::fromLatin1(action.id)}, {QStringLiteral("text"), translatedText(action.label)}});
+    }
+    return list;
+}
+
+QVariantList SirkelConfigModule::holdKeyActions() const
+{
+    QVariantList list;
+    for (const HoldKeyAction &action : ::holdKeyActions()) {
+        list.append(QVariantMap{{QStringLiteral("id"), QString::fromLatin1(action.id)}, {QStringLiteral("text"), translatedText(action.label)}});
     }
     return list;
 }
@@ -159,11 +177,14 @@ void SirkelConfigModule::reloadShortcuts()
     // Each lookup is a blocking D-Bus call, so they're read once here (on
     // open and after every change) rather than from every QML binding.
     const auto read = [this](const QString &id) {
-        m_shortcuts.insert(id, KGlobalAccel::self()->globalShortcut(QStringLiteral("kwin"), id).value(0));
+        m_shortcuts.insert(id, KGlobalAccel::self()->globalShortcut(QString::fromLatin1(kShortcutComponent), id).value(0));
     };
     m_shortcuts.clear();
     read(triggerId());
     for (const ShortcutAction &action : ::shortcutActions()) {
+        read(QString::fromLatin1(action.id));
+    }
+    for (const HoldKeyAction &action : ::holdKeyActions()) {
         read(QString::fromLatin1(action.id));
     }
 }
@@ -175,11 +196,16 @@ void SirkelConfigModule::setShortcut(const QString &actionId, const QKeySequence
     // QAction is updated live.
     QString text;
     if (actionId == triggerId()) {
-        text = kTriggerActionText.toString();
+        text = translatedText(kTriggerActionText);
     } else {
         for (const ShortcutAction &action : ::shortcutActions()) {
             if (actionId == QLatin1String(action.id)) {
-                text = action.text.toString();
+                text = translatedText(action.text);
+            }
+        }
+        for (const HoldKeyAction &action : ::holdKeyActions()) {
+            if (actionId == QLatin1String(action.id)) {
+                text = translatedText(action.text);
             }
         }
     }
@@ -194,8 +220,11 @@ void SirkelConfigModule::setShortcut(const QString &actionId, const QKeySequence
                                                           QStringLiteral("/kglobalaccel"),
                                                           QStringLiteral("org.kde.KGlobalAccel"),
                                                           QStringLiteral("setForeignShortcut"));
-    message << QStringList{QStringLiteral("kwin"), actionId, QStringLiteral("KWin"), text} << QVariant::fromValue(keys);
-    QDBusConnection::sessionBus().call(message);
+    message << QStringList{QString::fromLatin1(kShortcutComponent), actionId, QString::fromLatin1(kShortcutComponentName), text} << QVariant::fromValue(keys);
+    const QDBusMessage reply = QDBusConnection::sessionBus().call(message);
+    if (reply.type() == QDBusMessage::ErrorMessage) {
+        qCWarning(SIRKEL_KCM) << "couldn't set the shortcut for" << actionId << reply.errorMessage();
+    }
     // Re-read all: a reassignment can take another action's keys too.
     reloadShortcuts();
     ++m_shortcutsRevision;
@@ -209,38 +238,28 @@ void SirkelConfigModule::useHyperkeyTrigger()
 
 QUrl SirkelConfigModule::wallpaperUrl() const
 {
-    // Desktop containments live in plasmashell's applets config; prefer the
-    // one on the primary screen (lastScreen=0) with an image wallpaper.
-    const KConfig applets(QStringLiteral("plasma-org.kde.plasma.desktop-appletsrc"), KConfig::SimpleConfig);
-    const KConfigGroup containments(&applets, QStringLiteral("Containments"));
-    QString image;
-    for (const QString &id : containments.groupList()) {
-        const KConfigGroup containment = containments.group(id);
-        if (containment.readEntry("wallpaperplugin") != QLatin1String("org.kde.image")) {
-            continue;
-        }
-        const QString candidate = containment.group(QStringLiteral("Wallpaper")).group(QStringLiteral("org.kde.image")).group(QStringLiteral("General")).readEntry("Image");
-        if (candidate.isEmpty()) {
-            continue;
-        }
-        if (image.isEmpty() || containment.readEntry("lastScreen", -1) == 0) {
-            image = candidate;
-        }
-        if (containment.readEntry("lastScreen", -1) == 0) {
-            break;
-        }
-    }
-    if (image.isEmpty()) {
+    return m_wallpaperUrl;
+}
+
+namespace
+{
+// The wallpaper's "Image" setting is a file, or a wallpaper package folder
+// (use its largest image).
+QUrl wallpaperImage(const QString &image)
+{
+    const QString path = QUrl::fromUserInput(image).toLocalFile();
+    if (path.isEmpty()) {
         return {};
     }
-    const QString path = QUrl::fromUserInput(image).toLocalFile();
     if (QFileInfo(path).isFile()) {
         return QUrl::fromLocalFile(path);
     }
-    // A wallpaper package: use its largest image.
     QString best;
     qint64 bestSize = -1;
-    QDirIterator it(path + QStringLiteral("/contents"), {QStringLiteral("*.jpg"), QStringLiteral("*.jpeg"), QStringLiteral("*.png"), QStringLiteral("*.webp")}, QDir::Files, QDirIterator::Subdirectories);
+    QDirIterator it(path + QStringLiteral("/contents"),
+                    {QStringLiteral("*.jpg"), QStringLiteral("*.jpeg"), QStringLiteral("*.png"), QStringLiteral("*.webp")},
+                    QDir::Files,
+                    QDirIterator::Subdirectories);
     while (it.hasNext()) {
         const QFileInfo info(it.next());
         if (info.size() > bestSize) {
@@ -249,6 +268,35 @@ QUrl SirkelConfigModule::wallpaperUrl() const
         }
     }
     return best.isEmpty() ? QUrl() : QUrl::fromLocalFile(best);
+}
+}
+
+void SirkelConfigModule::fetchWallpaper()
+{
+    // Plasma's own API for the wallpaper of a screen (0 = the primary one).
+    QDBusMessage message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.plasmashell"),
+                                                          QStringLiteral("/PlasmaShell"),
+                                                          QStringLiteral("org.kde.PlasmaShell"),
+                                                          QStringLiteral("wallpaper"));
+    message << 0u;
+    auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(message), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher *watcher) {
+        watcher->deleteLater();
+        const QDBusPendingReply<QVariantMap> reply = *watcher;
+        if (reply.isError()) {
+            qCDebug(SIRKEL_KCM) << "no wallpaper from Plasma:" << reply.error().message();
+            return;
+        }
+        const QVariantMap wallpaper = reply.value();
+        // Slideshows, colors and other plugins have no single image.
+        const QUrl url = wallpaper.value(QStringLiteral("wallpaperPlugin")) == QLatin1String("org.kde.image")
+            ? wallpaperImage(wallpaper.value(QStringLiteral("Image")).toString())
+            : QUrl();
+        if (url != m_wallpaperUrl) {
+            m_wallpaperUrl = url;
+            Q_EMIT wallpaperUrlChanged();
+        }
+    });
 }
 
 void SirkelConfigModule::resizeHostWindow(qreal pageWidth, qreal targetPageWidth, int duration)
@@ -293,7 +341,6 @@ QVariantMap SirkelConfigModule::previewPlacement(const QString &name, qreal widt
     return {
         {QStringLiteral("rect"), placementGeometry(direction, QRectF(0, 0, width, height), SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical())},
         {QStringLiteral("ringIndex"), p ? p->ringIndex : -1},
-        {QStringLiteral("label"), placementLabel(direction)},
     };
 }
 
@@ -325,7 +372,6 @@ void SirkelConfigModule::resetColors()
     config->indicatorPointerColorSourceItem()->setDefault();
     config->indicatorRingColorItem()->setDefault();
     config->indicatorRingColorSourceItem()->setDefault();
-    config->wallpaperColorPathItem()->setDefault();
 }
 
 void SirkelConfigModule::save()
@@ -339,7 +385,13 @@ void SirkelConfigModule::save()
                                                           QStringLiteral("org.kde.kwin.Effects"),
                                                           QStringLiteral("reconfigureEffect"));
     message << QStringLiteral("kwin_effect_sirkel");
-    QDBusConnection::sessionBus().asyncCall(message);
+    auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(message), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, [](QDBusPendingCallWatcher *watcher) {
+        watcher->deleteLater();
+        if (watcher->isError()) {
+            qCWarning(SIRKEL_KCM) << "KWin didn't reload Sirkel's settings:" << watcher->error().message();
+        }
+    });
 }
 
 void SirkelConfigModule::checkKeyd()
@@ -369,6 +421,7 @@ void SirkelConfigModule::checkKeyd()
             // Unreadable config isn't evidence of a problem.
             ok = mapped || !anyReadable;
         }
+        qCDebug(SIRKEL_KCM) << "keyd set up:" << ok;
         if (ok != m_keydOk) {
             m_keydOk = ok;
             Q_EMIT keydOkChanged();
@@ -397,8 +450,10 @@ void SirkelConfigModule::checkEffect()
             process->deleteLater();
             // "kwin 6.8.1"; empty if kwin_wayland couldn't be run.
             m_kwinInstalledVersion = QString::fromUtf8(process->readAllStandardOutput()).trimmed().section(QLatin1Char(' '), -1);
-            const bool enabled = KConfigGroup(KSharedConfig::openConfig(QStringLiteral("kwinrc")), QStringLiteral("Plugins"))
-                                     .readEntry("kwin_effect_sirkelEnabled", false);
+            const bool enabled =
+                KConfigGroup(KSharedConfig::openConfig(QStringLiteral("kwinrc")), QStringLiteral("Plugins")).readEntry("kwin_effect_sirkelEnabled", false);
+            qCDebug(SIRKEL_KCM) << "built for KWin" << kwinBuildVersion() << "installed" << m_kwinInstalledVersion << "loaded" << loaded << "enabled"
+                                << enabled;
             if (!m_kwinInstalledVersion.isEmpty() && m_kwinInstalledVersion != kwinBuildVersion()) {
                 m_effectStatus = QStringLiteral("rebuild");
             } else if (loaded) {

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 
 // One window for both the outline preview and the indicator. Two Items in
@@ -36,11 +39,6 @@ Item {
     readonly property var glideCurve: [0.22, 1, 0.47, 1, 1, 1]
     readonly property var slideCurve: [0.22, 1, 0.36, 1, 1, 1]
 
-    // Soft drop shadow under both parts.
-    property bool shadowEnabled: true
-    // Pointer and outline fill shade from their color into a darker one.
-    property bool twoTone: false
-
     function ms(base) {
         return Math.round(base * root.motionScale);
     }
@@ -71,8 +69,6 @@ Item {
         motionScale: root.motionScale
         easingType: root.easingType
         easingCurve: root.glideCurve
-        shadowEnabled: root.shadowEnabled
-        twoTone: root.twoTone
     }
 
     Indicator {
@@ -81,7 +77,5 @@ Item {
         motionScale: root.motionScale
         easingType: root.easingType
         easingCurve: root.slideCurve
-        shadowEnabled: root.shadowEnabled
-        twoTone: root.twoTone
     }
 }

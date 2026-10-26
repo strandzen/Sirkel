@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
@@ -37,13 +40,13 @@ FormPage {
             Layout.minimumWidth: 0
             textRole: "text"
             model: [
-                { value: "box", text: i18n("Box (per-axis deadzones)") },
+                { value: "box", text: i18n("Box (distance per axis)") },
                 { value: "angle", text: i18n("Angle (eight slices)") },
             ]
             currentIndex: model.findIndex(m => m.value === kcm.settings.pickingMode)
             onActivated: kcm.settings.pickingMode = model[currentIndex].value
 
-            QQC2.ToolTip.text: i18n("Box: each axis has its own deadzone, corners need both. Angle: one center radius, then the direction you moved picks one of eight slices, so corners are as easy as edges.")
+            QQC2.ToolTip.text: i18n("Box: move a set distance left/right or up/down; corners need both. Angle: move past one center radius, then the direction you moved picks one of eight slices, so corners are as easy as edges.")
             QQC2.ToolTip.visible: hovered
         }
 
@@ -156,52 +159,21 @@ FormPage {
         }
 
         QQC2.SpinBox {
-            Kirigami.FormData.label: i18n("Horizontal deadzone (px):")
+            Kirigami.FormData.label: i18n("Deadzone (px):")
             Layout.preferredWidth: root.fieldWidth
             visible: kcm.settings.pickingMode !== "angle"
             from: 1
             to: 500
-            value: kcm.settings.horizontalDeadzone
-            onValueModified: kcm.settings.horizontalDeadzone = value
-        }
+            value: kcm.settings.deadzone
+            onValueModified: kcm.settings.deadzone = value
 
-        QQC2.SpinBox {
-            Kirigami.FormData.label: i18n("Vertical deadzone (px):")
-            Layout.preferredWidth: root.fieldWidth
-            visible: kcm.settings.pickingMode !== "angle"
-            from: 1
-            to: 500
-            value: kcm.settings.verticalDeadzone
-            onValueModified: kcm.settings.verticalDeadzone = value
+            QQC2.ToolTip.text: i18n("How far the mouse has to move from the center, left/right or up/down, before that direction counts. Both directions for a corner.")
+            QQC2.ToolTip.visible: hovered
         }
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Trigger")
-        }
-
-        QQC2.ComboBox {
-            Kirigami.FormData.label: i18n("Start:")
-            Layout.preferredWidth: root.fieldWidth
-            Layout.minimumWidth: 0
-            textRole: "text"
-            model: [
-                { value: "instant", text: i18n("Immediately") },
-                { value: "delay", text: i18n("After holding briefly") },
-            ]
-            currentIndex: model.findIndex(m => m.value === kcm.settings.triggerMode)
-            onActivated: kcm.settings.triggerMode = model[currentIndex].value
-        }
-
-        QQC2.SpinBox {
-            Kirigami.FormData.label: i18n("Hold for (ms):")
-            Layout.preferredWidth: root.fieldWidth
-            visible: kcm.settings.triggerMode === "delay"
-            from: 0
-            to: 1000
-            stepSize: 50
-            value: kcm.settings.triggerDelay
-            onValueModified: kcm.settings.triggerDelay = value
         }
 
         QQC2.SpinBox {

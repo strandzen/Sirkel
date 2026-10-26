@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #pragma once
 
 #include <QKeySequence>
@@ -7,7 +10,6 @@
 
 class QAction;
 class QKeyEvent;
-class QTimer;
 
 namespace KWin
 {
@@ -15,14 +17,13 @@ class Effect;
 }
 
 // Everything about how a hyperkey press becomes a session, kept in one place
-// so a different trigger (e.g. a Meta fallback) can be added later without
+// so a different trigger (e.g. a touchpad gesture) can be added later without
 // touching the session logic.
 //
 // Activation is a KGlobalAccel action: F24 (Caps Lock via keyd) by default,
 // or a Meta combination chosen in Sirkel's settings, also rebindable in
 // System Settings -> Shortcuts. Releasing the trigger ends the session. Also owns
-// the keyboard grab, since a pending "delay" trigger already needs it before
-// a session exists.
+// the keyboard grab, which is what delivers that release.
 class HyperkeyTrigger : public QObject
 {
     Q_OBJECT
@@ -38,8 +39,6 @@ public:
     // snap). Follows changes made in the settings live, without restarting
     // KWin.
     bool isRelease(const QKeyEvent *event) const;
-    // Feeds a key event while pending. Returns true if it was consumed.
-    bool handlePendingKey(QKeyEvent *event);
 
     // Grabs the keyboard if not already held. Returns false if the grab
     // failed (another effect holds it), in which case no session may start:
@@ -52,14 +51,11 @@ Q_SIGNALS:
 
 private:
     void onTriggered();
-    void cancelPending();
     void setCombo(const QKeySequence &sequence);
 
     KWin::Effect *m_effect;
     std::function<bool()> m_busy;
     QAction *m_action = nullptr;
-    QTimer *m_delayTimer = nullptr;
-    bool m_pending = false;
     // The trigger's key combination (F24 when none is set).
     QKeyCombination m_combo = QKeyCombination(Qt::Key_F24);
     bool m_grabbed = false;

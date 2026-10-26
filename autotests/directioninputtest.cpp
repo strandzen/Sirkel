@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "directioninput.h"
 
 #include <QTest>
@@ -28,7 +31,7 @@ private:
 void DirectionInputTest::init()
 {
     m_input.reset();
-    m_input.setDeadzones(48, 48);
+    m_input.setDeadzone(48);
 }
 
 void DirectionInputTest::schemes()
