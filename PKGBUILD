@@ -6,7 +6,7 @@
 # packaging/sirkel/PKGBUILD.
 pkgname=sirkel-git
 _pkgname=Sirkel
-pkgver=0.5.1
+pkgver=0.5.2
 pkgrel=1
 pkgdesc="Loop-inspired directional window snapping for KDE Plasma (KWin effect)"
 arch=('x86_64' 'aarch64')

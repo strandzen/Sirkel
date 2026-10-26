@@ -2,7 +2,7 @@
 
 All notable changes to Sirkel. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [semantic versioning](https://semver.org/). Before 1.0, settings may still change between versions.
 
-## [Unreleased]
+## [0.5.2] - 2026-10-26
 
 ### Added
 - Sirkel can be translated. See `po/README.md` for how to add a language.
@@ -13,6 +13,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - A pacman hook in both PKGBUILDs that reminds you to rebuild Sirkel when KWin is upgraded.
 - A PKGBUILD for the latest release (`packaging/sirkel`), next to the development one.
 - Links to the project page and bug tracker in System Settings → Desktop Effects.
+- A stress test (`scripts/stress/`) that runs Sirkel in a headless KWin with simulated input, optionally with memory error checking.
 
 ### Changed
 - Sirkel's shortcuts have their own **Sirkel** group in System Settings → Shortcuts instead of being listed under KWin. Existing bindings move over automatically.
@@ -131,6 +132,7 @@ First versioned release.
 - Desktop, panels and other special windows are ignored.
 - GPL-2.0-or-later license.
 
+[0.5.2]: https://github.com/strandzen/Sirkel/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/strandzen/Sirkel/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/strandzen/Sirkel/compare/v0.2.0...v0.5.0
 [0.2.0]: https://github.com/strandzen/Sirkel/compare/v0.1.0...v0.2.0
