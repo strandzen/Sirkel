@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-26 19:01+0100\n"
+"POT-Creation-Date: 2026-10-26 19:51+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,12 +22,12 @@ msgstr ""
 msgid "Caps Lock"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:22
+#: src/kcm/ui/AboutPage.qml:30
 #, kde-format
 msgid "Sirkel %1"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:28
+#: src/kcm/ui/AboutPage.qml:37
 #, kde-format
 msgid ""
 "Loop-inspired window snapping for KDE Plasma. Hold your trigger (set on the "
@@ -35,29 +35,29 @@ msgid ""
 "the window there."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:43
+#: src/kcm/ui/AboutPage.qml:52
 #, kde-format
 msgid "Sirkel is running (built for KWin %1)."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:44
+#: src/kcm/ui/AboutPage.qml:53
 #, kde-format
 msgid ""
 "Sirkel was built for KWin %1, but KWin %2 is installed, so KWin won't load "
 "it. Rebuild and reinstall Sirkel, then log out and back in."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:45
+#: src/kcm/ui/AboutPage.qml:54
 #, kde-format
 msgid "Sirkel matches KWin %1 but isn't running yet. Log out and back in."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:46
+#: src/kcm/ui/AboutPage.qml:55
 #, kde-format
 msgid "Sirkel is off. Turn it on in System Settings → Desktop Effects."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:56
+#: src/kcm/ui/AboutPage.qml:65
 #, kde-format
 msgid ""
 "# Built from source, in the source folder:\n"
@@ -68,50 +68,50 @@ msgid ""
 "makepkg -si"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:61
+#: src/kcm/ui/AboutPage.qml:70
 #, kde-format
 msgid "Optional: Caps Lock as the trigger"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:67
+#: src/kcm/ui/AboutPage.qml:76
 #, kde-format
 msgid ""
 "Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to /"
 "etc/keyd/default.conf (Sirkel never writes there itself):"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:81
+#: src/kcm/ui/AboutPage.qml:90
 #, kde-format
 msgid ""
 "Then enable it once with: sudo systemctl enable --now keyd, and choose Caps "
 "Lock on the Shortcuts page."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:91
+#: src/kcm/ui/AboutPage.qml:100
 #, kde-format
 msgid ""
 "keyd isn't needed: %1 is set as the trigger. Set it up only if you'd rather "
 "use Caps Lock."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:92
+#: src/kcm/ui/AboutPage.qml:101
 #, kde-format
 msgid "keyd is set up."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:92
+#: src/kcm/ui/AboutPage.qml:101
 #, kde-format
 msgid ""
 "keyd isn't set up yet. Reopen these settings after setting it up to check "
 "again."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:99
+#: src/kcm/ui/AboutPage.qml:108
 #, kde-format
 msgid "Project page"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:104
+#: src/kcm/ui/AboutPage.qml:113
 #, kde-format
 msgid "Report a problem"
 msgstr ""
