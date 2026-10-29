@@ -147,7 +147,9 @@ Item {
 
         Overlay {
             id: overlay
-            motionScale: kcm.settings.outlineAnimationDuration / 75
+            // As OverlayController::applyStyle(): 75 ms is the timings'
+            // reference, and Plasma's animation speed applies too.
+            motionScale: kcm.settings.outlineAnimationDuration / 75 * kcm.animationFactor
             easing: kcm.settings.easing
         }
     }

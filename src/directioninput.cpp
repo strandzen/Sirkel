@@ -145,9 +145,14 @@ std::optional<SnapDirection> DirectionInput::keyEvent(KeyAxis axis, bool pressed
     if (composed == SnapDirection::None) {
         return std::nullopt;
     }
+    keyPicked(cursor);
+    return composed;
+}
+
+void DirectionInput::keyPicked(const QPointF &cursor)
+{
     m_keyPickCursor = cursor;
     m_lastPickFromKey = true;
-    return composed;
 }
 
 std::optional<SnapDirection> DirectionInput::pointerMoved(const QPointF &cursor, const QPointF &delta)

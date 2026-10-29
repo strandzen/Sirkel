@@ -83,6 +83,13 @@ QRectF placementGeometry(SnapDirection direction, const QRectF &area, qreal padd
 // placement: centered in `target`, then kept inside `area` where possible.
 QRectF centeredFixedSize(const QRectF &target, const QSizeF &size, const QRectF &area);
 
+// `rect` with each edge rounded to a whole pixel. Placements are fractions
+// (a third of 3440 px is 1146.67 px), Wayland windows take whole pixels,
+// and rounding a window's position and size separately can leave two
+// neighbours 1 px apart or overlapping. Rounded edges are shared exactly.
+// Halves round up, so a whole-pixel size stays the same wherever it sits.
+QRectF alignedToPixels(const QRectF &rect);
+
 // Which placement a pointer displacement from the indicator's center selects.
 // Each axis arms independently once past `deadzone`, so a diagonal drag
 // selects a corner. Returns None while both axes are inside it.

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: 2026 Strandzen <strandzen@gmail.com>
+SPDX-License-Identifier: CC0-1.0
+-->
+<!-- Lets software centers (Discover) list Sirkel. Add a <release> on every release. -->
+<component type="desktop-application">
+  <id>io.github.strandzen.sirkel</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-or-later</project_license>
+  <name>Sirkel</name>
+  <summary>Loop-style window snapping for KDE Plasma</summary>
+  <description>
+    <p>
+      Hold a key combination or Caps Lock, move the mouse toward where you want the window, and let go.
+      Sirkel snaps it to that half or quarter of the screen, or fills the screen.
+      A small ring follows your direction and an outline shows where the window will end up.
+    </p>
+    <p>
+      Sirkel is a KWin effect for Plasma on Wayland, inspired by Loop on macOS.
+      KWin only loads effects built for its exact version, so Sirkel has to be rebuilt after every Plasma update.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.strandzen.sirkel.settings.desktop</launchable>
+  <icon type="stock">io.github.strandzen.sirkel</icon>
+  <url type="homepage">https://github.com/strandzen/Sirkel</url>
+  <url type="bugtracker">https://github.com/strandzen/Sirkel/issues</url>
+  <url type="vcs-browser">https://github.com/strandzen/Sirkel</url>
+  <developer id="io.github.strandzen">
+    <name>Strandzen</name>
+  </developer>
+  <categories>
+    <category>Settings</category>
+    <category>DesktopSettings</category>
+  </categories>
+  <keywords>
+    <keyword>window</keyword>
+    <keyword>snap</keyword>
+    <keyword>tiling</keyword>
+    <keyword>loop</keyword>
+    <keyword>kwin</keyword>
+  </keywords>
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.5.3" date="2026-10-26"/>
+    <release version="0.5.2" date="2026-10-26"/>
+    <release version="0.5.1" date="2026-10-26"/>
+    <release version="0.5.0" date="2026-10-20"/>
+    <release version="0.2.0" date="2026-10-18"/>
+    <release version="0.1.0" date="2026-10-14"/>
+  </releases>
+</component>

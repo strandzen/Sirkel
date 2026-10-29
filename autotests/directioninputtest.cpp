@@ -19,6 +19,7 @@ private Q_SLOTS:
     void centerIsMaximize();
     void intensity();
     void angleMode();
+    void otherKeyPickResistsJitter();
     void edgeOverflowPastLeftEdge();
     void edgeOverflowResetsOnRealMovement();
     void edgeOverflowKeptOnOtherAxis();
@@ -93,6 +94,19 @@ void DirectionInputTest::intensity()
     QCOMPARE(m_input.intensity(), 1.0);
     m_input.keyEvent(KeyAxis::Up, true, QPointF());
     QCOMPARE(m_input.intensity(), 1.0);
+}
+
+void DirectionInputTest::otherKeyPickResistsJitter()
+{
+    // Enter picks Maximize with the pointer off-center (at a Right pick):
+    // small pointer jitter must not turn it back into Right...
+    const QPointF cursor(600, 450);
+    QCOMPARE(m_input.pointerMoved(cursor, QPointF(100, 0)), SnapDirection::Right);
+    m_input.keyPicked(cursor);
+    QCOMPARE(m_input.intensity(), 1.0);
+    QCOMPARE(m_input.pointerMoved(cursor + QPointF(10, 5), QPointF(110, 5)), std::nullopt);
+    // ...but a real move takes over again.
+    QCOMPARE(m_input.pointerMoved(cursor + QPointF(0, 80), QPointF(100, 80)), SnapDirection::BottomRight);
 }
 
 void DirectionInputTest::angleMode()

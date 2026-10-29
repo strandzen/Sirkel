@@ -13,18 +13,44 @@
 #include <QDBusConnection>
 #include <QDBusMessage>
 #include <QDBusPendingCall>
+#include <QFileInfo>
+#include <QStandardPaths>
 
 namespace
 {
+const QString kShortcutsFileName = QStringLiteral("kglobalshortcutsrc");
+
+// The copy ShortcutsFile keeps open, if any: KSharedConfig hands out the
+// same object while one is alive (otherwise this parses the file anew).
 KConfigGroup storedGroup(const QString &component)
 {
-    KSharedConfigPtr config = KSharedConfig::openConfig(QStringLiteral("kglobalshortcutsrc"), KConfig::NoGlobals);
-    config->reparseConfiguration();
-    return config->group(component);
+    return KSharedConfig::openConfig(kShortcutsFileName, KConfig::NoGlobals)->group(component);
 }
 
-// Before 0.6, Sirkel's actions were registered under KWin's own group.
+QDateTime shortcutsFileModified()
+{
+    return QFileInfo(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QLatin1Char('/') + kShortcutsFileName).lastModified();
+}
+
+// Before 0.5.2, Sirkel's actions were registered under KWin's own group.
 constexpr const char *kOldComponent = "kwin";
+}
+
+ShortcutsFile::ShortcutsFile()
+    : m_config(KSharedConfig::openConfig(kShortcutsFileName, KConfig::NoGlobals))
+    , m_modified(shortcutsFileModified())
+{
+}
+
+bool ShortcutsFile::reloadIfChanged()
+{
+    const QDateTime modified = shortcutsFileModified();
+    if (modified == m_modified) {
+        return false;
+    }
+    m_modified = modified;
+    m_config->reparseConfiguration();
+    return true;
 }
 
 void registerGlobalAction(QAction *action, const QList<QKeySequence> &defaults)

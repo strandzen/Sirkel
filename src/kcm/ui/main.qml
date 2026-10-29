@@ -94,6 +94,33 @@ KCM.AbstractKCM {
         { name: i18n("About"), icon: "help-about", source: "AboutPage.qml" },
     ]
 
+    // The rebuild notification opens the settings on the About page.
+    function showRequestedPage() {
+        if (kcm.requestedPage === "about") {
+            currentPage = pages.findIndex(page => page.source === "AboutPage.qml");
+        }
+    }
+    Component.onCompleted: showRequestedPage()
+    Connections {
+        target: kcm
+        function onRequestedPageChanged() {
+            root.showRequestedPage();
+        }
+    }
+
+    // Back from a terminal (a rebuild) or keyd's config: check again, so
+    // the status is current without reopening the settings. Only on the
+    // pages that show it, as the window is also refocused by every dialog.
+    Connections {
+        target: root.Window.window
+        function onActiveChanged() {
+            const page = root.pages[root.currentPage].source;
+            if (root.Window.window.active && (page === "GeneralPage.qml" || page === "AboutPage.qml")) {
+                kcm.refreshStatus();
+            }
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0

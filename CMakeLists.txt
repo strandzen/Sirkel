@@ -7,8 +7,10 @@ project(sirkel VERSION 0.5.3)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(QT_MIN_VERSION "6.7.0")
-set(KF_MIN_VERSION "6.10.0")
+# What KWin 6.7, the oldest supported Plasma, needs itself: lower minimums
+# would never apply.
+set(QT_MIN_VERSION "6.10.0")
+set(KF_MIN_VERSION "6.26.0")
 # The effect API is internal and changes between Plasma releases; 6.7 is the
 # oldest version this has been built against.
 set(KWIN_MIN_VERSION "6.7.0")
@@ -28,6 +30,14 @@ include(KDEGitCommitHooks)
 find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick DBus Test Widgets)
 find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS Config ColorScheme CoreAddons GlobalAccel I18n KCMUtils WindowSystem)
 find_package(KWin ${KWIN_MIN_VERSION} REQUIRED)
+
+# sirkel-rebuild: the login notification when Sirkel needs a rebuild after a
+# KWin update, and the Rebuild button (see src/rebuild/).
+option(BUILD_REBUILD_HELPER "Build sirkel-rebuild (rebuild notification and button)" ON)
+add_feature_info(REBUILD_HELPER BUILD_REBUILD_HELPER "Notification and Rebuild button when Sirkel needs a rebuild after a KWin update")
+if(BUILD_REBUILD_HELPER)
+    find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS KIO Notifications)
+endif()
 
 add_subdirectory(src)
 

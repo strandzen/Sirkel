@@ -120,6 +120,14 @@ QRectF centeredFixedSize(const QRectF &target, const QSizeF &size, const QRectF 
     return rect;
 }
 
+QRectF alignedToPixels(const QRectF &rect)
+{
+    const auto round = [](qreal v) {
+        return std::floor(v + 0.5);
+    };
+    return QRectF(QPointF(round(rect.left()), round(rect.top())), QPointF(round(rect.right()), round(rect.bottom())));
+}
+
 SnapDirection directionForDelta(const QPointF &delta, qreal deadzone)
 {
     const bool hasHorizontal = std::abs(delta.x()) >= deadzone;

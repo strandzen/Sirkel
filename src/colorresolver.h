@@ -14,9 +14,10 @@ enum class ColorTarget {
     Ring
 };
 
-// Re-reads kdeglobals, so a changed Plasma accent color is picked up. Call
-// once before resolving a set of colors (the effect does it per session),
-// not per color.
+// Re-reads kdeglobals if it changed, so a changed Plasma accent color is
+// picked up. Call once before resolving a set of colors (the effect does it
+// per session), not per color. The caller keeps kdeglobals open
+// (KSharedConfig::openConfig("kdeglobals")) so it isn't parsed per color.
 void reloadColorSources();
 
 // The color for `target` per its *ColorSource setting: "manual" (the stored

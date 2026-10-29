@@ -6,8 +6,6 @@
 #include <QKeySequence>
 #include <QObject>
 
-#include <functional>
-
 class QAction;
 class QKeyEvent;
 
@@ -21,7 +19,7 @@ class Effect;
 // touching the session logic.
 //
 // Activation is a KGlobalAccel action: F24 (Caps Lock via keyd) by default,
-// or a Meta combination chosen in Sirkel's settings, also rebindable in
+// or a key combination chosen in Sirkel's settings, also rebindable in
 // System Settings -> Shortcuts. Releasing the trigger ends the session. Also owns
 // the keyboard grab, which is what delivers that release.
 class HyperkeyTrigger : public QObject
@@ -29,9 +27,7 @@ class HyperkeyTrigger : public QObject
     Q_OBJECT
 
 public:
-    // `busy` reports whether a session is already running, so auto-repeat of
-    // the held key doesn't re-trigger.
-    HyperkeyTrigger(KWin::Effect *effect, std::function<bool()> busy);
+    explicit HyperkeyTrigger(KWin::Effect *effect);
     ~HyperkeyTrigger() override;
 
     // Whether `event` releases the trigger: its key, or for a combination
@@ -47,14 +43,14 @@ public:
     void releaseGrab();
 
 Q_SIGNALS:
+    // The trigger was pressed. Also while a session runs: the receiver
+    // ignores it then.
     void armRequested();
 
 private:
-    void onTriggered();
     void setCombo(const QKeySequence &sequence);
 
     KWin::Effect *m_effect;
-    std::function<bool()> m_busy;
     QAction *m_action = nullptr;
     // The trigger's key combination (F24 when none is set).
     QKeyCombination m_combo = QKeyCombination(Qt::Key_F24);

@@ -19,14 +19,14 @@
 #include <QKeyEvent>
 #include <QTimer>
 
+#include <algorithm>
+
 SirkelEffect::SirkelEffect()
 {
-    m_trigger = new HyperkeyTrigger(this, [this]() {
-        return m_active;
-    });
+    m_trigger = new HyperkeyTrigger(this);
     connect(m_trigger, &HyperkeyTrigger::armRequested, this, &SirkelEffect::arm);
 
-    // Direct per-action shortcuts (System Settings -> Shortcuts -> KWin, or
+    // Direct per-action shortcuts (System Settings -> Shortcuts -> Sirkel, or
     // Sirkel's Shortcuts page). No defaults: users bind the ones they want.
     for (const ShortcutAction &def : shortcutActions()) {
         auto *action = new QAction(this);
@@ -51,13 +51,18 @@ SirkelEffect::SirkelEffect()
     }
 
     // Safety net for a missed key release: cancels a session that has seen
-    // no input for SessionTimeout seconds.
+    // no input for SessionTimeout seconds, or lets go of the keyboard after a
+    // session that ended early.
     m_idleTimer = new QTimer(this);
     m_idleTimer->setSingleShot(true);
     connect(m_idleTimer, &QTimer::timeout, this, [this]() {
         if (m_active) {
             qCWarning(SIRKEL) << "session idle for" << SirkelConfig::sessionTimeout() << "s, cancelling";
             finish(false);
+        } else if (m_awaitingRelease) {
+            qCWarning(SIRKEL) << "the trigger wasn't let go after" << SirkelConfig::sessionTimeout() << "s, releasing the keyboard";
+            m_awaitingRelease = false;
+            m_trigger->releaseGrab();
         }
     });
 
@@ -112,7 +117,8 @@ void SirkelEffect::reconfigure(ReconfigureFlags flags)
 
 void SirkelEffect::arm()
 {
-    if (m_active) {
+    // The held trigger repeats; a running session ignores that.
+    if (m_active || m_awaitingRelease) {
         return;
     }
     // Global shortcuts don't fire on the lock screen anyway; this makes sure
@@ -128,7 +134,6 @@ void SirkelEffect::arm()
     KWin::LogicalOutput *screen = isTargetable(window) ? screenFor(window) : nullptr;
     if (!screen) {
         qCDebug(SIRKEL) << "not starting: no window Sirkel may move" << (window ? window->windowClass() : QStringLiteral("(none)"));
-        m_trigger->releaseGrab();
         return;
     }
     if (!m_trigger->ensureGrab()) {
@@ -168,6 +173,11 @@ void SirkelEffect::arm()
 
 void SirkelEffect::readHoldKeys()
 {
+    // Only when KGlobalAccel has saved its file since (a binding changed):
+    // one stat() per press instead of parsing the file.
+    if (!m_shortcutsFile.reloadIfChanged() && !m_holdKeys.isEmpty()) {
+        return;
+    }
     m_holdKeys.clear();
     for (const HoldKeyAction &def : holdKeyActions()) {
         m_holdKeys.append({storedShortcuts(QString::fromLatin1(def.id), def.defaults), def.action});
@@ -249,11 +259,16 @@ void SirkelEffect::engage()
     m_overlay->showIndicator();
 }
 
-void SirkelEffect::finish(bool apply)
+void SirkelEffect::finish(bool apply, bool beforeRelease)
 {
     m_idleTimer->stop();
     KWin::effects->stopMouseInterception(this);
-    m_trigger->releaseGrab();
+    if (beforeRelease) {
+        m_awaitingRelease = true;
+        restartIdleTimer();
+    } else {
+        m_trigger->releaseGrab();
+    }
     m_active = false;
 
     if (apply && m_targetWindow && m_direction != SnapDirection::None) {
@@ -284,7 +299,7 @@ void SirkelEffect::pick(SnapDirection direction)
 
 QRectF SirkelEffect::geometryFor(KWin::EffectWindow *window, const QRectF &area, SnapDirection direction, int step)
 {
-    const QRectF target = placementGeometry(direction, area, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), step);
+    const QRectF target = alignedToPixels(placementGeometry(direction, area, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), step));
     KWin::Window *w = window ? window->window() : nullptr;
     if (!w) {
         return target;
@@ -298,17 +313,12 @@ QRectF SirkelEffect::geometryFor(KWin::EffectWindow *window, const QRectF &area,
     if (qAbs(size.width() - target.width()) < 1 && qAbs(size.height() - target.height()) < 1) {
         return target;
     }
-    return centeredFixedSize(target, size, area);
-}
-
-QRectF SirkelEffect::targetGeometry(SnapDirection direction, int step) const
-{
-    return geometryFor(m_targetWindow, m_area, direction, step);
+    return alignedToPixels(centeredFixedSize(target, size, area));
 }
 
 void SirkelEffect::refreshPreview()
 {
-    const QRectF target = targetGeometry(m_direction, m_sizeStep);
+    const QRectF target = geometryFor(m_targetWindow, m_area, m_direction, m_sizeStep);
     m_overlay->showPlacement(m_direction, target, m_targetWindow ? QRectF(m_targetWindow->frameGeometry()) : QRectF());
 }
 
@@ -332,9 +342,32 @@ void SirkelEffect::perform(KWin::EffectWindow *window, const QRectF &area, const
     case WindowAction::Kind::Minimize:
         window->setMinimized(true);
         break;
-    case WindowAction::Kind::Cancel:
+    case WindowAction::Kind::Restore:
+        restore(window, area);
         break;
     }
+}
+
+void SirkelEffect::restore(KWin::EffectWindow *window, const QRectF &area)
+{
+    const auto it = m_snapped.constFind(window);
+    if (it == m_snapped.constEnd()) {
+        qCDebug(SIRKEL) << "nothing to restore for" << window->windowClass();
+        return;
+    }
+    QRectF geometry = it->restore;
+    m_snapped.erase(it);
+    // Its old place may be on a screen that's gone: then centered here.
+    const QPointF center = geometry.center();
+    const QList<KWin::LogicalOutput *> screens = KWin::effects->screens();
+    const bool onScreen = std::any_of(screens.cbegin(), screens.cend(), [center](KWin::LogicalOutput *screen) {
+        return QRectF(screen->geometry()).contains(center);
+    });
+    if (!onScreen) {
+        geometry = alignedToPixels(centeredFixedSize(area, geometry.size().boundedTo(area.size()), area));
+    }
+    qCDebug(SIRKEL) << "restoring" << window->windowClass() << "to" << geometry;
+    moveWindow(window, geometry);
 }
 
 namespace
@@ -410,8 +443,13 @@ void SirkelEffect::onUserMoveStarted(KWin::EffectWindow *window)
 void SirkelEffect::moveWindow(KWin::EffectWindow *window, const QRectF &geometry)
 {
     KWin::Window *w = window ? window->window() : nullptr;
-    if (!w) {
+    if (!w || geometry.isEmpty()) {
         return;
+    }
+    // Out of KWin's own tiling first (quick tiles and custom ones): moved
+    // but left in its tile, KWin still treats it as tiled there.
+    if (w->requestedTile()) {
+        w->requestTile(nullptr);
     }
     w->setMaximize(false, false);
     w->moveResize(geometry);
@@ -438,13 +476,21 @@ void SirkelEffect::runShortcutAction(const ShortcutAction &shortcut)
 
 void SirkelEffect::runKeyAction(const WindowAction &action)
 {
-    // Keeps a scroll-resized size if that placement is the current pick.
-    perform(m_targetWindow, m_area, action, action.direction == m_direction ? m_sizeStep : -1);
-    finish(false);
+    perform(m_targetWindow, m_area, action, -1);
+    finish(false, true);
 }
 
 void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
 {
+    if (m_awaitingRelease) {
+        // The session ended early; only the trigger's release matters now.
+        if (m_trigger->isRelease(event)) {
+            m_awaitingRelease = false;
+            m_idleTimer->stop();
+            m_trigger->releaseGrab();
+        }
+        return;
+    }
     if (!m_active) {
         return;
     }
@@ -478,15 +524,25 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
     if (press) {
         // Esc always cancels; the others are rebindable (holdKeyActions()).
         if (event->key() == Qt::Key_Escape) {
-            runKeyAction({WindowAction::Kind::Cancel});
+            finish(false, true);
             return;
         }
         for (const auto &[keys, action] : std::as_const(m_holdKeys)) {
             for (const QKeySequence &binding : keys) {
-                if (matchesKey(binding, event->key(), event->modifiers())) {
-                    runKeyAction(action);
-                    return;
+                if (!matchesKey(binding, event->key(), event->modifiers())) {
+                    continue;
                 }
+                if (action.kind == WindowAction::Kind::Place) {
+                    // A placement key (Enter: Maximize) picks like a
+                    // direction: the preview shows it and releasing the
+                    // trigger applies it, so it can still be changed.
+                    engage();
+                    m_input.keyPicked(m_edgeOverflow.current());
+                    pick(action.direction);
+                } else {
+                    runKeyAction(action);
+                }
+                return;
             }
         }
     } else if (m_trigger->isRelease(event)) {
@@ -505,6 +561,22 @@ void SirkelEffect::pointerMotion(KWin::PointerMotionEvent *event)
     const QPointF pointer = m_edgeOverflow.update(event->position, event->delta);
     if (const auto direction = m_input.pointerMoved(pointer, pointer - m_origin)) {
         pick(*direction);
+    }
+}
+
+void SirkelEffect::pointerButton(KWin::PointerButtonEvent *event)
+{
+    // A click ends the session at once: left snaps, right cancels. On the
+    // release, so neither half of the click reaches the window below.
+    if (!m_active || event->state != KWin::PointerButtonState::Released) {
+        return;
+    }
+    if (event->button == Qt::LeftButton) {
+        qCDebug(SIRKEL) << "clicked: snapping now";
+        finish(true, true);
+    } else if (event->button == Qt::RightButton) {
+        qCDebug(SIRKEL) << "right-clicked: cancelling";
+        finish(false, true);
     }
 }
 

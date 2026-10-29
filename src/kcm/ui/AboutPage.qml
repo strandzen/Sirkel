@@ -56,13 +56,48 @@ FormPage {
             })[kcm.effectStatus] ?? ""
         }
 
+        // A package install carries its PKGBUILD, so it can rebuild from
+        // here: sirkel-rebuild opens a terminal running makepkg -si.
+        RowLayout {
+            visible: kcm.effectStatus === "rebuild" && kcm.canRebuild && kcm.hasBuildTools
+            spacing: Kirigami.Units.smallSpacing
+
+            QQC2.Button {
+                text: i18n("Rebuild for KWin %1", kcm.kwinInstalledVersion)
+                icon.name: "run-build"
+                onClicked: kcm.rebuild()
+            }
+            QQC2.Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: i18n("Opens a terminal that builds and installs Sirkel. You'll be asked for your password.")
+            }
+        }
+
+        QQC2.Label {
+            Layout.fillWidth: true
+            visible: kcm.effectStatus === "rebuild" && kcm.canRebuild && !kcm.hasBuildTools
+            wrapMode: Text.WordWrap
+            text: i18n("To rebuild Sirkel from here, first install the build tools: sudo pacman -S --needed base-devel")
+        }
+
         QQC2.TextArea {
             Layout.fillWidth: true
-            visible: kcm.effectStatus === "rebuild"
+            visible: kcm.effectStatus === "rebuild" && !kcm.canRebuild
             readOnly: true
             selectByMouse: true
             font.family: "monospace"
             text: i18n("# Built from source, in the source folder:\ncmake --build build\nsudo cmake --install build\n\n# Installed with the PKGBUILD, in its folder:\nmakepkg -si")
+        }
+
+        // The output of the last rebuild, to attach to a bug report if it
+        // failed.
+        QQC2.Button {
+            visible: kcm.effectStatus === "rebuild" && kcm.rebuildLogUrl.toString() !== ""
+            flat: true
+            text: i18n("Show the last rebuild's output")
+            icon.name: "text-x-log"
+            onClicked: Qt.openUrlExternally(kcm.rebuildLogUrl)
         }
 
         Kirigami.Heading {

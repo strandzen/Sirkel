@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-26 19:07+0100\n"
+"POT-Creation-Date: 2026-10-29 01:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,94 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: src/rebuild/main.cpp:45
+#, kde-format
+msgid "Sirkel"
+msgstr ""
+
+#: src/rebuild/main.cpp:75
+#, kde-format
+msgid ""
+"Sirkel can only rebuild itself when it was installed as a package. See the "
+"About page in its settings for how to rebuild it."
+msgstr ""
+
+#: src/rebuild/main.cpp:79
+#, kde-format
+msgid "A rebuild of Sirkel is already running."
+msgstr ""
+
+#: src/rebuild/main.cpp:87
+#, kde-format
+msgid "Couldn't prepare the rebuild: %1 can't be written."
+msgstr ""
+
+#: src/rebuild/main.cpp:97
+#, kde-format
+msgid "Couldn't open a terminal for the rebuild: %1"
+msgstr ""
+
+#: src/rebuild/main.cpp:112
+#, kde-format
+msgid "Sirkel needs a rebuild"
+msgstr ""
+
+#: src/rebuild/main.cpp:113
+#, kde-format
+msgid ""
+"KWin %1 is installed, but Sirkel was built for KWin %2, so KWin doesn't load "
+"it."
+msgstr ""
+
+#: src/rebuild/main.cpp:120
+#, kde-format
+msgid "Rebuild for KWin %1"
+msgstr ""
+
+#: src/rebuild/main.cpp:126
+#, kde-format
+msgid ""
+"To rebuild it, first install the build tools: sudo pacman -S --needed base-"
+"devel"
+msgstr ""
+
+#: src/rebuild/main.cpp:130 src/rebuild/main.cpp:133
+#, kde-format
+msgid "Open settings"
+msgstr ""
+
+#: src/rebuild/main.cpp:169
+#, kde-format
+msgid "Rebuilds Sirkel after a KWin update, or tells you when it needs one."
+msgstr ""
+
+#: src/rebuild/main.cpp:171
+#, kde-format
+msgid "Show a notification if Sirkel needs a rebuild (run at login)."
+msgstr ""
+
+#: src/rebuild/rebuildstatus.cpp:138
+#, kde-format
+msgid "A rebuild is already running in another window."
+msgstr ""
+
+#: src/rebuild/rebuildstatus.cpp:139
+#, kde-format
+msgid "Sirkel is rebuilt. Log out and back in to start it."
+msgstr ""
+
+#: src/rebuild/rebuildstatus.cpp:140
+#, kde-format
+msgid ""
+"The rebuild didn't finish. Everything above is also saved in %1, which you "
+"can attach to a bug report at %2."
+msgstr ""
+
+#: src/rebuild/rebuildstatus.cpp:143
+#, kde-format
+msgid "Press Enter to close this window."
+msgstr ""
 
 #: src/shortcutactions.cpp:10
 msgid "Sirkel: Snap to left half"
@@ -85,7 +173,7 @@ msgstr ""
 msgid "Sirkel: Maximize"
 msgstr ""
 
-#: src/shortcutactions.cpp:18 src/shortcutactions.cpp:30
+#: src/shortcutactions.cpp:18 src/shortcutactions.cpp:31
 msgid "Maximize"
 msgstr ""
 
@@ -93,16 +181,29 @@ msgstr ""
 msgid "Sirkel: Minimize"
 msgstr ""
 
-#: src/shortcutactions.cpp:19 src/shortcutactions.cpp:33
+#: src/shortcutactions.cpp:19 src/shortcutactions.cpp:34
 msgid "Minimize"
 msgstr ""
 
-#: src/shortcutactions.cpp:29
+#: src/shortcutactions.cpp:20
+msgid "Sirkel: Restore the size from before snapping"
+msgstr ""
+
+#: src/shortcutactions.cpp:20 src/shortcutactions.cpp:37
+msgid "Restore size"
+msgstr ""
+
+#: src/shortcutactions.cpp:30
 msgid "Sirkel: Maximize (while holding the trigger)"
 msgstr ""
 
-#: src/shortcutactions.cpp:33
+#: src/shortcutactions.cpp:34
 msgid "Sirkel: Minimize (while holding the trigger)"
+msgstr ""
+
+#: src/shortcutactions.cpp:36
+msgid ""
+"Sirkel: Restore the size from before snapping (while holding the trigger)"
 msgstr ""
 
 #: src/shortcutactions.h:25

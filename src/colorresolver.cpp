@@ -7,6 +7,10 @@
 #include <KColorScheme>
 #include <KSharedConfig>
 
+#include <QDateTime>
+#include <QFileInfo>
+#include <QStandardPaths>
+
 namespace
 {
 KSharedConfigPtr globals()
@@ -33,7 +37,15 @@ QColor ringColorFrom(const QColor &accent)
 
 void reloadColorSources()
 {
-    globals()->reparseConfiguration();
+    // Only when it changed since the last time: the effect asks on every
+    // trigger press, on the compositor's thread.
+    static QDateTime lastModified;
+    const QDateTime modified =
+        QFileInfo(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/kdeglobals")).lastModified();
+    if (modified != lastModified) {
+        lastModified = modified;
+        globals()->reparseConfiguration();
+    }
 }
 
 QColor resolveColor(ColorTarget target)

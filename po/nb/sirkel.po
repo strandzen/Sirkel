@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-26 01:42+0100\n"
+"POT-Creation-Date: 2026-10-29 01:19+0100\n"
 "PO-Revision-Date: 2026-10-26 01:40\n"
 "Last-Translator: Strandzen <strandzen@gmail.com>\n"
 "Language-Team: Norwegian Bokmål\n"
@@ -17,6 +17,104 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/rebuild/main.cpp:45
+#, kde-format
+msgid "Sirkel"
+msgstr "Sirkel"
+
+#: src/rebuild/main.cpp:75
+#, kde-format
+msgid ""
+"Sirkel can only rebuild itself when it was installed as a package. See the "
+"About page in its settings for how to rebuild it."
+msgstr ""
+"Sirkel kan bare bygge seg selv på nytt når den er installert som en pakke. "
+"Se Om-siden i innstillingene for hvordan du bygger den på nytt."
+
+#: src/rebuild/main.cpp:79
+#, kde-format
+msgid "A rebuild of Sirkel is already running."
+msgstr "Sirkel bygges allerede på nytt."
+
+#: src/rebuild/main.cpp:87
+#, kde-format
+msgid "Couldn't prepare the rebuild: %1 can't be written."
+msgstr "Kunne ikke forberede byggingen: %1 kan ikke skrives."
+
+#: src/rebuild/main.cpp:97
+#, kde-format
+msgid "Couldn't open a terminal for the rebuild: %1"
+msgstr "Kunne ikke åpne en terminal for byggingen: %1"
+
+#: src/rebuild/main.cpp:112
+#, kde-format
+msgid "Sirkel needs a rebuild"
+msgstr "Sirkel må bygges på nytt"
+
+#: src/rebuild/main.cpp:113
+#, kde-format
+msgid ""
+"KWin %1 is installed, but Sirkel was built for KWin %2, so KWin doesn't load "
+"it."
+msgstr ""
+"KWin %1 er installert, men Sirkel ble bygget for KWin %2, så KWin laster den "
+"ikke."
+
+#: src/rebuild/main.cpp:120
+#, kde-format
+msgid "Rebuild for KWin %1"
+msgstr "Bygg på nytt for KWin %1"
+
+#: src/rebuild/main.cpp:126
+#, kde-format
+msgid ""
+"To rebuild it, first install the build tools: sudo pacman -S --needed base-"
+"devel"
+msgstr ""
+"For å bygge den på nytt må du først installere byggeverktøyene: sudo pacman "
+"-S --needed base-devel"
+
+#: src/rebuild/main.cpp:130 src/rebuild/main.cpp:133
+#, kde-format
+msgid "Open settings"
+msgstr "Åpne innstillinger"
+
+#: src/rebuild/main.cpp:169
+#, kde-format
+msgid "Rebuilds Sirkel after a KWin update, or tells you when it needs one."
+msgstr ""
+"Bygger Sirkel på nytt etter en KWin-oppdatering, eller sier fra når det "
+"trengs."
+
+#: src/rebuild/main.cpp:171
+#, kde-format
+msgid "Show a notification if Sirkel needs a rebuild (run at login)."
+msgstr "Vis et varsel hvis Sirkel må bygges på nytt (kjøres ved innlogging)."
+
+#: src/rebuild/rebuildstatus.cpp:138
+#, kde-format
+msgid "A rebuild is already running in another window."
+msgstr "Sirkel bygges allerede på nytt i et annet vindu."
+
+#: src/rebuild/rebuildstatus.cpp:139
+#, kde-format
+msgid "Sirkel is rebuilt. Log out and back in to start it."
+msgstr "Sirkel er bygget på nytt. Logg ut og inn igjen for å starte den."
+
+#: src/rebuild/rebuildstatus.cpp:140
+#, kde-format
+msgid ""
+"The rebuild didn't finish. Everything above is also saved in %1, which you "
+"can attach to a bug report at %2."
+msgstr ""
+"Byggingen ble ikke fullført. Alt over er også lagret i %1, som du kan legge "
+"ved en feilrapport på %2."
+
+#: src/rebuild/rebuildstatus.cpp:143
+#, kde-format
+msgid "Press Enter to close this window."
+msgstr "Trykk Enter for å lukke dette vinduet."
 
 #: src/shortcutactions.cpp:10
 msgid "Sirkel: Snap to left half"
@@ -86,7 +184,7 @@ msgstr "Nedre høyre firedel"
 msgid "Sirkel: Maximize"
 msgstr "Sirkel: Maksimer"
 
-#: src/shortcutactions.cpp:18 src/shortcutactions.cpp:30
+#: src/shortcutactions.cpp:18 src/shortcutactions.cpp:31
 msgid "Maximize"
 msgstr "Maksimer"
 
@@ -94,17 +192,31 @@ msgstr "Maksimer"
 msgid "Sirkel: Minimize"
 msgstr "Sirkel: Minimer"
 
-#: src/shortcutactions.cpp:19 src/shortcutactions.cpp:33
+#: src/shortcutactions.cpp:19 src/shortcutactions.cpp:34
 msgid "Minimize"
 msgstr "Minimer"
 
-#: src/shortcutactions.cpp:29
+#: src/shortcutactions.cpp:20
+msgid "Sirkel: Restore the size from before snapping"
+msgstr "Sirkel: Gjenopprett størrelsen fra før festingen"
+
+#: src/shortcutactions.cpp:20 src/shortcutactions.cpp:37
+msgid "Restore size"
+msgstr "Gjenopprett størrelse"
+
+#: src/shortcutactions.cpp:30
 msgid "Sirkel: Maximize (while holding the trigger)"
 msgstr "Sirkel: Maksimer (mens utløseren holdes inne)"
 
-#: src/shortcutactions.cpp:33
+#: src/shortcutactions.cpp:34
 msgid "Sirkel: Minimize (while holding the trigger)"
 msgstr "Sirkel: Minimer (mens utløseren holdes inne)"
+
+#: src/shortcutactions.cpp:36
+msgid ""
+"Sirkel: Restore the size from before snapping (while holding the trigger)"
+msgstr ""
+"Sirkel: Gjenopprett størrelsen fra før festingen (mens utløseren holdes inne)"
 
 #: src/shortcutactions.h:25
 msgid "Sirkel: hold to snap window"

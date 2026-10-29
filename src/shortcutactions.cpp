@@ -17,6 +17,7 @@ const QList<ShortcutAction> &shortcutActions()
         {"SirkelSnapBottomRight", kli18n("Sirkel: Snap to bottom-right quarter"), kli18n("Bottom-right quarter"), {K::Place, SnapDirection::BottomRight}},
         {"SirkelMaximize", kli18n("Sirkel: Maximize"), kli18n("Maximize"), {K::Place, SnapDirection::Maximize}},
         {"SirkelMinimize", kli18n("Sirkel: Minimize"), kli18n("Minimize"), {K::Minimize}},
+        {"SirkelRestore", kli18n("Sirkel: Restore the size from before snapping"), kli18n("Restore size"), {K::Restore}},
     };
     return actions;
 }
@@ -31,6 +32,11 @@ const QList<HoldKeyAction> &holdKeyActions()
          {QKeySequence(Qt::Key_Return), QKeySequence(Qt::Key_Enter)},
          {K::Place, SnapDirection::Maximize}},
         {"SirkelHoldMinimize", kli18n("Sirkel: Minimize (while holding the trigger)"), kli18n("Minimize"), {QKeySequence(Qt::Key_Backspace)}, {K::Minimize}},
+        {"SirkelHoldRestore",
+         kli18n("Sirkel: Restore the size from before snapping (while holding the trigger)"),
+         kli18n("Restore size"),
+         {QKeySequence(Qt::Key_R)},
+         {K::Restore}},
     };
     return actions;
 }

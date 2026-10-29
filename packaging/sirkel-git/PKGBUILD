@@ -14,7 +14,8 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/strandzen/Sirkel"
 license=('GPL-2.0-or-later')
 depends=('kwin' 'qt6-base' 'qt6-declarative' 'kconfig' 'kcolorscheme' 'kcoreaddons'
-         'kglobalaccel' 'ki18n' 'kcmutils' 'kwindowsystem' 'kirigami' 'kdeclarative')
+         'kglobalaccel' 'ki18n' 'kcmutils' 'kwindowsystem' 'kirigami' 'kdeclarative'
+         'knotifications' 'kio')
 optdepends=('keyd: use Caps Lock as the trigger (otherwise pick a key combination in the settings)')
 makedepends=('git' 'cmake' 'extra-cmake-modules' 'vulkan-headers')
 provides=('sirkel')
@@ -46,4 +47,8 @@ package() {
   DESTDIR="$pkgdir" cmake --install build
   # KWin only loads effects built for its exact version: remind to rebuild.
   install -Dm644 "$_pkgname/packaging/sirkel/sirkel-rebuild.hook" "$pkgdir/usr/share/libalpm/hooks/sirkel-rebuild.hook"
+  # The PKGBUILD this package was built from (not the source's copy, which
+  # can point at an older release), for sirkel-rebuild's Rebuild button:
+  # it builds again from a copy in ~/.cache/sirkel/rebuild.
+  install -Dm644 -t "$pkgdir/usr/share/sirkel/rebuild" "$startdir/PKGBUILD"
 }

@@ -18,7 +18,7 @@ FormPage {
     // Whether the combination option is selected. Kept separately from the
     // stored shortcut: choosing it doesn't change anything until a
     // combination is recorded (there's no default).
-    property bool comboMode: !kcm.triggerIsHyperkey
+    property bool comboMode: kcm.triggerKind !== "capslock"
 
     Kirigami.FormLayout {
         id: mainForm
@@ -113,6 +113,16 @@ FormPage {
             keySequence: kcm.shortcutsRevision, kcm.shortcut(kcm.holdKeyActions[1].id)
             onKeySequenceModified: kcm.setShortcut(kcm.holdKeyActions[1].id, keySequence)
         }
+        KQuickControls.KeySequenceItem {
+            Kirigami.FormData.label: kcm.holdKeyActions[2].text + ":"
+            modifierlessAllowed: true
+            checkForConflictsAgainst: KQuickControls.ShortcutType.GlobalShortcuts
+            keySequence: kcm.shortcutsRevision, kcm.shortcut(kcm.holdKeyActions[2].id)
+            onKeySequenceModified: kcm.setShortcut(kcm.holdKeyActions[2].id, keySequence)
+
+            QQC2.ToolTip.text: i18n("Puts the window back where it was before Sirkel placed it.")
+            QQC2.ToolTip.visible: hovered
+        }
         QQC2.Label {
             Kirigami.FormData.label: i18n("Cancel:")
             text: i18n("Esc")
@@ -124,6 +134,10 @@ FormPage {
         QQC2.Label {
             Kirigami.FormData.label: i18n("Release:")
             text: i18n("Snap the window")
+        }
+        QQC2.Label {
+            Kirigami.FormData.label: i18n("Click:")
+            text: i18n("Snap now; right-click cancels")
         }
     }
 
@@ -174,7 +188,7 @@ FormPage {
     Connections {
         target: kcm
         function onShortcutsChanged() {
-            root.comboMode = root.comboMode || !kcm.triggerIsHyperkey;
+            root.comboMode = root.comboMode || kcm.triggerKind !== "capslock";
         }
     }
 }

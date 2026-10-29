@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-26 19:51+0100\n"
+"POT-Creation-Date: 2026-10-29 01:11+0100\n"
 "PO-Revision-Date: 2026-10-26 01:40\n"
 "Last-Translator: Strandzen <strandzen@gmail.com>\n"
 "Language-Team: Norwegian Bokmål\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/kcm/sirkelconfigmodule.cpp:156
+#: src/kcm/sirkelconfigmodule.cpp:192
 #, kde-format
 msgid "Caps Lock"
 msgstr "Caps Lock"
@@ -64,7 +64,30 @@ msgid "Sirkel is off. Turn it on in System Settings → Desktop Effects."
 msgstr ""
 "Sirkel er slått av. Slå den på i Systeminnstillinger → Skrivebordseffekter."
 
-#: src/kcm/ui/AboutPage.qml:65
+#: src/kcm/ui/AboutPage.qml:66
+#, kde-format
+msgid "Rebuild for KWin %1"
+msgstr "Bygg på nytt for KWin %1"
+
+#: src/kcm/ui/AboutPage.qml:73
+#, kde-format
+msgid ""
+"Opens a terminal that builds and installs Sirkel. You'll be asked for your "
+"password."
+msgstr ""
+"Åpner en terminal som bygger og installerer Sirkel. Du blir spurt om "
+"passordet ditt."
+
+#: src/kcm/ui/AboutPage.qml:81
+#, kde-format
+msgid ""
+"To rebuild Sirkel from here, first install the build tools: sudo pacman -S --"
+"needed base-devel"
+msgstr ""
+"For å bygge Sirkel på nytt herfra må du først installere byggeverktøyene: "
+"sudo pacman -S --needed base-devel"
+
+#: src/kcm/ui/AboutPage.qml:90
 #, kde-format
 msgid ""
 "# Built from source, in the source folder:\n"
@@ -81,12 +104,17 @@ msgstr ""
 "# Installert med PKGBUILD, i mappa der den ligger:\n"
 "makepkg -si"
 
-#: src/kcm/ui/AboutPage.qml:70
+#: src/kcm/ui/AboutPage.qml:98
+#, kde-format
+msgid "Show the last rebuild's output"
+msgstr "Vis utdata fra forrige bygging"
+
+#: src/kcm/ui/AboutPage.qml:105
 #, kde-format
 msgid "Optional: Caps Lock as the trigger"
 msgstr "Valgfritt: Caps Lock som utløser"
 
-#: src/kcm/ui/AboutPage.qml:76
+#: src/kcm/ui/AboutPage.qml:111
 #, kde-format
 msgid ""
 "Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to /"
@@ -95,7 +123,7 @@ msgstr ""
 "Sirkel lytter etter F24, og keyd kan gjøre Caps Lock om til F24. Legg dette "
 "til i /etc/keyd/default.conf (Sirkel skriver aldri dit selv):"
 
-#: src/kcm/ui/AboutPage.qml:90
+#: src/kcm/ui/AboutPage.qml:125
 #, kde-format
 msgid ""
 "Then enable it once with: sudo systemctl enable --now keyd, and choose Caps "
@@ -104,7 +132,7 @@ msgstr ""
 "Slå den så på én gang med: sudo systemctl enable --now keyd, og velg Caps "
 "Lock på siden Snarveier."
 
-#: src/kcm/ui/AboutPage.qml:100
+#: src/kcm/ui/AboutPage.qml:135
 #, kde-format
 msgid ""
 "keyd isn't needed: %1 is set as the trigger. Set it up only if you'd rather "
@@ -113,12 +141,12 @@ msgstr ""
 "keyd trengs ikke: %1 er satt som utløser. Sett den bare opp hvis du heller "
 "vil bruke Caps Lock."
 
-#: src/kcm/ui/AboutPage.qml:101
+#: src/kcm/ui/AboutPage.qml:136
 #, kde-format
 msgid "keyd is set up."
 msgstr "keyd er satt opp."
 
-#: src/kcm/ui/AboutPage.qml:101
+#: src/kcm/ui/AboutPage.qml:136
 #, kde-format
 msgid ""
 "keyd isn't set up yet. Reopen these settings after setting it up to check "
@@ -127,12 +155,12 @@ msgstr ""
 "keyd er ikke satt opp ennå. Åpne disse innstillingene på nytt etter "
 "oppsettet for å sjekke igjen."
 
-#: src/kcm/ui/AboutPage.qml:108
+#: src/kcm/ui/AboutPage.qml:143
 #, kde-format
 msgid "Project page"
 msgstr "Prosjektside"
 
-#: src/kcm/ui/AboutPage.qml:113
+#: src/kcm/ui/AboutPage.qml:148
 #, kde-format
 msgid "Report a problem"
 msgstr "Rapporter et problem"
@@ -427,7 +455,7 @@ msgstr "HJKL"
 msgid "None (mouse only)"
 msgstr "Ingen (bare mus)"
 
-#: src/kcm/ui/GeneralPage.qml:75 src/kcm/ui/ShortcutsPage.qml:121
+#: src/kcm/ui/GeneralPage.qml:75 src/kcm/ui/ShortcutsPage.qml:131
 #, kde-format
 msgid "Scroll wheel:"
 msgstr "Rullehjul:"
@@ -679,42 +707,57 @@ msgstr "Samme tast igjen:"
 msgid "Change the size (1/2, 1/3, 1/4, 2/3)"
 msgstr "Endre størrelsen (1/2, 1/3, 1/4, 2/3)"
 
-#: src/kcm/ui/ShortcutsPage.qml:117
+#: src/kcm/ui/ShortcutsPage.qml:123
+#, kde-format
+msgid "Puts the window back where it was before Sirkel placed it."
+msgstr "Setter vinduet tilbake der det var før Sirkel plasserte det."
+
+#: src/kcm/ui/ShortcutsPage.qml:127
 #, kde-format
 msgid "Cancel:"
 msgstr "Avbryt:"
 
-#: src/kcm/ui/ShortcutsPage.qml:118
+#: src/kcm/ui/ShortcutsPage.qml:128
 #, kde-format
 msgid "Esc"
 msgstr "Esc"
 
-#: src/kcm/ui/ShortcutsPage.qml:122
+#: src/kcm/ui/ShortcutsPage.qml:132
 #, kde-format
 msgid "Resize the target"
 msgstr "Endre størrelsen på målet"
 
-#: src/kcm/ui/ShortcutsPage.qml:122
+#: src/kcm/ui/ShortcutsPage.qml:132
 #, kde-format
 msgid "Resize the target (turned off on General)"
 msgstr "Endre størrelsen på målet (slått av under Generelt)"
 
-#: src/kcm/ui/ShortcutsPage.qml:125
+#: src/kcm/ui/ShortcutsPage.qml:135
 #, kde-format
 msgid "Release:"
 msgstr "Slipp:"
 
-#: src/kcm/ui/ShortcutsPage.qml:126
+#: src/kcm/ui/ShortcutsPage.qml:136
 #, kde-format
 msgid "Snap the window"
 msgstr "Fest vinduet"
 
-#: src/kcm/ui/ShortcutsPage.qml:138
+#: src/kcm/ui/ShortcutsPage.qml:139
+#, kde-format
+msgid "Click:"
+msgstr "Klikk:"
+
+#: src/kcm/ui/ShortcutsPage.qml:140
+#, kde-format
+msgid "Snap now; right-click cancels"
+msgstr "Fest nå; høyreklikk avbryter"
+
+#: src/kcm/ui/ShortcutsPage.qml:152
 #, kde-format
 msgid "Direct shortcuts"
 msgstr "Direkte snarveier"
 
-#: src/kcm/ui/ShortcutsPage.qml:146
+#: src/kcm/ui/ShortcutsPage.qml:160
 #, kde-format
 msgid ""
 "Act on the active window at once, without the indicator. None are set by "
@@ -723,12 +766,12 @@ msgstr ""
 "Virker på det aktive vinduet med en gang, uten indikatoren. Ingen er satt "
 "som standard."
 
-#: src/kcm/ui/ShortcutsPage.qml:165
+#: src/kcm/ui/ShortcutsPage.qml:179
 #, kde-format
 msgid "Open Shortcuts settings…"
 msgstr "Åpne innstillinger for snarveier …"
 
-#: src/kcm/ui/ShortcutsPage.qml:169
+#: src/kcm/ui/ShortcutsPage.qml:183
 #, kde-format
 msgid "All of these are also under Sirkel in System Settings → Shortcuts."
 msgstr "Alle disse finnes også under Sirkel i Systeminnstillinger → Snarveier."

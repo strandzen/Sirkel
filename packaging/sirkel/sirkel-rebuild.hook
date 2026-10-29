@@ -3,7 +3,9 @@
 
 # KWin only loads effects built for its exact version, so Sirkel stops
 # working after every KWin upgrade until it's rebuilt. A pacman hook can't
-# rebuild it (makepkg doesn't run as root), so it says so at the right time.
+# rebuild it (makepkg doesn't run as root), so it says so at the right time:
+# the running KWin keeps Sirkel loaded until logout, so rebuilding now means
+# it never stops working. sirkel-rebuild also offers it at the next login.
 [Trigger]
 Operation = Upgrade
 Type = Package
@@ -12,4 +14,4 @@ Target = kwin
 [Action]
 Description = Reminding to rebuild Sirkel for the new KWin...
 When = PostTransaction
-Exec = /bin/sh -c 'echo "==> Sirkel: KWin was upgraded. Rebuild Sirkel (makepkg -si in its PKGBUILD folder, or your AUR helper), then log out and back in."'
+Exec = /bin/sh -c 'echo "==> Sirkel: KWin was upgraded. Sirkel keeps working until you log out, so rebuild it now: the About page in its settings shows how. Then log out and back in."'

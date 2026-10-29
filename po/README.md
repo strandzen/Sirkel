@@ -7,7 +7,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 
 Sirkel has two translation templates:
 
-- `sirkel.pot` - the shortcut names and direction labels (used by the effect and the settings)
+- `sirkel.pot` - the shortcut names and direction labels (used by the effect and the settings), and the rebuild notification and terminal messages (`sirkel-rebuild`)
 - `kwin_effect_sirkel_config.pot` - the settings window
 
 ## Adding a language

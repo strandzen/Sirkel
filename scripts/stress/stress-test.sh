@@ -126,10 +126,10 @@ STATUS=0
 trap '' PIPE
 
 # Evdev key and button codes.
-F24=194 LEFT=105 RIGHT=106 UP=103 DOWN=108 ENTER=28 BACKSPACE=14 ESC=1 META=125 SPACE=57
-BTN_LEFT=272
+F24=194 LEFT=105 RIGHT=106 UP=103 DOWN=108 ENTER=28 BACKSPACE=14 ESC=1 META=125 SPACE=57 KEY_R=19
+BTN_LEFT=272 BTN_RIGHT=273
 # Qt key codes, as the key-logging test window prints them.
-QT_RETURN=16777220 QT_BACKSPACE=16777219
+QT_RETURN=16777220 QT_BACKSPACE=16777219 QT_R=82
 
 CLIENT_ENV=(env QT_QPA_PLATFORM=wayland QT_LOGGING_RULES= QT_FORCE_STDERR_LOGGING= LD_PRELOAD=)
 KWIN_STARTS=0
@@ -188,9 +188,10 @@ respawn_windows() {
     spawn window-normal.qml; spawn window-fixed.qml; spawn window-normal.qml
 }
 
-# probe <window title>: prints the window's frame geometry as "x y w h",
-# nothing if there's no such window. Runs probe.js in the test KWin.
-probe() {
+# probe_line <window title>: the window's line from probe.js
+# ("title|x|y|w|h|tiled"), nothing if there's no such window. Runs probe.js
+# in the test KWin.
+probe_line() {
     local token="p$(date +%s%N)" id
     sed "s/TOKEN/$token/" "$HERE/probe.js" > "$RUN/probe.js"
     id=$(timeout 10 qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript "$RUN/probe.js" sirkelprobe 2>/dev/null)
@@ -198,8 +199,13 @@ probe() {
     qd org.kde.KWin "/Scripting/Script$id" org.kde.kwin.Script.run
     sleep 0.3
     qd org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript sirkelprobe
-    grep "SIRKEL-PROBE $token $1|" "$LOG" | tail -1 | awk -F'|' '{print $2, $3, $4, $5}'
+    grep "SIRKEL-PROBE $token $1|" "$LOG" | tail -1
 }
+# probe <window title>: the window's frame geometry as "x y w h".
+probe() { probe_line "$1" | awk -F'|' '{print $2, $3, $4, $5}'; }
+# tile_state <window title>: "tiled" if it's in one of KWin's own tiles,
+# otherwise "untiled".
+tile_state() { probe_line "$1" | awk -F'|' '{print $6}'; }
 
 # One session: press the trigger, a few moves, release.
 session() {
@@ -364,12 +370,13 @@ for _ in $(seq "$ROUNDS"); do
 done
 end
 
-begin "key mashing (arrows, Enter, Esc, occasional Backspace)"
+begin "key mashing (arrows, Enter, Esc, occasional Backspace and R)"
 for _ in $(seq "$ROUNDS"); do
     send key $F24 1
     for _ in $(seq "$(rnd 3 12)"); do
         keys=($LEFT $RIGHT $UP $DOWN $LEFT $RIGHT $UP $DOWN $ENTER $ESC)
         [ $(rnd 0 30) = 0 ] && keys+=($BACKSPACE)
+        [ $(rnd 0 15) = 0 ] && keys+=($KEY_R)
         k=${keys[$(rnd 0 $((${#keys[@]} - 1)))]}
         send key "$k" 1; send sleep "$(rnd 0 10)"; send key "$k" 0
     done
@@ -527,6 +534,81 @@ check "Left pressed, then held for 1.5 s: one step (533 px)" "x <= 2 && w >= 530
 check_true "held key stepped once, not on every repeat" [ $(( $(count "same direction again") - steps )) -eq 1 ]
 end
 
+begin "Enter picks maximize, applied when the trigger is let go" "snapping to \"maximize\""
+send abs 800 450; sync_input
+spawn window-drag.qml
+snaps=$(count "sirkel: snapping to")
+send abs 800 450; send key $F24 1; send sleep 50; send move -300 0; send sleep 50
+send key $ENTER 1; send key $ENTER 0; sync_input
+sleep 0.5
+check_true "nothing applied while the trigger is still held" [ "$(count "sirkel: snapping to")" -eq "$snaps" ]
+send key $F24 0; sync_input
+sleep 0.8
+check "maximized after letting go of the trigger" "x <= 2 && y <= 2 && w >= 1597 && h >= 897" $(probe "sirkel-stress drag")
+# Changing your mind: Enter, then Left, then let go: the window goes left.
+send abs 800 450; send key $F24 1; send sleep 50
+send key $ENTER 1; send key $ENTER 0; send sleep 50; send key $LEFT 1; send key $LEFT 0
+send key $F24 0; sync_input
+sleep 0.8
+check "Enter then Left picks the left half" "x <= 2 && w >= 797 && w <= 803" $(probe "sirkel-stress drag")
+end
+
+begin "R and the Restore shortcut put a snapped window back" "restoring"
+send abs 800 450; sync_input
+spawn window-drag.qml
+geo0=$(probe "sirkel-stress drag")
+read -r x0 y0 w0 h0 <<<"$geo0"
+back="x >= ${x0:-0} - 2 && x <= ${x0:-0} + 2 && y >= ${y0:-0} - 2 && y <= ${y0:-0} + 2 && w >= ${w0:-0} - 2 && w <= ${w0:-0} + 2 && h >= ${h0:-0} - 2 && h <= ${h0:-0} + 2"
+snap -300 0
+check "snapped to the left half first" "x <= 2 && w >= 797 && w <= 803" $(probe "sirkel-stress drag")
+send abs 800 450; send key $F24 1; send sleep 50
+send key $KEY_R 1; send key $KEY_R 0; send sleep 50; send key $F24 0; sync_input
+sleep 0.8
+check "trigger + R: back where it was before the snap (${geo0:-?})" "$back" $(probe "sirkel-stress drag")
+snap 300 0
+qd org.kde.kglobalaccel /component/sirkel org.kde.kglobalaccel.Component.invokeShortcut SirkelRestore
+sleep 0.8
+check "the Restore shortcut: back where it was" "$back" $(probe "sirkel-stress drag")
+# Restored windows are forgotten: restoring again leaves it alone.
+qd org.kde.kglobalaccel /component/sirkel org.kde.kglobalaccel.Component.invokeShortcut SirkelRestore
+sleep 0.5
+check "restoring again does nothing" "$back" $(probe "sirkel-stress drag")
+end
+
+begin "a click snaps at once, a right-click cancels" "clicked: snapping now"
+send abs 800 450; sync_input
+spawn window-drag.qml
+snaps=$(count "sirkel: snapping to")
+sessions=$(count "sirkel: session started")
+send abs 800 450; send key $F24 1; send sleep 50; send move -300 0; send sleep 50
+send button $BTN_LEFT 1; send sleep 30; send button $BTN_LEFT 0; sync_input
+sleep 0.8
+check "left click: on the left half while the trigger is still held" "x <= 2 && w >= 797 && w <= 803" $(probe "sirkel-stress drag")
+# Still held well past KWin's key repeat delay: its repeats mustn't start
+# another session.
+send sleep 1500; send key $F24 0; sync_input
+sleep 0.3
+check_true "letting go of the trigger after the click doesn't snap again" [ $(( $(count "sirkel: snapping to") - snaps )) -eq 1 ]
+check_true "holding the trigger after the click didn't start another session" [ $(( $(count "sirkel: session started") - sessions )) -eq 1 ]
+before=$(probe "sirkel-stress drag")
+send abs 800 450; send key $F24 1; send sleep 50; send move 300 0; send sleep 50
+send button $BTN_RIGHT 1; send sleep 30; send button $BTN_RIGHT 0; send sleep 50; send key $F24 0; sync_input
+sleep 0.8
+after=$(probe "sirkel-stress drag")
+check_true "right click: the window didn't move (before: ${before:-?}, after: ${after:-?})" [ -n "$before" -a "$before" = "$after" ]
+end
+
+begin "a window in KWin's own tiling leaves its tile when Sirkel moves it"
+send abs 800 450; sync_input
+spawn window-drag.qml
+qd org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut "Window Quick Tile Left"
+sleep 0.8
+check_true "KWin quick-tiled it first (otherwise this tests nothing)" [ "$(tile_state "sirkel-stress drag")" = tiled ]
+snap 300 0
+check "moved to the right half" "x >= 798 && x <= 802 && w >= 797 && w <= 803" $(probe "sirkel-stress drag")
+check_true "no longer in KWin's left tile" [ "$(tile_state "sirkel-stress drag")" = untiled ]
+end
+
 begin "windows with a minimum size stay on screen"
 send abs 800 450; sync_input
 spawn window-minsize.qml
@@ -562,16 +644,17 @@ drag "sirkel-stress drag" 300
 check "and the next drag still restores the size" "w >= ${w0:-0} - 2 && w <= ${w0:-0} + 2" $(probe "sirkel-stress drag")
 end
 
-begin "Enter and Backspace reach apps outside a session"
+begin "Enter, Backspace and R reach apps outside a session"
 : > "$RUN/keys.log"
 env QT_QPA_PLATFORM=wayland QT_LOGGING_RULES= QT_FORCE_STDERR_LOGGING=1 LD_PRELOAD= \
     qml6 "$HERE/window-keys.qml" >>"$RUN/keys.log" 2>&1 &
 WINDOWS+=($!)
 sleep 1
-send key $ENTER 1; send key $ENTER 0; send key $BACKSPACE 1; send key $BACKSPACE 0; sync_input
+send key $ENTER 1; send key $ENTER 0; send key $BACKSPACE 1; send key $BACKSPACE 0; send key $KEY_R 1; send key $KEY_R 0; sync_input
 sleep 0.5
 check_true "Enter reached the app" grep -q "SIRKEL-KEY $QT_RETURN" "$RUN/keys.log"
 check_true "Backspace reached the app" grep -q "SIRKEL-KEY $QT_BACKSPACE" "$RUN/keys.log"
+check_true "R reached the app" grep -qw "SIRKEL-KEY $QT_R" "$RUN/keys.log"
 # While a session holds the keyboard, Enter belongs to Sirkel (it maximizes
 # and ends the session) and must not reach the app.
 enters=$(grep -c "SIRKEL-KEY $QT_RETURN" "$RUN/keys.log")
@@ -592,13 +675,13 @@ begin "locked screen (nothing starts, nothing moves)" "screen is locked"
 spawn window-drag.qml
 before=$(probe "sirkel-stress drag")
 for _ in 1 2 3 4 5; do snap 300 0; done
-for n in SirkelSnapLeft SirkelSnapRight SirkelMaximize SirkelMinimize; do
+for n in SirkelSnapLeft SirkelSnapRight SirkelMaximize SirkelMinimize SirkelRestore; do
     qd org.kde.kglobalaccel /component/sirkel org.kde.kglobalaccel.Component.invokeShortcut "$n"
 done
 sleep 0.5
 after=$(probe "sirkel-stress drag")
 check_true "no session started" [ $(( $(count "sirkel: session started") - STARTED_BEFORE )) -eq 0 ]
-check_true "the window didn't move (before: ${before:-?}, after: ${after:-?})" [ -n "$before" ] && [ "$before" = "$after" ]
+check_true "the window didn't move (before: ${before:-?}, after: ${after:-?})" [ -n "$before" -a "$before" = "$after" ]
 end
 
 finish

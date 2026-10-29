@@ -24,7 +24,7 @@ jobs:
           pacman -Syu --noconfirm --needed \
             base-devel git cmake extra-cmake-modules vulkan-headers gettext \
             kwin qt6-base qt6-declarative qt6-wayland qt6-tools kconfig kcolorscheme \
-            kcoreaddons kglobalaccel ki18n kcmutils kwindowsystem kirigami kdeclarative \
+            kcoreaddons kglobalaccel ki18n kcmutils kwindowsystem kirigami kdeclarative knotifications kio \
             libkscreen dbus wayland plasma-wayland-protocols mesa
 
       - uses: actions/checkout@v4

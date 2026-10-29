@@ -5,6 +5,8 @@
 
 #include "placement.h"
 
+#include <KSharedConfig>
+
 #include <QObject>
 #include <QPointer>
 #include <QRectF>
@@ -56,7 +58,12 @@ private Q_SLOTS:
 
 private:
     QQuickItem *root() const;
+    // Turns off the blur behind the outline, if it's on.
+    void clearBlur();
 
+    // Kept open so resolving the theme colors doesn't parse it every time
+    // (see reloadColorSources()).
+    KSharedConfigPtr m_globals;
     std::unique_ptr<QQuickView> m_view;
     QPointer<QQuickItem> m_outline;
     QPointer<QQuickItem> m_indicator;
@@ -65,6 +72,7 @@ private:
     bool m_outlineShown = false;
     bool m_blurEnabled = false;
     int m_outlineCornerRadius = 0;
-    // Last region sent to KWin's blur, to skip unchanged per-frame updates.
+    // Last region sent to KWin's blur, to skip unchanged per-frame updates;
+    // empty while the blur is off.
     QRegion m_blurRegion;
 };

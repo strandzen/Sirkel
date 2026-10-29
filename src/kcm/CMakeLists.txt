@@ -29,10 +29,9 @@ qt6_add_resources(kwin_effect_sirkel_config sirkel_preview_qml
         ../qml/Overlay.qml
 )
 
-# KWin loads an effect only if it was built for its exact version; the About
-# page compares this against the installed KWin.
+# The About page's Rebuild button runs sirkel-rebuild (src/rebuild/).
 target_compile_definitions(kwin_effect_sirkel_config PRIVATE
-    SIRKEL_KWIN_VERSION="${KWin_VERSION}"
+    SIRKEL_REBUILD_EXECUTABLE="${KDE_INSTALL_FULL_BINDIR}/sirkel-rebuild"
     TRANSLATION_DOMAIN="kwin_effect_sirkel_config"
 )
 
@@ -49,6 +48,7 @@ target_include_directories(kwin_effect_sirkel_config PRIVATE ${CMAKE_CURRENT_BIN
 
 target_link_libraries(kwin_effect_sirkel_config PRIVATE
     sirkel_core
+    sirkel_rebuild_core
     Qt6::Core
     Qt6::DBus
     Qt6::Gui

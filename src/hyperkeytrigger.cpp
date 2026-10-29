@@ -13,16 +13,15 @@
 #include <QAction>
 #include <QKeyEvent>
 
-HyperkeyTrigger::HyperkeyTrigger(KWin::Effect *effect, std::function<bool()> busy)
+HyperkeyTrigger::HyperkeyTrigger(KWin::Effect *effect)
     : QObject(effect)
     , m_effect(effect)
-    , m_busy(std::move(busy))
 {
     m_action = new QAction(this);
     m_action->setObjectName(QString::fromLatin1(kTriggerActionId));
     m_action->setText(kTriggerActionText.toString());
     registerGlobalAction(m_action, {QKeySequence(Qt::Key_F24)});
-    connect(m_action, &QAction::triggered, this, &HyperkeyTrigger::onTriggered);
+    connect(m_action, &QAction::triggered, this, &HyperkeyTrigger::armRequested);
 
     // Kept up to date locally rather than asked for on every press: the
     // KGlobalAccel service runs inside KWin, so a lookup would be a
@@ -49,15 +48,6 @@ void HyperkeyTrigger::setCombo(const QKeySequence &sequence)
 bool HyperkeyTrigger::isRelease(const QKeyEvent *event) const
 {
     return event->type() == QEvent::KeyRelease && isTriggerRelease(m_combo, event->key());
-}
-
-void HyperkeyTrigger::onTriggered()
-{
-    // The held key auto-repeats; ignore repeats while a session runs.
-    if (m_busy()) {
-        return;
-    }
-    Q_EMIT armRequested();
 }
 
 bool HyperkeyTrigger::ensureGrab()

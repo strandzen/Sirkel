@@ -74,6 +74,7 @@ target_link_libraries(kwin_effect_sirkel PRIVATE
     KWin::kwin
 )
 
+add_subdirectory(rebuild)
 add_subdirectory(kcm)
 
 ecm_qt_install_logging_categories(
@@ -81,6 +82,9 @@ ecm_qt_install_logging_categories(
     FILE sirkel.categories
     DESTINATION ${KDE_INSTALL_LOGGINGCATEGORIESDIR}
 )
+
+# For software centers (Discover). Validated by appstreamtest after an install.
+install(FILES io.github.strandzen.sirkel.metainfo.xml DESTINATION ${KDE_INSTALL_METAINFODIR})
 
 # Settings migrations, run once per user by kconf_update at Plasma login.
 install(FILES update/sirkel.upd DESTINATION ${KDE_INSTALL_KCONFUPDATEDIR})

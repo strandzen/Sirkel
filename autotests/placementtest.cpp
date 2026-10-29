@@ -5,6 +5,8 @@
 
 #include <QTest>
 
+#include <cmath>
+
 class PlacementTest : public QObject
 {
     Q_OBJECT
@@ -16,6 +18,7 @@ private Q_SLOTS:
     void cycleWraps();
     void ringIndicesAreUnique();
     void fixedSizeCentered();
+    void neighboursShareEdges();
     void namesRoundTrip();
     void directionForAngle_data();
     void directionForAngle();
@@ -116,6 +119,29 @@ void PlacementTest::fixedSizeCentered()
     QCOMPARE(centeredFixedSize(QRectF(0, 0, 250, 800), QSizeF(400, 100), area), QRectF(0, 350, 400, 100));
     // Larger than the whole area: top-left stays on screen.
     QCOMPARE(centeredFixedSize(QRectF(0, 0, 500, 800), QSizeF(1200, 900), area).topLeft(), QPointF(0, 0));
+}
+
+// Thirds of 3440 px aren't whole pixels. Rounded per edge, three windows
+// side by side (left third, centered third, right third) meet exactly: no
+// 1 px gap or overlap, and the gaps between them are the padding.
+void PlacementTest::neighboursShareEdges()
+{
+    const QRectF area(0, 0, 3440, 1400);
+    for (const qreal padding : {0.0, 10.0}) {
+        const QRectF left = alignedToPixels(placementGeometry(SnapDirection::Left, area, padding, padding, 1));
+        const QRectF middle = alignedToPixels(placementGeometry(SnapDirection::Maximize, area, padding, padding, 0));
+        const QRectF right = alignedToPixels(placementGeometry(SnapDirection::Right, area, padding, padding, 1));
+        for (const QRectF &rect : {left, middle, right}) {
+            QCOMPARE(rect.left(), std::floor(rect.left()));
+            QCOMPARE(rect.right(), std::floor(rect.right()));
+        }
+        QCOMPARE(middle.left() - left.right(), padding);
+        QCOMPARE(right.left() - middle.right(), padding);
+        QCOMPARE(right.right(), area.right() - padding);
+    }
+    // A whole-pixel size keeps its size wherever it sits, also on a screen
+    // left of the origin (halves round the same way at both edges).
+    QCOMPARE(alignedToPixels(QRectF(-100.5, 0.5, 800, 600)).size(), QSizeF(800, 600));
 }
 
 void PlacementTest::directionForAngle_data()

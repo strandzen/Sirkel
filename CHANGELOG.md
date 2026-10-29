@@ -2,6 +2,30 @@
 
 All notable changes to Sirkel. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [semantic versioning](https://semver.org/). Before 1.0, settings may still change between versions.
 
+## [Unreleased]
+
+### Added
+- A notification at login when Sirkel needs a rebuild after a KWin update, so it no longer just stops working without a word. It can be turned off in System Settings → Notifications or Autostart.
+- A **Rebuild** button, in that notification and on the About page, for Sirkel installed as a package: it opens a terminal that builds and installs it again with `makepkg -si`. The package now carries the PKGBUILD it was built from for this. The button names the KWin version it rebuilds for, and says so first if the build tools (`base-devel`) are missing. The rebuild check reads the installed Sirkel itself, so the About page is right straight after a rebuild.
+- The output of the last rebuild is saved in `~/.cache/sirkel/rebuild.log`, and the About page can show it, to attach to a bug report if a rebuild fails.
+- The General and About pages check again when you come back to the settings window, so they show the new state after a rebuild (or after setting up keyd) without reopening it.
+- Press R while holding the trigger to put the window back where it was before Sirkel placed it. Also as a direct shortcut (**Restore size**, not set out of the box).
+- Click while holding the trigger to snap right away; right-click cancels.
+- Software centers like Discover can list Sirkel (AppStream metadata).
+
+### Changed
+- The pacman hook says to rebuild right away: Sirkel keeps working until you log out after a KWin update, so rebuilding before that means it never stops working.
+- Sirkel now also needs KNotifications and KIO. Building without the rebuild notification and button: `-DBUILD_REBUILD_HELPER=OFF`.
+- Trigger + Enter now picks maximize like a direction: the outline shows the full screen and the window is maximized when you let go of the trigger, so you can still pick something else or cancel. Backspace (minimize) still acts at once.
+- After Esc, Backspace or R, keys you press while still holding the trigger stay with Sirkel until you let go, instead of reaching the app.
+- Building needs Qt 6.10 and KDE Frameworks 6.26, what KWin 6.7 needs itself.
+- Faster: checking whether Sirkel needs a rebuild no longer starts `kwin_wayland` (65 ms each time) or a full app at login, the settings read all shortcuts in one go, and a trigger press no longer re-reads the shortcut and color settings unless they changed.
+- The settings' live preview follows Plasma's animation speed, like the real overlay.
+
+### Fixed
+- A window tiled by KWin (Meta+arrow quick tiling or custom tiles) stayed in its KWin tile after Sirkel moved it.
+- Windows side by side (for example three thirds) could end up 1 px apart or overlapping. Edges are now whole pixels, shared exactly by neighbours.
+
 ## [0.5.3] - 2026-10-26
 
 ### Added

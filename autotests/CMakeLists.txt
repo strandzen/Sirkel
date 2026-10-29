@@ -7,3 +7,8 @@ ecm_add_tests(
     shortcutactionstest.cpp
     LINK_LIBRARIES sirkel_core Qt6::Test
 )
+
+ecm_add_test(rebuildtest.cpp
+    TEST_NAME rebuildtest
+    LINK_LIBRARIES sirkel_rebuild_core Qt6::Test
+)

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "directioninput.h"
+#include "globalshortcuts.h"
 #include "placement.h"
 #include "shortcutactions.h"
 
@@ -27,12 +28,13 @@ namespace KWin
 class EffectWindow;
 class LogicalOutput;
 struct PointerMotionEvent;
+struct PointerButtonEvent;
 struct PointerAxisEvent;
 }
 
-// Loop-style directional window snapping. Hold the hyperkey (Caps Lock,
-// remapped to F24 by keyd), move the mouse or press a direction key to pick a
-// placement, release to snap the active window there.
+// Loop-style directional window snapping. Hold the trigger (a key
+// combination, or Caps Lock remapped to F24 by keyd), move the mouse or press
+// a direction key to pick a placement, release to snap the window there.
 //
 // The pieces: HyperkeyTrigger decides when a session starts and owns the
 // keyboard grab, DirectionInput turns key/pointer input into picks,
@@ -52,6 +54,7 @@ public:
 protected:
     void grabbedKeyboardEvent(QKeyEvent *event) override;
     void pointerMotion(KWin::PointerMotionEvent *event) override;
+    void pointerButton(KWin::PointerButtonEvent *event) override;
     void pointerAxis(KWin::PointerAxisEvent *event) override;
     void reconfigure(ReconfigureFlags flags) override;
 
@@ -64,8 +67,11 @@ private Q_SLOTS:
 
 private:
     void arm();
-    // Ends the session; snaps to the current pick if `apply`.
-    void finish(bool apply);
+    // Ends the session; snaps to the current pick if `apply`. With
+    // `beforeRelease` (a click, Esc, an acting key), the trigger is still
+    // held: the keyboard stays grabbed until it's let go (see
+    // m_awaitingRelease).
+    void finish(bool apply, bool beforeRelease = false);
     // The first real input of a session: shows the indicator.
     void engage();
     void pick(SnapDirection direction);
@@ -73,8 +79,9 @@ private:
     // wrapping round (scroll wheel, or the same direction key again).
     void stepSize(int delta);
     void refreshPreview();
-    // A key pressed while holding the trigger: Esc, or one of
-    // holdKeyActions() (add a row there to bind another key).
+    // A holdKeyActions() row that acts at once and ends the session
+    // (Backspace: minimize, R: restore). Placement rows (Enter: maximize)
+    // pick instead, applied on release.
     void runKeyAction(const WindowAction &action);
     // Does `action` to `window` within `area` (`step` = scroll-resize step,
     // -1 for the normal size).
@@ -82,6 +89,10 @@ private:
     // Remembers the size `window` had before Sirkel placed it at `snapped`,
     // so dragging it away restores that size (see onUserMoveStarted()).
     void rememberSnap(KWin::EffectWindow *window, const QRectF &snapped);
+    // Puts `window` back where it was before Sirkel placed it (an undo), if
+    // Sirkel placed it and it hasn't been dragged away since. Centered in
+    // `area` if that place is on a screen that's gone.
+    void restore(KWin::EffectWindow *window, const QRectF &area);
     // Whether Sirkel may act on `window` at all (not special, fullscreen,
     // excluded, or during Overview and similar).
     bool isTargetable(KWin::EffectWindow *window) const;
@@ -90,8 +101,11 @@ private:
     KWin::LogicalOutput *screenFor(KWin::EffectWindow *window) const;
     // Placement geometry for `window` in `area`: the placement rect, or for
     // a window that can't take that size (fixed size, or a minimum/maximum
-    // size), its own size centered on it and kept inside the area.
+    // size), its own size centered on it and kept inside the area. Always
+    // in whole pixels (alignedToPixels()).
     static QRectF geometryFor(KWin::EffectWindow *window, const QRectF &area, SnapDirection direction, int step);
+    // Un-maximizes and untiles `window`, then moves it. Ignores an empty
+    // geometry.
     static void moveWindow(KWin::EffectWindow *window, const QRectF &geometry);
     // A per-action global shortcut fired: act on the active window directly.
     void runShortcutAction(const ShortcutAction &action);
@@ -103,12 +117,9 @@ private:
     KWin::EffectWindow *windowUnderCursor() const;
     // (Re)starts the SessionTimeout countdown; called on every input.
     void restartIdleTimer();
-    // Reads the configured keys for holdKeyActions() into m_holdKeys.
+    // Reads the configured keys for holdKeyActions() into m_holdKeys, if
+    // they may have changed since the last session.
     void readHoldKeys();
-    // Where the target window actually ends up for a placement: the
-    // placement rect, or for a window that can't be resized, its own size
-    // centered in that rect.
-    QRectF targetGeometry(SnapDirection direction, int step) const;
 
     HyperkeyTrigger *m_trigger = nullptr;
     QTimer *m_idleTimer = nullptr;
@@ -117,6 +128,11 @@ private:
     EdgeOverflow m_edgeOverflow;
 
     bool m_active = false;
+    // A session ended before the trigger was let go. Until it is, the
+    // keyboard stays grabbed: the trigger's key repeats (KWin repeats the
+    // last key pressed) would otherwise reach KGlobalAccel and start a new
+    // session at once, and keys typed meanwhile would reach the app.
+    bool m_awaitingRelease = false;
     // Holding the hyperkey alone shows nothing; the session engages on the
     // first mouse movement or direction key.
     bool m_engaged = false;
@@ -138,6 +154,9 @@ private:
         QRectF snapped;
     };
     QHash<KWin::EffectWindow *, SnapRecord> m_snapped;
-    // holdKeyActions() with their configured keys, read per session.
+    // holdKeyActions() with their configured keys (see readHoldKeys()).
     QList<std::pair<QList<QKeySequence>, WindowAction>> m_holdKeys;
+    // KGlobalAccel's file, open for the effect's lifetime. Opened before the
+    // constructor registers the shortcuts, so they're all read from one copy.
+    ShortcutsFile m_shortcutsFile;
 };

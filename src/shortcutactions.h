@@ -16,7 +16,7 @@
 // The ids are the stored action names; never rename one that has shipped.
 
 // KGlobalAccel component: Sirkel's own group in System Settings ->
-// Shortcuts (before 0.6 the actions lived under "kwin").
+// Shortcuts (before 0.5.2 the actions lived under "kwin").
 inline constexpr const char *kShortcutComponent = "sirkel";
 inline constexpr const char *kShortcutComponentName = "Sirkel";
 
@@ -24,16 +24,16 @@ inline constexpr const char *kShortcutComponentName = "Sirkel";
 inline constexpr const char *kTriggerActionId = "SirkelSnap";
 inline constexpr KLazyLocalizedString kTriggerActionText = kli18n("Sirkel: hold to snap window");
 
-// What an action does to a window: place it, minimize it, or nothing
-// (Cancel, for Esc while holding the trigger). Shared by the keys that work
-// while holding the trigger and by the direct shortcuts.
+// What an action does to a window: place it, minimize it, or put it back
+// where it was before Sirkel placed it (Restore). Shared by the keys that
+// work while holding the trigger and by the direct shortcuts.
 struct WindowAction {
     enum class Kind {
         Place,
         Minimize,
-        Cancel
+        Restore
     };
-    Kind kind = Kind::Cancel;
+    Kind kind = Kind::Place;
     SnapDirection direction = SnapDirection::None;
 };
 
@@ -51,9 +51,9 @@ struct ShortcutAction {
 const QList<ShortcutAction> &shortcutActions();
 
 // Keys that act while the trigger is held (Enter maximizes, Backspace
-// minimizes). Listed in System Settings -> Shortcuts so they can be
-// rebound, but registered inactive: KGlobalAccel never grabs them, so Enter
-// keeps working everywhere else. During a session the effect reads the
+// minimizes, R restores). Listed in System Settings -> Shortcuts so they can
+// be rebound, but registered inactive: KGlobalAccel never grabs them, so
+// Enter keeps working everywhere else. During a session the effect reads the
 // configured keys and matches them itself. Esc (cancel) stays fixed.
 struct HoldKeyAction {
     const char *id;

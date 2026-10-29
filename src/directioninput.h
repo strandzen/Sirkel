@@ -69,6 +69,9 @@ public:
     // the pointer position at that moment, remembered so small pointer jitter
     // right after a key pick can't override it.
     std::optional<SnapDirection> keyEvent(KeyAxis axis, bool pressed, const QPointF &cursor);
+    // A pick made by some other key (Enter for Maximize): protected from
+    // pointer jitter the same way as a direction key pick.
+    void keyPicked(const QPointF &cursor);
 
     // The pointer moved. `delta` is the cursor relative to the indicator
     // center. Returns the new pick, if any.

@@ -24,7 +24,7 @@ This is version 0.5.3. It's early and I've only tested it on my own machine and 
 - Scroll while holding the trigger to change the size: 1/4, 1/3, 1/2 or 2/3 of the screen. Full screen goes 1/3, 1/2, full width. This is off by default.
 - Snap the active window or the one under the mouse, on its own monitor or the one the mouse is on.
 - Add gaps around windows. Two windows next to each other get the same gap between them as against the screen edge.
-- Drag a snapped window away and it recovers its previous size.
+- Drag a snapped window away and it recovers its previous size, or press R while holding the trigger to put it back where it was.
 - Windows that can't be resized, or can't get as small or big as the spot you picked, are centered within outline. Fullscreen (F11, Games, Movies, etc) are excluded, and you can manually exclude apps.
 - Colors follow your Plasma accent color, or you can pick your own.
 - Optional blur behind the preview, with adjustable animation speed and easing options.
@@ -34,7 +34,7 @@ This is version 0.5.3. It's early and I've only tested it on my own machine and 
 
 - KDE Plasma 6.7 or newer, Wayland only.
 - Optional: [keyd](https://github.com/rvaiya/keyd), if you want to use Caps Lock as the trigger
-- To build: `cmake extra-cmake-modules qt6-base qt6-declarative kconfig kcolorscheme kcoreaddons kglobalaccel ki18n kcmutils kwindowsystem kwin`
+- To build: `cmake extra-cmake-modules qt6-base qt6-declarative kconfig kcolorscheme kcoreaddons kglobalaccel ki18n kcmutils kwindowsystem knotifications kio kwin`
 
 [Geometry Change](https://github.com/peterfajdiga/kwin4_effect_geometry_change) is not required but is a nice addition if you want some additional window animations.
 
@@ -63,7 +63,12 @@ cmake --build build
 sudo cmake --install build
 ```
 
-If you installed with the PKGBUILD, just run `makepkg -si` again. The About page in Sirkel's settings tells you when a rebuild is needed.
+If you installed with the PKGBUILD, just run `makepkg -si` again, or let Sirkel do it for you:
+
+- When you log in and Sirkel needs a rebuild, a notification tells you so. Click **Rebuild** in it, or the **Rebuild** button on the About page in Sirkel's settings. Either one opens a terminal that builds and installs Sirkel again (you need `base-devel` for that, and you'll be asked for your password). Then log out and back in.
+- Tip: Sirkel keeps working until you log out after a KWin update. If you rebuild right after updating, it never stops working at all.
+
+The notification can be turned off in **System Settings → Notifications** (Sirkel), or in **System Settings → Autostart** (Sirkel rebuild check). If you built with CMake yourself, the notification and the About page tell you a rebuild is needed, but you rebuild with the commands above. To leave all of this out, configure with `-DBUILD_REBUILD_HELPER=OFF`.
 
 ### 2. Turn it on
 
@@ -105,13 +110,15 @@ While you hold the trigger, you can also press:
 
 | Key | What it does |
 |---|---|
-| Enter | Fill the screen |
+| Enter | Pick fill the screen (it's applied when you let go, so you can still change your mind) |
 | Backspace | Minimize |
+| R | Put the window back where it was before Sirkel placed it |
 | Esc | Cancel |
 | The same direction key again | Change the size: 1/2, 1/3, 1/4, 2/3 and round again (left, right, top and bottom) |
 | Scroll wheel | Change the size (if turned on) |
+| Click | Snap now, without waiting for you to let go. Right-click cancels |
 
-Enter and Backspace can be changed to other keys, either on Sirkel's Shortcuts page or under Sirkel in **System Settings → Shortcuts**. They only do something while you hold the trigger.
+Enter, Backspace and R can be changed to other keys, either on Sirkel's Shortcuts page or under Sirkel in **System Settings → Shortcuts**. They only do something while you hold the trigger. Putting a window back also works as a direct shortcut (**Restore size**, not set out of the box).
 
 ## Settings
 
@@ -128,7 +135,7 @@ Every shortcut also shows up under Sirkel in **System Settings → Shortcuts**.
 
 ## Troubleshooting
 
-**Sirkel stopped working after a Plasma update.** KWin only loads effects built for its exact version. Rebuild and reinstall (see [Installation](#installation)), then log out and back in. The About page in Sirkel's settings tells you whether this is the problem.
+**Sirkel stopped working after a Plasma update.** KWin only loads effects built for its exact version. Rebuild and reinstall (see [Installation](#installation)), then log out and back in. The About page in Sirkel's settings tells you whether this is the problem, and has a **Rebuild** button if you installed the package. If a rebuild fails, its output is saved in `~/.cache/sirkel/rebuild.log`: please attach it to a [bug report](https://github.com/strandzen/Sirkel/issues).
 
 **Nothing happens when I hold the trigger.** The General page in Sirkel's settings says which trigger is set and whether it works. If you use Caps Lock, check that keyd is running (`systemctl status keyd`) and that Caps Lock sends F24: `sudo keyd monitor` shows the key while you press it.
 

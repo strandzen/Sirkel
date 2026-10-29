@@ -23,7 +23,7 @@ jobs:
           pacman -Syu --noconfirm --needed \
             base-devel git cmake extra-cmake-modules vulkan-headers gettext clang \
             kwin qt6-base qt6-declarative kconfig kcolorscheme kcoreaddons \
-            kglobalaccel ki18n kcmutils kwindowsystem kirigami kdeclarative
+            kglobalaccel ki18n kcmutils kwindowsystem kirigami kdeclarative knotifications kio
 
       - uses: actions/checkout@v4
 

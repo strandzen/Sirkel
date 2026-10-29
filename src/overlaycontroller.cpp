@@ -28,7 +28,8 @@ constexpr qreal kReferenceDuration = 75.0;
 }
 
 OverlayController::OverlayController()
-    : m_view(std::make_unique<QQuickView>(QUrl(QStringLiteral("qrc:/qml/Overlay.qml"))))
+    : m_globals(KSharedConfig::openConfig(QStringLiteral("kdeglobals")))
+    , m_view(std::make_unique<QQuickView>(QUrl(QStringLiteral("qrc:/qml/Overlay.qml"))))
 {
     m_view->setFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool | Qt::WindowDoesNotAcceptFocus | Qt::WindowTransparentForInput);
     m_view->setColor(Qt::transparent);
@@ -82,8 +83,7 @@ void OverlayController::begin(const QRectF &area)
         }
     }
     m_view->setGeometry(area.toRect());
-    KWindowEffects::enableBlurBehind(m_view.get(), false);
-    m_blurRegion = QRegion();
+    clearBlur();
 
     if (QQuickItem *item = root()) {
         QMetaObject::invokeMethod(item, "reset");
@@ -196,8 +196,7 @@ void OverlayController::end()
 {
     // Blur can't fade with the rest, so it goes first.
     m_outlineShown = false;
-    KWindowEffects::enableBlurBehind(m_view.get(), false);
-    m_blurRegion = QRegion();
+    clearBlur();
     if (!m_view->isVisible()) {
         return;
     }
@@ -213,8 +212,15 @@ void OverlayController::hideNow()
 {
     m_hideFallback->stop();
     m_view->hide();
-    KWindowEffects::enableBlurBehind(m_view.get(), false);
-    m_blurRegion = QRegion();
+    clearBlur();
+}
+
+void OverlayController::clearBlur()
+{
+    if (!m_blurRegion.isEmpty()) {
+        KWindowEffects::enableBlurBehind(m_view.get(), false);
+        m_blurRegion = QRegion();
+    }
 }
 
 void OverlayController::updateBlur()
