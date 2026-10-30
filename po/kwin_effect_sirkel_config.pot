@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-30 12:26+0100\n"
+"POT-Creation-Date: 2026-10-30 12:35+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -62,21 +62,21 @@ msgstr ""
 msgid "Rebuild for KWin %1"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:71
+#: src/kcm/ui/AboutPage.qml:69
 #, kde-format
 msgid ""
 "Opens a terminal that builds and installs Sirkel. You'll be asked for your "
 "password."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:79
+#: src/kcm/ui/AboutPage.qml:77
 #, kde-format
 msgid ""
 "To rebuild Sirkel from here, first install the build tools: sudo pacman -S --"
 "needed base-devel"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:88
+#: src/kcm/ui/AboutPage.qml:86
 #, kde-format
 msgid ""
 "# Built from source, in the source folder:\n"
@@ -87,46 +87,46 @@ msgid ""
 "makepkg -si"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:96
+#: src/kcm/ui/AboutPage.qml:94
 #, kde-format
 msgid "Show the last rebuild's output"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:107
+#: src/kcm/ui/AboutPage.qml:105
 #, kde-format
 msgid "keyd is set up."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:117
+#: src/kcm/ui/AboutPage.qml:115
 #, kde-format
 msgid "Recommended: Caps Lock as the trigger"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:123
+#: src/kcm/ui/AboutPage.qml:121
 #, kde-format
 msgid ""
 "Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to /"
 "etc/keyd/default.conf (Sirkel never writes there itself):"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:142
+#: src/kcm/ui/AboutPage.qml:140
 #, kde-format
 msgid "Copy"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:157
+#: src/kcm/ui/AboutPage.qml:155
 #, kde-format
 msgid ""
 "Then enable keyd with <code>sudo systemctl enable --now keyd</code>, and "
 "choose Caps Lock on the Shortcuts page. Reopen these settings to check again."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:165
+#: src/kcm/ui/AboutPage.qml:163
 #, kde-format
 msgid "Project page"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:170
+#: src/kcm/ui/AboutPage.qml:168
 #, kde-format
 msgid "Report a problem"
 msgstr ""

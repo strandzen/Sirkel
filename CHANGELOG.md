@@ -21,9 +21,11 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - Building needs Qt 6.10 and KDE Frameworks 6.26, what KWin 6.7 needs itself.
 - Faster: checking whether Sirkel needs a rebuild no longer starts `kwin_wayland` (65 ms each time) or a full app at login, the settings read all shortcuts in one go, and a trigger press no longer re-reads the shortcut and color settings unless they changed.
 - The settings' live preview follows Plasma's animation speed, like the real overlay.
-- The About page is tidier: a larger, centered icon and version, one message saying which KWin Sirkel is built for and whether it runs, and the keyd steps (with a copy button) only until keyd is set up, recommended whatever the trigger. Once it is, a single "keyd is set up" line.
+- The About page is tidier: a larger (128 px), centered icon and version, one message saying which KWin Sirkel is built for and whether it runs, and the keyd steps (with a copy button) only until keyd is set up, recommended whatever the trigger. Once it is, a single "keyd is set up" line.
 
 ### Fixed
+- With "move the window under the mouse", an excluded app's window under the mouse (for example a desktop shell's window over the desktop) made Sirkel refuse to start. Excluded windows are now looked through, like panels.
+- Running `makepkg -si` again in a folder used for an earlier build, after a KWin update, could produce a package still built for the old KWin (the new KWin's files looked older than the leftover build). The PKGBUILDs now always build from scratch.
 - A window tiled by KWin (Meta+arrow quick tiling or custom tiles) stayed in its KWin tile after Sirkel moved it.
 - Windows side by side (for example three thirds) could end up 1 px apart or overlapping. Edges are now whole pixels, shared exactly by neighbours.
 

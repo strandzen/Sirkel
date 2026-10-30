@@ -7,7 +7,7 @@
 # next to the PKGBUILD, which in the repository root is Sirkel's own source.
 pkgname=sirkel-git
 _pkgname=Sirkel
-pkgver=0.5.3
+pkgver=0.5.3.r46.gdc2e8a9
 pkgrel=1
 pkgdesc="Loop-inspired directional window snapping for KDE Plasma (KWin effect)"
 arch=('x86_64' 'aarch64')
@@ -32,6 +32,9 @@ pkgver() {
 }
 
 build() {
+  # Always from scratch: a KWin update installs headers older than the
+  # objects left from the last build, so make would keep the old KWin's IID.
+  rm -rf build
   cmake -B build -S "$_pkgname" \
     -DCMAKE_BUILD_TYPE=None \
     -DCMAKE_INSTALL_PREFIX=/usr \

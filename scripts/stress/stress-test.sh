@@ -201,6 +201,15 @@ probe_line() {
     qd org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript sirkelprobe
     grep "SIRKEL-PROBE $token $1|" "$LOG" | tail -1
 }
+# probe_all <window title>: every such window's "x y w h", one per line.
+probe_all() {
+    local line
+    probe_line "$1" >/dev/null
+    grep "SIRKEL-PROBE $(grep -o 'SIRKEL-PROBE p[0-9]*' "$LOG" | tail -1 | cut -d' ' -f2) $1|" "$LOG" | awk -F'|' '{print $2, $3, $4, $5}'
+}
+# top_half_in <"x y w h;..."> : one of them fills the top half of the first
+# output.
+top_half_in() { printf '%s' "$1" | tr ';' '\n' | awk '$1 <= 2 && $2 <= 2 && $3 >= 1590 && $4 >= 440 && $4 <= 453 { found = 1 } END { exit !found }'; }
 # probe <window title>: the window's frame geometry as "x y w h".
 probe() { probe_line "$1" | awk -F'|' '{print $2, $3, $4, $5}'; }
 # tile_state <window title>: "tiled" if it's in one of KWin's own tiles,
@@ -662,6 +671,39 @@ send abs 800 450; send key $F24 1; send move 100 0; send sleep 50
 send key $ENTER 1; send key $ENTER 0; send key $F24 0; sync_input
 sleep 0.5
 check_true "Enter during a session stayed with Sirkel" [ "$(grep -c "SIRKEL-KEY $QT_RETURN" "$RUN/keys.log")" -eq "$enters" ]
+end
+
+begin "move the window under the mouse" "session started"
+send abs 800 450; sync_input
+spawn window-drag.qml
+# The active window to the right half first, so the cursor can be put over
+# another window (the normal ones, centered) without it.
+snap 300 0
+check "active window snapped to the right half first" "x >= 798 && x <= 802" $(probe "sirkel-stress drag")
+# Directions from where the cursor starts, as in the usual setup.
+setting TargetWindowUnderCursor true; setting IndicatorFollowsMouse true; reconfigure; sleep 0.3
+drag_before=$(probe "sirkel-stress drag")
+# Over a normal window, left of the active one: that one moves.
+send abs 560 450; send key $F24 1; send sleep 50
+send move 0 -300; send sleep 100
+send key $F24 0; sync_input
+sleep 0.8
+check_true "the active window stayed (before: ${drag_before:-?}, after: $(probe "sirkel-stress drag"))" [ -n "$drag_before" -a "$drag_before" = "$(probe "sirkel-stress drag")" ]
+normals=$(probe_all "sirkel-stress normal" | tr '\n' ';')
+check_true "a normal window under the mouse went to the top half: ${normals:-no window}" top_half_in "$normals"
+# Over the active window: it moves.
+send abs 1200 600; send key $F24 1; send sleep 50
+send move -300 0; send sleep 100
+send key $F24 0; sync_input
+sleep 0.8
+check "the window under the mouse (the active one) went to the left half" "x <= 2 && w >= 797 && w <= 803 && h >= 890" $(probe "sirkel-stress drag")
+# Over no window at all: the active window moves.
+send abs 1500 700; send key $F24 1; send sleep 50
+send move 300 0; send sleep 100
+send key $F24 0; sync_input
+sleep 0.8
+check "nothing under the mouse: the active window went to the right half" "x >= 798 && x <= 802 && h >= 890" $(probe "sirkel-stress drag")
+setting TargetWindowUnderCursor false; setting IndicatorFollowsMouse false; reconfigure
 end
 
 # ---- Locked screen: a KWin started locked; nothing may start or move -------

@@ -128,12 +128,23 @@ void SirkelEffect::arm()
         return;
     }
     KWin::EffectWindow *window = SirkelConfig::targetWindowUnderCursor() ? windowUnderCursor() : nullptr;
+    if (SirkelConfig::targetWindowUnderCursor()) {
+        qCDebug(SIRKEL) << "window under the cursor at" << KWin::effects->cursorPos() << ":"
+                        << (window ? window->windowClass() + QStringLiteral(" \"") + window->caption() + QLatin1Char('"')
+                                   : QStringLiteral("(none, using the active window)"));
+    }
     if (!window) {
         window = KWin::effects->activeWindow();
     }
     KWin::LogicalOutput *screen = isTargetable(window) ? screenFor(window) : nullptr;
     if (!screen) {
-        qCDebug(SIRKEL) << "not starting: no window Sirkel may move" << (window ? window->windowClass() : QStringLiteral("(none)"));
+        qCDebug(SIRKEL) << "not starting: no window Sirkel may move" << (window ? window->windowClass() : QStringLiteral("(none)"))
+                        << (window ? QStringLiteral("special %1, fullscreen %2, full-screen effect %3, excluded %4")
+                                         .arg(window->isSpecialWindow())
+                                         .arg(window->isFullScreen())
+                                         .arg(KWin::effects->hasActiveFullScreenEffect())
+                                         .arg(isExcluded(window))
+                                   : QString());
         return;
     }
     if (!m_trigger->ensureGrab()) {
@@ -168,7 +179,7 @@ void SirkelEffect::arm()
 
     KWin::effects->startMouseInterception(this, Qt::CrossCursor);
     restartIdleTimer();
-    qCDebug(SIRKEL) << "session started for" << window->windowClass() << "in" << m_area;
+    qCDebug(SIRKEL) << "session started for" << window->windowClass() << window->caption() << "in" << m_area;
 }
 
 void SirkelEffect::readHoldKeys()
@@ -219,6 +230,12 @@ KWin::EffectWindow *SirkelEffect::windowUnderCursor() const
             continue;
         }
         if (!w->isNormalWindow() && !w->isDialog()) {
+            continue;
+        }
+        // Excluded apps are looked through, like panels: some are normal
+        // windows over the desktop (dynamicholme), and stopping at one
+        // refused the session instead of using the active window.
+        if (isExcluded(w)) {
             continue;
         }
         if (QRectF(w->frameGeometry()).contains(cursor)) {

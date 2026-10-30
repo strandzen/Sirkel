@@ -25,6 +25,9 @@ sha256sums=('eb6fb35d52d8f7473228288692febbbe8350998b2bb2670ea7ed8ff5ae89cf96'
             '4cfc276d376b22ff762c9b6a8ae2000a3aeec879b88265747437638bfd2ebb12')
 
 build() {
+  # Always from scratch: a KWin update installs headers older than the
+  # objects left from the last build, so make would keep the old KWin's IID.
+  rm -rf build
   cmake -B build -S "Sirkel-$pkgver" \
     -DCMAKE_BUILD_TYPE=None \
     -DCMAKE_INSTALL_PREFIX=/usr \

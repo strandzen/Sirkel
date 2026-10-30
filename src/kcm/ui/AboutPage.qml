@@ -20,8 +20,8 @@ FormPage {
         Kirigami.Icon {
             Layout.alignment: Qt.AlignHCenter
             source: "io.github.strandzen.sirkel"
-            implicitWidth: Kirigami.Units.iconSizes.huge * 1.5
-            implicitHeight: Kirigami.Units.iconSizes.huge * 1.5
+            implicitWidth: Kirigami.Units.iconSizes.enormous
+            implicitHeight: Kirigami.Units.iconSizes.enormous
         }
         Kirigami.Heading {
             Layout.alignment: Qt.AlignHCenter
@@ -65,10 +65,8 @@ FormPage {
                 icon.name: "run-build"
                 onClicked: kcm.rebuild()
             }
-            QQC2.Label {
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                text: i18n("Opens a terminal that builds and installs Sirkel. You'll be asked for your password.")
+            Kirigami.ContextualHelpButton {
+                toolTipText: i18n("Opens a terminal that builds and installs Sirkel. You'll be asked for your password.")
             }
         }
 
