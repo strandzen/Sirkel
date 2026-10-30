@@ -4,6 +4,7 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 
 // KWin only loads an effect built for its exact version, so Sirkel stops
 // working after every KWin update until it's rebuilt. Shared by the
@@ -77,5 +78,12 @@ QString shellQuote(const QString &value);
 // `makepkg -si` with its output also saved to the log, says how it went and
 // waits for Enter so the window stays open.
 QString rebuildScript(const RebuildPaths &paths);
+
+// KTerminalLauncherJob keeps Konsole (--noclose) and xterm (-hold) open
+// after the command ends, so the script's "Press Enter to close" wouldn't
+// close them. For those two, given the terminal's Exec, the program and
+// arguments to start it ourselves without that; empty for any other
+// terminal, which KTerminalLauncherJob opens as usual.
+QStringList closingTerminalCommand(const QString &terminalExec, const QString &scriptFile, const QString &workDir);
 
 } // namespace Rebuild

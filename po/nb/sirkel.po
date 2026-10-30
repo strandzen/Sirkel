@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-29 01:19+0100\n"
+"POT-Creation-Date: 2026-10-30 12:10+0100\n"
 "PO-Revision-Date: 2026-10-26 01:40\n"
 "Last-Translator: Strandzen <strandzen@gmail.com>\n"
 "Language-Team: Norwegian Bokmål\n"
@@ -18,12 +18,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/rebuild/main.cpp:45
+#: src/rebuild/main.cpp:50
 #, kde-format
 msgid "Sirkel"
 msgstr "Sirkel"
 
-#: src/rebuild/main.cpp:75
+#: src/rebuild/main.cpp:108
 #, kde-format
 msgid ""
 "Sirkel can only rebuild itself when it was installed as a package. See the "
@@ -32,27 +32,27 @@ msgstr ""
 "Sirkel kan bare bygge seg selv på nytt når den er installert som en pakke. "
 "Se Om-siden i innstillingene for hvordan du bygger den på nytt."
 
-#: src/rebuild/main.cpp:79
+#: src/rebuild/main.cpp:112
 #, kde-format
 msgid "A rebuild of Sirkel is already running."
 msgstr "Sirkel bygges allerede på nytt."
 
-#: src/rebuild/main.cpp:87
+#: src/rebuild/main.cpp:120
 #, kde-format
 msgid "Couldn't prepare the rebuild: %1 can't be written."
 msgstr "Kunne ikke forberede byggingen: %1 kan ikke skrives."
 
-#: src/rebuild/main.cpp:97
+#: src/rebuild/main.cpp:142
 #, kde-format
 msgid "Couldn't open a terminal for the rebuild: %1"
 msgstr "Kunne ikke åpne en terminal for byggingen: %1"
 
-#: src/rebuild/main.cpp:112
+#: src/rebuild/main.cpp:157
 #, kde-format
 msgid "Sirkel needs a rebuild"
 msgstr "Sirkel må bygges på nytt"
 
-#: src/rebuild/main.cpp:113
+#: src/rebuild/main.cpp:158
 #, kde-format
 msgid ""
 "KWin %1 is installed, but Sirkel was built for KWin %2, so KWin doesn't load "
@@ -61,12 +61,12 @@ msgstr ""
 "KWin %1 er installert, men Sirkel ble bygget for KWin %2, så KWin laster den "
 "ikke."
 
-#: src/rebuild/main.cpp:120
+#: src/rebuild/main.cpp:165
 #, kde-format
 msgid "Rebuild for KWin %1"
 msgstr "Bygg på nytt for KWin %1"
 
-#: src/rebuild/main.cpp:126
+#: src/rebuild/main.cpp:171
 #, kde-format
 msgid ""
 "To rebuild it, first install the build tools: sudo pacman -S --needed base-"
@@ -75,19 +75,19 @@ msgstr ""
 "For å bygge den på nytt må du først installere byggeverktøyene: sudo pacman "
 "-S --needed base-devel"
 
-#: src/rebuild/main.cpp:130 src/rebuild/main.cpp:133
+#: src/rebuild/main.cpp:175 src/rebuild/main.cpp:178
 #, kde-format
 msgid "Open settings"
 msgstr "Åpne innstillinger"
 
-#: src/rebuild/main.cpp:169
+#: src/rebuild/main.cpp:214
 #, kde-format
 msgid "Rebuilds Sirkel after a KWin update, or tells you when it needs one."
 msgstr ""
 "Bygger Sirkel på nytt etter en KWin-oppdatering, eller sier fra når det "
 "trengs."
 
-#: src/rebuild/main.cpp:171
+#: src/rebuild/main.cpp:216
 #, kde-format
 msgid "Show a notification if Sirkel needs a rebuild (run at login)."
 msgstr "Vis et varsel hvis Sirkel må bygges på nytt (kjøres ved innlogging)."

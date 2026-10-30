@@ -170,6 +170,23 @@ private Q_SLOTS:
         }
     }
 
+    // Konsole and xterm are started without the keep-open flags
+    // KTerminalLauncherJob adds; other terminals go through it as usual.
+    void closingTerminalCommand()
+    {
+        const QString script = QStringLiteral("/c/rebuild.sh");
+        const QString dir = QStringLiteral("/c");
+        QCOMPARE(Rebuild::closingTerminalCommand(QStringLiteral("konsole"), script, dir),
+                 QStringList({QStringLiteral("konsole"), QStringLiteral("--workdir"), dir, QStringLiteral("-e"), QStringLiteral("sh"), script}));
+        QCOMPARE(Rebuild::closingTerminalCommand(QStringLiteral("xterm"), script, dir),
+                 QStringList({QStringLiteral("xterm"), QStringLiteral("-e"), QStringLiteral("sh"), script}));
+        for (const QString &exec : {QStringLiteral("kitty"), QStringLiteral("konsole --profile X"), QString()}) {
+            const QStringList command = Rebuild::closingTerminalCommand(exec, script, dir);
+            QVERIFY2(command.isEmpty(), qPrintable(command.join(QLatin1Char(' '))));
+            QVERIFY(!command.join(QLatin1Char(' ')).contains(QStringLiteral("--noclose")));
+        }
+    }
+
     void scriptBuildsInACleanCopy()
     {
         if (!haveScriptTools()) {

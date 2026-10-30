@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-29 01:19+0100\n"
+"POT-Creation-Date: 2026-10-30 12:10+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,68 +17,68 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/rebuild/main.cpp:45
+#: src/rebuild/main.cpp:50
 #, kde-format
 msgid "Sirkel"
 msgstr ""
 
-#: src/rebuild/main.cpp:75
+#: src/rebuild/main.cpp:108
 #, kde-format
 msgid ""
 "Sirkel can only rebuild itself when it was installed as a package. See the "
 "About page in its settings for how to rebuild it."
 msgstr ""
 
-#: src/rebuild/main.cpp:79
+#: src/rebuild/main.cpp:112
 #, kde-format
 msgid "A rebuild of Sirkel is already running."
 msgstr ""
 
-#: src/rebuild/main.cpp:87
+#: src/rebuild/main.cpp:120
 #, kde-format
 msgid "Couldn't prepare the rebuild: %1 can't be written."
 msgstr ""
 
-#: src/rebuild/main.cpp:97
+#: src/rebuild/main.cpp:142
 #, kde-format
 msgid "Couldn't open a terminal for the rebuild: %1"
 msgstr ""
 
-#: src/rebuild/main.cpp:112
+#: src/rebuild/main.cpp:157
 #, kde-format
 msgid "Sirkel needs a rebuild"
 msgstr ""
 
-#: src/rebuild/main.cpp:113
+#: src/rebuild/main.cpp:158
 #, kde-format
 msgid ""
 "KWin %1 is installed, but Sirkel was built for KWin %2, so KWin doesn't load "
 "it."
 msgstr ""
 
-#: src/rebuild/main.cpp:120
+#: src/rebuild/main.cpp:165
 #, kde-format
 msgid "Rebuild for KWin %1"
 msgstr ""
 
-#: src/rebuild/main.cpp:126
+#: src/rebuild/main.cpp:171
 #, kde-format
 msgid ""
 "To rebuild it, first install the build tools: sudo pacman -S --needed base-"
 "devel"
 msgstr ""
 
-#: src/rebuild/main.cpp:130 src/rebuild/main.cpp:133
+#: src/rebuild/main.cpp:175 src/rebuild/main.cpp:178
 #, kde-format
 msgid "Open settings"
 msgstr ""
 
-#: src/rebuild/main.cpp:169
+#: src/rebuild/main.cpp:214
 #, kde-format
 msgid "Rebuilds Sirkel after a KWin update, or tells you when it needs one."
 msgstr ""
 
-#: src/rebuild/main.cpp:171
+#: src/rebuild/main.cpp:216
 #, kde-format
 msgid "Show a notification if Sirkel needs a rebuild (run at login)."
 msgstr ""

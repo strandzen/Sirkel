@@ -12,8 +12,12 @@
 #include "rebuildstatus.h"
 #include "sirkel_rebuild_debug.h"
 
+#include <KConfigGroup>
+#include <KIO/CommandLauncherJob>
 #include <KLocalizedString>
 #include <KNotification>
+#include <KService>
+#include <KSharedConfig>
 #include <KShell>
 #include <KTerminalLauncherJob>
 
@@ -23,6 +27,7 @@
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QProcess>
+#include <QStandardPaths>
 
 #include <algorithm>
 #include <memory>
@@ -66,6 +71,34 @@ void openSettings()
                             {QStringLiteral("kwin/effects/configs/kwin_effect_sirkel_config"), QStringLiteral("--args"), QStringLiteral("about")});
 }
 
+// The Exec of the terminal KTerminalLauncherJob would open, picked the same
+// way: the default terminal (System Settings -> Default Applications), else
+// Konsole, else xterm. Empty if there's none.
+QString terminalExec()
+{
+    const KConfigGroup general(KSharedConfig::openConfig(), QStringLiteral("General"));
+    const QString storageId = general.readEntry("TerminalService");
+    const QString application = general.readEntry("TerminalApplication");
+    KService::Ptr service;
+    if (!storageId.isEmpty()) {
+        service = KService::serviceByStorageId(storageId);
+    } else if (!application.isEmpty()) {
+        return application;
+    }
+    if (!service) {
+        service = KService::serviceByStorageId(QStringLiteral("org.kde.konsole"));
+    }
+    if (service) {
+        return service->exec();
+    }
+    for (const QString &fallback : {QStringLiteral("konsole"), QStringLiteral("xterm")}) {
+        if (!QStandardPaths::findExecutable(fallback).isEmpty()) {
+            return fallback;
+        }
+    }
+    return {};
+}
+
 // Writes the script and opens it in the user's terminal; quits when the
 // terminal has started (or a problem was reported).
 void startRebuild()
@@ -89,8 +122,20 @@ void startRebuild()
     }
     script.close();
 
-    auto *job = new KTerminalLauncherJob(QStringLiteral("sh ") + KShell::quoteArg(paths.scriptFile));
-    job->setWorkingDirectory(QFileInfo(paths.scriptFile).path());
+    const QString workDir = QFileInfo(paths.scriptFile).path();
+    KJob *job;
+    if (const QStringList command = Rebuild::closingTerminalCommand(terminalExec(), paths.scriptFile, workDir); !command.isEmpty()) {
+        auto *own = new KIO::CommandLauncherJob(command.first(), command.mid(1));
+        own->setWorkingDirectory(workDir);
+        if (command.first() == QLatin1String("konsole")) {
+            own->setDesktopName(QStringLiteral("org.kde.konsole"));
+        }
+        job = own;
+    } else {
+        auto *launcher = new KTerminalLauncherJob(QStringLiteral("sh ") + KShell::quoteArg(paths.scriptFile));
+        launcher->setWorkingDirectory(workDir);
+        job = launcher;
+    }
     QObject::connect(job, &KJob::result, qApp, [job]() {
         if (job->error()) {
             qCWarning(SIRKEL_REBUILD) << "can't open a terminal:" << job->errorString();

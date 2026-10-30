@@ -45,6 +45,7 @@ target_link_libraries(sirkel-rebuild PRIVATE
     KF6::I18n
     KF6::KIOGui
     KF6::Notifications
+    KF6::Service
 )
 
 install(TARGETS sirkel-rebuild ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})

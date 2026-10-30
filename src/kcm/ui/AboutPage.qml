@@ -6,8 +6,8 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// About: version, how to use it, and the keyd setup steps (moved here from
-// the old warning banner).
+// About: version, how to use it, whether Sirkel is built for the installed
+// KWin, and the keyd setup steps until keyd is set up.
 FormPage {
     id: root
 
@@ -17,18 +17,16 @@ FormPage {
         Layout.fillWidth: true
         spacing: Kirigami.Units.largeSpacing
 
-        RowLayout {
-            spacing: Kirigami.Units.largeSpacing
-
-            Kirigami.Icon {
-                source: "io.github.strandzen.sirkel"
-                implicitWidth: Kirigami.Units.iconSizes.huge
-                implicitHeight: Kirigami.Units.iconSizes.huge
-            }
-            Kirigami.Heading {
-                level: 1
-                text: i18n("Sirkel %1", kcm.version)
-            }
+        Kirigami.Icon {
+            Layout.alignment: Qt.AlignHCenter
+            source: "io.github.strandzen.sirkel"
+            implicitWidth: Kirigami.Units.iconSizes.huge * 1.5
+            implicitHeight: Kirigami.Units.iconSizes.huge * 1.5
+        }
+        Kirigami.Heading {
+            Layout.alignment: Qt.AlignHCenter
+            level: 1
+            text: i18n("Sirkel %1", kcm.version)
         }
 
         QQC2.Label {
@@ -49,10 +47,10 @@ FormPage {
                 disabled: Kirigami.MessageType.Information,
             })[kcm.effectStatus] ?? Kirigami.MessageType.Information
             text: ({
-                running: i18n("Sirkel is running (built for KWin %1).", kcm.kwinBuildVersion),
-                rebuild: i18n("Sirkel was built for KWin %1, but KWin %2 is installed, so KWin won't load it. Rebuild and reinstall Sirkel, then log out and back in.", kcm.kwinBuildVersion, kcm.kwinInstalledVersion),
-                relogin: i18n("Sirkel matches KWin %1 but isn't running yet. Log out and back in.", kcm.kwinBuildVersion),
-                disabled: i18n("Sirkel is off. Turn it on in System Settings → Desktop Effects."),
+                running: i18n("Sirkel is built for KWin %1 and running.", kcm.kwinBuildVersion),
+                rebuild: i18n("Sirkel is built for KWin %1, but KWin %2 is installed, so KWin won't load it. Rebuild and reinstall Sirkel, then log out and back in.", kcm.kwinBuildVersion, kcm.kwinInstalledVersion),
+                relogin: i18n("Sirkel is built for KWin %1 but isn't running yet. Log out and back in.", kcm.kwinBuildVersion),
+                disabled: i18n("Sirkel isn't active. Turn it on in System Settings → Desktop Effects."),
             })[kcm.effectStatus] ?? ""
         }
 
@@ -100,40 +98,64 @@ FormPage {
             onClicked: Qt.openUrlExternally(kcm.rebuildLogUrl)
         }
 
-        Kirigami.Heading {
-            level: 3
-            text: i18n("Optional: Caps Lock as the trigger")
-        }
-
-        QQC2.Label {
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            text: i18n("Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to /etc/keyd/default.conf (Sirkel never writes there itself):")
-        }
-
-        QQC2.TextArea {
-            Layout.fillWidth: true
-            readOnly: true
-            selectByMouse: true
-            font.family: "monospace"
-            text: "[ids]\n*\n\n[main]\ncapslock = f24"
-        }
-
-        QQC2.Label {
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            text: i18n("Then enable it once with: sudo systemctl enable --now keyd, and choose Caps Lock on the Shortcuts page.")
-        }
-
+        // keyd: just a confirmation once it's set up, otherwise the steps.
+        // Recommended even when a key combination is the trigger.
         Kirigami.InlineMessage {
             Layout.fillWidth: true
-            visible: true
-            // keyd only matters when Caps Lock is (or could become) the trigger.
-            type: kcm.triggerKind === "combination" ? Kirigami.MessageType.Information
-                : kcm.keydOk ? Kirigami.MessageType.Positive : Kirigami.MessageType.Warning
-            text: kcm.triggerKind === "combination"
-                ? i18n("keyd isn't needed: %1 is set as the trigger. Set it up only if you'd rather use Caps Lock.", kcm.triggerText)
-                : kcm.keydOk ? i18n("keyd is set up.") : i18n("keyd isn't set up yet. Reopen these settings after setting it up to check again.")
+            visible: kcm.keydOk
+            type: Kirigami.MessageType.Positive
+            text: i18n("keyd is set up.")
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: !kcm.keydOk
+            spacing: Kirigami.Units.smallSpacing
+
+            Kirigami.Heading {
+                level: 3
+                text: i18n("Recommended: Caps Lock as the trigger")
+            }
+
+            QQC2.Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: i18n("Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to /etc/keyd/default.conf (Sirkel never writes there itself):")
+            }
+
+            QQC2.TextArea {
+                id: keydConfig
+                Layout.fillWidth: true
+                readOnly: true
+                selectByMouse: true
+                font.family: "monospace"
+                text: "[ids]\n*\n\n[main]\ncapslock = f24"
+                rightPadding: copyButton.width + Kirigami.Units.smallSpacing * 2
+
+                QQC2.ToolButton {
+                    id: copyButton
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.margins: Kirigami.Units.smallSpacing
+                    icon.name: "edit-copy"
+                    display: QQC2.AbstractButton.IconOnly
+                    text: i18n("Copy")
+                    QQC2.ToolTip.text: text
+                    QQC2.ToolTip.visible: hovered
+                    onClicked: {
+                        keydConfig.selectAll();
+                        keydConfig.copy();
+                        keydConfig.deselect();
+                    }
+                }
+            }
+
+            QQC2.Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                textFormat: Text.RichText
+                text: i18n("Then enable keyd with <code>sudo systemctl enable --now keyd</code>, and choose Caps Lock on the Shortcuts page. Reopen these settings to check again.")
+            }
         }
 
         RowLayout {

@@ -175,4 +175,15 @@ QString rebuildScript(const RebuildPaths &paths)
                       shellQuote(close));
 }
 
+QStringList closingTerminalCommand(const QString &terminalExec, const QString &scriptFile, const QString &workDir)
+{
+    if (terminalExec == QLatin1String("konsole")) {
+        return {QStringLiteral("konsole"), QStringLiteral("--workdir"), workDir, QStringLiteral("-e"), QStringLiteral("sh"), scriptFile};
+    }
+    if (terminalExec == QLatin1String("xterm")) {
+        return {QStringLiteral("xterm"), QStringLiteral("-e"), QStringLiteral("sh"), scriptFile};
+    }
+    return {};
+}
+
 } // namespace Rebuild

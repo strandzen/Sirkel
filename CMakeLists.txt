@@ -36,7 +36,7 @@ find_package(KWin ${KWIN_MIN_VERSION} REQUIRED)
 option(BUILD_REBUILD_HELPER "Build sirkel-rebuild (rebuild notification and button)" ON)
 add_feature_info(REBUILD_HELPER BUILD_REBUILD_HELPER "Notification and Rebuild button when Sirkel needs a rebuild after a KWin update")
 if(BUILD_REBUILD_HELPER)
-    find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS KIO Notifications)
+    find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS KIO Notifications Service)
 endif()
 
 add_subdirectory(src)
