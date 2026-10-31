@@ -27,7 +27,7 @@ include(ECMQtDeclareLoggingCategory)
 include(KDEClangFormat)
 include(KDEGitCommitHooks)
 
-find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick DBus Test Widgets)
+find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick DBus Widgets)
 find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS Config ColorScheme CoreAddons GlobalAccel I18n KCMUtils WindowSystem)
 find_package(KWin ${KWIN_MIN_VERSION} REQUIRED)
 
@@ -51,6 +51,7 @@ file(GLOB_RECURSE ALL_CLANG_FORMAT_SOURCE_FILES src/*.cpp src/*.h autotests/*.cp
 kde_clang_format(${ALL_CLANG_FORMAT_SOURCE_FILES})
 kde_configure_git_pre_commit_hook(CHECKS CLANG_FORMAT)
 if(BUILD_TESTING)
+    find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Test)
     add_subdirectory(autotests)
 endif()
 

@@ -50,6 +50,8 @@ SirkelEffect::SirkelEffect()
         registerGlobalAction(&action, def.defaults);
     }
 
+    readExcludedApps();
+
     // Safety net for a missed key release: cancels a session that has seen
     // no input for SessionTimeout seconds, or lets go of the keyboard after a
     // session that ended early.
@@ -112,6 +114,7 @@ void SirkelEffect::reconfigure(ReconfigureFlags flags)
     // so the cached values have to be re-read from kwinrc.
     SirkelConfig::self()->config()->reparseConfiguration();
     SirkelConfig::self()->load();
+    readExcludedApps();
     qCDebug(SIRKEL) << "settings reloaded";
 }
 
@@ -139,11 +142,13 @@ void SirkelEffect::arm()
     KWin::LogicalOutput *screen = isTargetable(window) ? screenFor(window) : nullptr;
     if (!screen) {
         qCDebug(SIRKEL) << "not starting: no window Sirkel may move" << (window ? window->windowClass() : QStringLiteral("(none)"))
-                        << (window ? QStringLiteral("special %1, fullscreen %2, full-screen effect %3, excluded %4")
+                        << (window ? QStringLiteral("special %1, fullscreen %2, full-screen effect %3, excluded %4, moving %5, movable %6")
                                          .arg(window->isSpecialWindow())
                                          .arg(window->isFullScreen())
                                          .arg(KWin::effects->hasActiveFullScreenEffect())
                                          .arg(isExcluded(window))
+                                         .arg(window->isUserMove() || window->isUserResize())
+                                         .arg(window->window() && window->window()->isMovable())
                                    : QString());
         return;
     }
@@ -159,6 +164,7 @@ void SirkelEffect::arm()
     m_sizeStep = 0;
     m_active = true;
     m_engaged = false;
+    m_pressedButtons = {};
     m_input.reset();
     m_input.setDeadzone(SirkelConfig::deadzone());
     m_input.setAngleMode(SirkelConfig::pickingMode() == QStringLiteral("angle") ? SirkelConfig::centerRadius() : 0);
@@ -195,6 +201,17 @@ void SirkelEffect::readHoldKeys()
     }
 }
 
+void SirkelEffect::readExcludedApps()
+{
+    m_excluded.clear();
+    for (const QString &entry : SirkelConfig::excludedApps()) {
+        const QString wanted = entry.trimmed().toLower();
+        if (!wanted.isEmpty()) {
+            m_excluded.append(wanted);
+        }
+    }
+}
+
 void SirkelEffect::restartIdleTimer()
 {
     const int seconds = SirkelConfig::sessionTimeout();
@@ -209,7 +226,13 @@ bool SirkelEffect::isTargetable(KWin::EffectWindow *window) const
     // moving the desktop window shifts the wallpaper. Fullscreen windows
     // (games, video) are left alone entirely for now, and so is everything
     // while Overview, Desktop Grid or a similar full-screen effect is up.
-    return window && !window->isSpecialWindow() && !window->isFullScreen() && !KWin::effects->hasActiveFullScreenEffect() && !isExcluded(window);
+    // A window the user is dragging or resizing is KWin's until let go, and
+    // one a window rule holds in place stays there.
+    if (!window || window->isSpecialWindow() || window->isFullScreen() || KWin::effects->hasActiveFullScreenEffect() || isExcluded(window)) {
+        return false;
+    }
+    KWin::Window *w = window->window();
+    return w && w->isMovable() && !window->isUserMove() && !window->isUserResize();
 }
 
 KWin::LogicalOutput *SirkelEffect::screenFor(KWin::EffectWindow *window) const
@@ -229,16 +252,13 @@ KWin::EffectWindow *SirkelEffect::windowUnderCursor() const
         if (w->isDeleted() || w->isMinimized() || w->isHidden() || !w->isOnCurrentDesktop() || !w->isOnCurrentActivity()) {
             continue;
         }
-        if (!w->isNormalWindow() && !w->isDialog()) {
+        if ((!w->isNormalWindow() && !w->isDialog()) || !QRectF(w->frameGeometry()).contains(cursor)) {
             continue;
         }
         // Excluded apps are looked through, like panels: some are normal
         // windows over the desktop (dynamicholme), and stopping at one
         // refused the session instead of using the active window.
-        if (isExcluded(w)) {
-            continue;
-        }
-        if (QRectF(w->frameGeometry()).contains(cursor)) {
+        if (!isExcluded(w)) {
             return w;
         }
     }
@@ -247,21 +267,13 @@ KWin::EffectWindow *SirkelEffect::windowUnderCursor() const
 
 bool SirkelEffect::isExcluded(KWin::EffectWindow *window) const
 {
-    const QStringList excluded = SirkelConfig::excludedApps();
     KWin::Window *w = window->window();
-    if (excluded.isEmpty() || !w) {
+    if (m_excluded.isEmpty() || !w) {
         return false;
     }
-    const QStringList ids{w->desktopFileName(), w->resourceName(), w->resourceClass()};
-    for (const QString &entry : excluded) {
-        const QString wanted = entry.trimmed();
-        if (wanted.isEmpty()) {
-            continue;
-        }
-        for (const QString &id : ids) {
-            if (id.compare(wanted, Qt::CaseInsensitive) == 0) {
-                return true;
-            }
+    for (const QString &id : {w->desktopFileName(), w->resourceName(), w->resourceClass()}) {
+        if (m_excluded.contains(id.toLower())) {
+            return true;
         }
     }
     return false;
@@ -584,10 +596,19 @@ void SirkelEffect::pointerMotion(KWin::PointerMotionEvent *event)
 void SirkelEffect::pointerButton(KWin::PointerButtonEvent *event)
 {
     // A click ends the session at once: left snaps, right cancels. On the
-    // release, so neither half of the click reaches the window below.
-    if (!m_active || event->state != KWin::PointerButtonState::Released) {
+    // release, so neither half of the click reaches the window below, and
+    // only for a button pressed during the session.
+    if (!m_active) {
         return;
     }
+    if (event->state != KWin::PointerButtonState::Released) {
+        m_pressedButtons |= event->button;
+        return;
+    }
+    if (!(m_pressedButtons & event->button)) {
+        return;
+    }
+    m_pressedButtons &= ~Qt::MouseButtons(event->button);
     if (event->button == Qt::LeftButton) {
         qCDebug(SIRKEL) << "clicked: snapping now";
         finish(true, true);

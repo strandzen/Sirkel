@@ -94,7 +94,8 @@ private:
     // `area` if that place is on a screen that's gone.
     void restore(KWin::EffectWindow *window, const QRectF &area);
     // Whether Sirkel may act on `window` at all (not special, fullscreen,
-    // excluded, or during Overview and similar).
+    // excluded, locked in place by a window rule, being moved or resized by
+    // the user, or during Overview and similar).
     bool isTargetable(KWin::EffectWindow *window) const;
     // The screen to snap on: the cursor's (SnapToCursorScreen) or the
     // window's own.
@@ -120,6 +121,8 @@ private:
     // Reads the configured keys for holdKeyActions() into m_holdKeys, if
     // they may have changed since the last session.
     void readHoldKeys();
+    // ExcludedApps, trimmed and lowercased, into m_excluded.
+    void readExcludedApps();
 
     HyperkeyTrigger *m_trigger = nullptr;
     QTimer *m_idleTimer = nullptr;
@@ -136,6 +139,10 @@ private:
     // Holding the hyperkey alone shows nothing; the session engages on the
     // first mouse movement or direction key.
     bool m_engaged = false;
+    // Mouse buttons pressed during this session. Only their release counts
+    // as a click: a button already held when the trigger was pressed (e.g.
+    // dragging a window) is let go without ending the session.
+    Qt::MouseButtons m_pressedButtons;
     KWin::EffectWindow *m_targetWindow = nullptr;
     KWin::LogicalOutput *m_targetScreen = nullptr;
     // Usable area of m_targetScreen, fixed for the session.
@@ -156,6 +163,8 @@ private:
     QHash<KWin::EffectWindow *, SnapRecord> m_snapped;
     // holdKeyActions() with their configured keys (see readHoldKeys()).
     QList<std::pair<QList<QKeySequence>, WindowAction>> m_holdKeys;
+    // ExcludedApps as compared (see readExcludedApps()).
+    QStringList m_excluded;
     // KGlobalAccel's file, open for the effect's lifetime. Opened before the
     // constructor registers the shortcuts, so they're all read from one copy.
     ShortcutsFile m_shortcutsFile;

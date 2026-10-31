@@ -93,7 +93,8 @@ private Q_SLOTS:
         QCOMPARE(shortcut(QStringLiteral("SirkelHoldMaximize")), QKeySequence(Qt::Key_Return));
         QCOMPARE(shortcut(QStringLiteral("SirkelHoldMinimize")), QKeySequence(Qt::Key_Backspace));
         QCOMPARE(shortcut(QStringLiteral("SirkelHoldRestore")), QKeySequence(Qt::Key_R));
-        QCOMPARE(m_kcm->property("triggerKind").toString(), QStringLiteral("none"));
+        // The trigger's default is F24 (Caps Lock via keyd), as registered.
+        QCOMPARE(m_kcm->property("triggerKind").toString(), QStringLiteral("capslock"));
         QTRY_VERIFY(m_kcm->representsDefaults());
         QVERIFY(m_kcm->needsSave());
         m_kcm->load();

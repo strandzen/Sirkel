@@ -10,19 +10,15 @@ import org.kde.kirigami as Kirigami
 // Live preview: the real Overlay (Outline + Indicator, the same files the
 // effect uses) over the blurred wallpaper, cycling through a few picks so
 // every visual setting can be seen without triggering Sirkel. The pane is
-// the "screen": the overlay is laid out on a virtual screen and drawn at a
-// fixed scale, so the indicator keeps the same size however wide the pane
-// is; only the screen area (and with it the outline's placements) follows
-// the pane.
+// the "screen", drawn at real size: the indicator keeps its size however
+// wide the pane is; only the screen area (and with it the outline's
+// placements) follows the pane.
 Item {
     id: pane
     clip: true
 
-    // Fixed drawing scale: 1 shows the indicator at exactly its real size.
-    readonly property real scaleFactor: 1.0
-    // Virtual screen: the pane's size at that scale.
-    readonly property real screenW: Math.max(1, width / scaleFactor)
-    readonly property real screenH: Math.max(1, height / scaleFactor)
+    readonly property real screenW: Math.max(1, width)
+    readonly property real screenH: Math.max(1, height)
 
     // The demo: picks in order, then a release (exit) and a restart.
     readonly property var demo: ["left", "topRight", "maximize", "bottom", "right"]
@@ -139,19 +135,12 @@ Item {
         }
     }
 
-    Item {
-        id: virtualScreen
-        width: pane.screenW
-        height: pane.screenH
-        transform: Scale { xScale: pane.scaleFactor; yScale: pane.scaleFactor }
-
-        Overlay {
-            id: overlay
-            // As OverlayController::applyStyle(): 75 ms is the timings'
-            // reference, and Plasma's animation speed applies too.
-            motionScale: kcm.settings.outlineAnimationDuration / 75 * kcm.animationFactor
-            easing: kcm.settings.easing
-        }
+    Overlay {
+        id: overlay
+        // As OverlayController::applyStyle(): 75 ms is the timings'
+        // reference, and Plasma's animation speed applies too.
+        motionScale: kcm.settings.outlineAnimationDuration / 75 * kcm.animationFactor
+        easing: kcm.settings.easing
     }
 
     // Style, bound live to the settings.
@@ -165,9 +154,7 @@ Item {
     Binding { target: overlay.indicatorItem; property: "highlightColor"; value: kcm.resolvedPointerColor }
     Binding { target: overlay.indicatorItem; property: "ringColor"; value: kcm.resolvedRingColor }
     Binding { target: overlay.indicatorItem; property: "baseOpacity"; value: kcm.settings.indicatorRingFillOpacity / 100 }
-    // At least one real pixel once scaled down, or thin borders vanish (and
-    // only some of their edges survive the rounding).
-    Binding { target: overlay.outlineItem; property: "borderWidth"; value: kcm.settings.outlineBorderWidth > 0 ? Math.max(kcm.settings.outlineBorderWidth, 1 / Math.max(0.01, pane.scaleFactor)) : 0 }
+    Binding { target: overlay.outlineItem; property: "borderWidth"; value: kcm.settings.outlineBorderWidth }
     Binding { target: overlay.outlineItem; property: "borderColor"; value: kcm.resolvedOutlineColor }
     Binding { target: overlay.outlineItem; property: "cornerRadius"; value: kcm.settings.outlineCornerRadius }
     Binding { target: overlay.outlineItem; property: "fillOpacity"; value: kcm.settings.outlineFillOpacity }

@@ -18,11 +18,23 @@ KSharedConfigPtr globals()
     return KSharedConfig::openConfig(QStringLiteral("kdeglobals"));
 }
 
+// The accent as last read (invalid until first needed, and again after
+// kdeglobals changed): building a KColorScheme reads a whole color group.
+QColor &cachedAccent()
+{
+    static QColor accent;
+    return accent;
+}
+
 QColor accentColor()
 {
     // Plasma applies the accent color by writing it into kdeglobals' color
     // groups, so the selection background is the accent.
-    return KColorScheme(QPalette::Active, KColorScheme::Selection, globals()).background(KColorScheme::NormalBackground).color();
+    QColor &accent = cachedAccent();
+    if (!accent.isValid()) {
+        accent = KColorScheme(QPalette::Active, KColorScheme::Selection, globals()).background(KColorScheme::NormalBackground).color();
+    }
+    return accent;
 }
 
 // The accent's hue at the default ring's saturation and brightness
@@ -45,6 +57,7 @@ void reloadColorSources()
     if (modified != lastModified) {
         lastModified = modified;
         globals()->reparseConfiguration();
+        cachedAccent() = QColor();
     }
 }
 

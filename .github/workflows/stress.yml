@@ -6,6 +6,12 @@
 # nothing crashes and windows end up where they should. Weekly, so a new
 # Plasma release that breaks Sirkel's behaviour (not only its build) shows up
 # early; can also be started by hand from the Actions tab.
+#
+# Without a GPU, KWin (6.8) renders in software, which needs the kernel's
+# /dev/udmabuf; without it KWin finds no render device, runs without
+# compositing and loads no effects at all. A `container:` job can't load the
+# module or pass the device in before the container starts, so this job runs
+# on the runner itself and starts the Arch container by hand.
 name: Stress test
 
 on:
@@ -16,40 +22,38 @@ on:
 jobs:
   stress:
     runs-on: ubuntu-latest
-    container: archlinux:latest
     timeout-minutes: 45
     steps:
-      - name: Install dependencies
+      - uses: actions/checkout@v7
+
+      - name: Make /dev/udmabuf available
         run: |
-          pacman -Syu --noconfirm --needed \
-            base-devel git cmake extra-cmake-modules vulkan-headers gettext \
-            kwin qt6-base qt6-declarative qt6-wayland qt6-tools kconfig kcolorscheme \
-            kcoreaddons kglobalaccel ki18n kcmutils kwindowsystem kirigami kdeclarative knotifications kio \
-            libkscreen dbus wayland plasma-wayland-protocols mesa
+          sudo modprobe udmabuf || true
+          ls -l /dev/udmabuf
 
-      - uses: actions/checkout@v4
-
-      - name: Show versions
-        run: pacman -Q kwin qt6-base mesa
-
-      # KWin and the test windows expect a normal user with a runtime folder.
-      - name: Set up a test user
+      - name: Build and run the stress test in Arch Linux
         run: |
-          useradd -m tester
-          chown -R tester "$GITHUB_WORKSPACE"
-          install -d -m 700 -o tester /tmp/runtime-tester
-
-      - name: Build
-        run: |
-          runuser -u tester -- cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTING=OFF
-          runuser -u tester -- cmake --build build -j"$(nproc)"
-
-      - name: Stress test
-        run: runuser -u tester -- env XDG_RUNTIME_DIR=/tmp/runtime-tester scripts/stress/stress-test.sh --rounds 15
+          docker run --rm --device /dev/udmabuf -v "$PWD:/src" -w /src archlinux:latest bash -euo pipefail -c '
+            pacman -Syu --noconfirm --needed \
+              base-devel git cmake extra-cmake-modules vulkan-headers gettext \
+              kwin qt6-base qt6-declarative qt6-wayland qt6-tools kconfig kcolorscheme \
+              kcoreaddons kglobalaccel ki18n kcmutils kwindowsystem kirigami kdeclarative knotifications kio \
+              libkscreen dbus wayland plasma-wayland-protocols mesa
+            pacman -Q kwin qt6-base mesa
+            # KWin and the test windows expect a normal user with a runtime
+            # folder, and that user needs the device.
+            useradd -m tester
+            chmod 666 /dev/udmabuf
+            chown -R tester /src
+            install -d -m 700 -o tester /tmp/runtime-tester
+            runuser -u tester -- cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTING=OFF
+            runuser -u tester -- cmake --build build -j"$(nproc)"
+            runuser -u tester -- env XDG_RUNTIME_DIR=/tmp/runtime-tester scripts/stress/stress-test.sh --rounds 15
+          '
 
       - name: Keep the results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: stress-results
           path: build/stress/run-*/

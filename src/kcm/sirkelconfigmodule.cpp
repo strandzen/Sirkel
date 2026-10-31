@@ -473,10 +473,11 @@ void SirkelConfigModule::load()
 void SirkelConfigModule::defaults()
 {
     KQuickManagedConfigModule::defaults();
-    // No trigger by default; the hold keys have theirs (Enter, Backspace,
-    // R). The direct shortcuts aren't on these pages (System Settings ->
-    // Shortcuts), so they're left alone.
-    setPendingShortcut(triggerId(), {});
+    // The trigger's default is F24 (Caps Lock via keyd), as the effect
+    // registers it; the hold keys have theirs (Enter, Backspace, R). The
+    // direct shortcuts aren't on these pages (System Settings -> Shortcuts),
+    // so they're left alone.
+    setPendingShortcut(triggerId(), {QKeySequence(Qt::Key_F24)});
     for (const HoldKeyAction &action : ::holdKeyActions()) {
         setPendingShortcut(QString::fromLatin1(action.id), action.defaults);
     }
@@ -490,7 +491,7 @@ bool SirkelConfigModule::isSaveNeeded() const
 
 bool SirkelConfigModule::isDefaults() const
 {
-    if (!currentShortcuts(triggerId()).isEmpty()) {
+    if (currentShortcuts(triggerId()) != QList<QKeySequence>{QKeySequence(Qt::Key_F24)}) {
         return false;
     }
     for (const HoldKeyAction &action : ::holdKeyActions()) {

@@ -16,7 +16,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 
 ### Changed
 - The Shortcuts page no longer lists the direct shortcuts (snap straight to a half or quarter). They're set under Sirkel in System Settings → Shortcuts, which the page links to. **Defaults** leaves them alone.
-- Settings now wait for **Apply** instead of applying as you change them, shortcuts included. The preview still shows every change straight away, and closing the window with unapplied changes asks whether to apply or discard them. **Defaults** fills in the defaults (no trigger, Enter/Backspace/R while holding), also applied only with Apply.
+- Settings now wait for **Apply** instead of applying as you change them, shortcuts included. The preview still shows every change straight away, and closing the window with unapplied changes asks whether to apply or discard them. **Defaults** fills in the defaults (Caps Lock via keyd as the trigger, Enter/Backspace/R while holding), also applied only with Apply.
 - The pacman hook says to rebuild right away: Sirkel keeps working until you log out after a KWin update, so rebuilding before that means it never stops working.
 - Sirkel now also needs KNotifications, KIO and KService. Building without the rebuild notification and button: `-DBUILD_REBUILD_HELPER=OFF`.
 - Trigger + Enter now picks maximize like a direction: the outline shows the full screen and the window is maximized when you let go of the trigger, so you can still pick something else or cancel. Backspace (minimize) still acts at once.
@@ -24,9 +24,12 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - Building needs Qt 6.10 and KDE Frameworks 6.26, what KWin 6.7 needs itself.
 - Faster: checking whether Sirkel needs a rebuild no longer starts `kwin_wayland` (65 ms each time) or a full app at login, the settings read all shortcuts in one go, and a trigger press no longer re-reads the shortcut and color settings unless they changed.
 - The settings' live preview follows Plasma's animation speed, like the real overlay.
+- The outline's shadow is drawn in one pass with the outline instead of through a blurred copy redrawn every frame, and no longer darkens a see-through fill. The blur behind the outline is updated once per frame instead of up to four times, the pointer is drawn with fewer points, and theme colors and excluded apps are no longer worked out again on every press.
 - The About page is tidier: a larger (128 px), centered icon and version, one message saying which KWin Sirkel is built for and whether it runs, and the keyd steps (with a copy button) only until keyd is set up, recommended whatever the trigger. Once it is, a single "keyd is set up" line.
 
 ### Fixed
+- A mouse button already held when you pressed the trigger (for example while dragging a window) ended the session as a click when you let go of it. Only a click made during the session counts now.
+- No session starts on a window you're dragging or resizing, or one a window rule keeps in place.
 - Between a square and a full circle, the pointer and the Maximize fill could show thin stray lines near the corners: their inner side folded back on itself there. It now follows the ring's inner corner in one smooth pass.
 - With little or no ring roundness, the pointer and the Maximize fill cut diagonally across the corners. They now follow square corners exactly and match a slightly rounded ring.
 - With "move the window under the mouse", an excluded app's window under the mouse (for example a desktop shell's window over the desktop) made Sirkel refuse to start. Excluded windows are now looked through, like panels.

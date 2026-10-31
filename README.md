@@ -98,7 +98,7 @@ Then start keyd:
 sudo systemctl enable --now keyd
 ```
 
-Finally, in Sirkel's settings under **Shortcuts**, set **Start Sirkel with** to **Caps Lock (via keyd)**. Caps Lock won't work as Caps Lock anymore after this. The About page shows whether keyd is set up correctly.
+Finally, check that Sirkel's settings under **Shortcuts** say **Start Sirkel with: Caps Lock (via keyd)** (the default). Caps Lock won't work as Caps Lock anymore after this. The About page shows whether keyd is set up correctly.
 
 ## Usage
 

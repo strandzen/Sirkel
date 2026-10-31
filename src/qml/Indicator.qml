@@ -134,6 +134,11 @@ Item {
     // so both corners share a center and the ring is equally thick all
     // round. Square inside until the roundness passes the ring width.
     readonly property real ri: Math.max(0, r - band)
+    // How far the hole's rounded corner reaches into the straight runs of
+    // the centerline: there the pointer's inner side needs dense samples to
+    // follow it (see holePoint()). 0 once the roundness passes the ring
+    // width (the corners then share a center).
+    readonly property real cornerZone: Math.max(0, band + ri - cr)
     readonly property real straightX: Math.max(0, width - 2 * cr)
     readonly property real straightY: Math.max(0, height - 2 * cr)
     readonly property real arcLength: (Math.PI / 2) * rc
@@ -180,7 +185,8 @@ Item {
         return { x: c + rem, y: inset, angle: 0 };
     }
 
-    // Path lengths to sample between start and end: a point every ~3px.
+    // Path lengths to sample between start and end: every ~3px around
+    // corners, and just the ends of straight runs elsewhere.
     function sampleLengths(start, end) {
         // Total derived from the same segments being walked: mid-resize,
         // the segments and totalPathLength bindings can briefly disagree,
@@ -202,11 +208,33 @@ Item {
         let guard = 0;
         while (s < end && guard++ < 64) {
             const segEnd = Math.min(segStart + segments[idx][0], end);
-            // Every ~3px, straights too: the hole's rounded corners reach
-            // into the straight runs (see holePoint()).
-            const n = Math.max(1, Math.ceil((segEnd - s) / 3));
-            for (let k = 1; k <= n; k++) {
-                out.push(s + (segEnd - s) * k / n);
+            if (segments[idx][1]) {
+                const n = Math.max(1, Math.ceil((segEnd - s) / 3));
+                for (let k = 1; k <= n; k++) {
+                    out.push(s + (segEnd - s) * k / n);
+                }
+            } else {
+                // Straights: every ~3px within cornerZone of either end,
+                // otherwise just the ends.
+                const a = segStart, b = segStart + segments[idx][0];
+                const z = Math.min(root.cornerZone, (b - a) / 2);
+                let t = s;
+                let steps = 0;
+                while (t < segEnd && steps++ < 256) {
+                    let next = segEnd;
+                    if (t < a + z) {
+                        next = Math.min(t + 3, a + z, segEnd);
+                    } else if (t < b - z) {
+                        next = Math.min(b - z, segEnd);
+                    } else {
+                        next = Math.min(t + 3, segEnd);
+                    }
+                    if (!(next > t)) {
+                        next = segEnd;
+                    }
+                    out.push(next);
+                    t = next;
+                }
             }
             s = segEnd;
             segStart += segments[idx][0];
@@ -267,8 +295,6 @@ Item {
         NumberAnimation { duration: root.ms(75); easing.type: root.easingType; easing.bezierCurve: root.easingCurve }
     }
 
-    // A band hugging the ring: each sample point on the centerline offset by
-    // half the ring width to either side, with flat ends.
     // The closest point on the hole's edge (its rounded corners included):
     // where the pointer's inner side goes, so it covers the ring exactly.
     function holePoint(x, y) {
@@ -329,6 +355,9 @@ Item {
         return holePoint(g.cx + d * Math.cos(phi), g.cy + d * Math.sin(phi));
     }
 
+    // The pointer: a band hugging the ring, each centerline sample offset
+    // by half the ring width outwards, and inwards onto the hole's edge;
+    // flat ends.
     readonly property var markerPolygon: {
         const center = (((unwrappedProgress % 1) + 1) % 1) * totalPathLength;
         const span = Math.min(effectiveSpan, totalPathLength);

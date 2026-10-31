@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import QtQuick
-import QtQuick.Effects
+import org.kde.kirigami as Kirigami
 
 // Preview of where the window will land. Fills the overlay window; only the
 // inner rect (targetX/Y/Width/Height, window-local) moves, so it can glide
@@ -98,6 +98,24 @@ Item {
         easing.type: Easing.InCubic
     }
 
+    // Soft drop shadow (Loop uses about black 20%, radius 10), outside the
+    // outline only. Drawn by one shader pass with the rect: a blurred layer
+    // would be redrawn, at up to full-screen size, every frame of the
+    // glide, and would darken a see-through fill from below. Skipped on the
+    // software renderer, which can't draw it.
+    Kirigami.ShadowedRectangle {
+        x: fillRect.x
+        y: fillRect.y
+        width: fillRect.width
+        height: fillRect.height
+        visible: width > 0 && height > 0 && GraphicsInfo.api !== GraphicsInfo.Software
+        radius: root.cornerRadius
+        color: "transparent"
+        shadow.size: 14
+        shadow.yOffset: 2
+        shadow.color: Qt.rgba(0, 0, 0, 0.35)
+    }
+
     Rectangle {
         id: fillRect
         x: root.visualRect.x + root.borderWidth / 2
@@ -108,17 +126,5 @@ Item {
         border.color: root.borderColor
         border.width: root.borderWidth
         radius: root.cornerRadius
-
-        // Soft drop shadow (Loop uses about black 20%, radius 10).
-        // Skipped on the software renderer, where it would hide the item.
-        layer.enabled: width > 0 && height > 0 && GraphicsInfo.api !== GraphicsInfo.Software
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowColor: "black"
-            shadowOpacity: 0.35
-            shadowBlur: 0.6
-            blurMax: 24
-            shadowVerticalOffset: 2
-        }
     }
 }

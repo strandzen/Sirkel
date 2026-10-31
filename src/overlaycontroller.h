@@ -53,11 +53,15 @@ public:
 
 private Q_SLOTS:
     // Connected by name to QML signals (visualRectChanged/exitFinished).
-    void updateBlur();
+    // The outline's rect changes up to four times per animation frame (x, y,
+    // width and height animate separately), so the blur is updated once,
+    // after all of them.
+    void scheduleBlurUpdate();
     void hideNow();
 
 private:
     QQuickItem *root() const;
+    void updateBlur();
     // Turns off the blur behind the outline, if it's on.
     void clearBlur();
 
@@ -68,6 +72,7 @@ private:
     QPointer<QQuickItem> m_outline;
     QPointer<QQuickItem> m_indicator;
     QTimer *m_hideFallback = nullptr;
+    QTimer *m_blurTimer = nullptr;
     QRectF m_area;
     bool m_outlineShown = false;
     bool m_blurEnabled = false;

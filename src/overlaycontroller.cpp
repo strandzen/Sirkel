@@ -46,8 +46,12 @@ OverlayController::OverlayController()
         m_indicator = item->findChild<QQuickItem *>(QStringLiteral("indicatorPart"));
         connect(item, SIGNAL(exitFinished()), this, SLOT(hideNow()));
     }
+    m_blurTimer = new QTimer(this);
+    m_blurTimer->setSingleShot(true);
+    m_blurTimer->setInterval(0);
+    connect(m_blurTimer, &QTimer::timeout, this, &OverlayController::updateBlur);
     if (m_outline) {
-        connect(m_outline, SIGNAL(visualRectChanged()), this, SLOT(updateBlur()));
+        connect(m_outline, SIGNAL(visualRectChanged()), this, SLOT(scheduleBlurUpdate()));
     }
 
     // In case the exit animation's finished signal never arrives.
@@ -216,8 +220,16 @@ void OverlayController::hideNow()
     clearBlur();
 }
 
+void OverlayController::scheduleBlurUpdate()
+{
+    if (!m_blurTimer->isActive()) {
+        m_blurTimer->start();
+    }
+}
+
 void OverlayController::clearBlur()
 {
+    m_blurTimer->stop();
     if (!m_blurRegion.isEmpty()) {
         KWindowEffects::enableBlurBehind(m_view.get(), false);
         m_blurRegion = QRegion();

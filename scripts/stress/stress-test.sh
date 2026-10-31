@@ -143,6 +143,12 @@ start_kwin() {
     KWIN=$!
     for _ in $(seq 100); do [ -S "$XDG_RUNTIME_DIR/$SOCKET" ] && break; sleep 0.1; done
     sleep 2
+    # Without compositing KWin loads no effects, so nothing could be tested.
+    if grep -q "requires compositing" "$LOG"; then
+        echo "KWin can't composite here (no GPU, and no /dev/udmabuf for software rendering): nothing to test."
+        kill "$KWIN" 2>/dev/null
+        exit 2
+    fi
     export WAYLAND_DISPLAY=$SOCKET
     coproc INPUT { "$STRESS_INPUT" 2>>"$RUN/input.log"; }
 }
@@ -172,6 +178,9 @@ rss() { ps -o rss= -p "$KWIN" 2>/dev/null | tr -d ' '; }
 qd() { timeout 10 qdbus6 "$@" >/dev/null 2>&1; }
 setting() { kwriteconfig6 --file kwinrc --group Effect-sirkel --key "$1" "$2"; }
 reconfigure() { qd org.kde.KWin /Effects org.kde.kwin.Effects.reconfigureEffect kwin_effect_sirkel; }
+# share <n>: ROUNDS / n, but at least 1, so every scenario runs at low
+# round counts.
+share() { echo $(( ROUNDS / $1 > 0 ? ROUNDS / $1 : 1 )); }
 rnd() { echo $(( RANDOM % ($2 - $1 + 1) + $1 )); }
 
 WINDOWS=()
@@ -396,7 +405,7 @@ done
 end
 
 begin "window closes mid-session" "target window closed"
-for _ in $(seq $((ROUNDS / 5))); do
+for _ in $(seq "$(share 5)"); do
     "${CLIENT_ENV[@]}" qml6 "$HERE/window-normal.qml" >/dev/null 2>&1 &
     victim=$!
     sleep 0.5
@@ -408,7 +417,7 @@ done
 end
 
 begin "effect unloaded and reloaded mid-session" "trigger is"
-for _ in $(seq $((ROUNDS / 10))); do
+for _ in $(seq "$(share 10)"); do
     send key $F24 1; send move 200 200; sync_input
     qd org.kde.KWin /Effects org.kde.kwin.Effects.unloadEffect kwin_effect_sirkel
     send key $F24 0; sync_input
@@ -433,7 +442,7 @@ for combo in \
     "OutlineBlur=true OutlineBorderWidth=0 OutlineFillOpacity=100 IndicatorCornerRadius=0 Easing=overshoot"; do
     for kv in $combo; do setting "${kv%%=*}" "${kv#*=}"; done
     reconfigure
-    for _ in $(seq $((ROUNDS / 4))); do session; done
+    for _ in $(seq "$(share 4)"); do session; done
     sync_input
 done
 rm -f "$RUN/config/kwinrc.lock"
@@ -448,7 +457,7 @@ setting SnapToCursorScreen true; reconfigure
 second=$(kscreen-doctor -o 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' \
     | awk '/^Output:/ {name = $3} /Geometry: 1600,/ {print name}')
 if [ -n "$second" ]; then
-    for _ in $(seq $((ROUNDS / 15 + 1))); do
+    for _ in $(seq "$(share 15)"); do
         send abs 2400 450; send key $F24 1; send move 200 0; sync_input
         timeout 10 kscreen-doctor "output.$second.disable" >/dev/null 2>&1
         send move 0 200; send key $F24 0; sync_input
@@ -499,13 +508,13 @@ begin "fullscreen window (sessions must be refused)" "not starting"
 "${CLIENT_ENV[@]}" qml6 "$HERE/window-fullscreen.qml" >/dev/null 2>&1 &
 full=$!
 sleep 1
-for _ in $(seq $((ROUNDS / 5))); do session; done
+for _ in $(seq "$(share 5)"); do session; done
 sync_input
 kill $full 2>/dev/null; wait $full 2>/dev/null
 end
 
-begin "Overview opened and closed during sessions"
-for _ in $(seq $((ROUNDS / 10))); do
+begin "Overview opened and closed during sessions" "session started"
+for _ in $(seq "$(share 10)"); do
     send key $F24 1; send move 200 0; sync_input
     qd org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut Overview
     sleep 0.3
@@ -605,6 +614,36 @@ send button $BTN_RIGHT 1; send sleep 30; send button $BTN_RIGHT 0; send sleep 50
 sleep 0.8
 after=$(probe "sirkel-stress drag")
 check_true "right click: the window didn't move (before: ${before:-?}, after: ${after:-?})" [ -n "$before" -a "$before" = "$after" ]
+end
+
+begin "a mouse button held before the trigger isn't a click" "session started"
+send abs 800 450; sync_input
+spawn window-drag.qml
+clicks=$(count "clicked: snapping now")
+# Pressed on the window first, let go during the session: not a click.
+send abs 800 450; send button $BTN_LEFT 1; send sleep 50
+send key $F24 1; send sleep 50; send move -300 0; send sleep 50
+send button $BTN_LEFT 0; send sleep 100
+send key $F24 0; sync_input
+sleep 0.8
+check_true "letting go of a button pressed before the trigger didn't end the session" [ "$(count "clicked: snapping now")" -eq "$clicks" ]
+check "snapped on the trigger's release instead" "x <= 2 && w >= 797 && w <= 803" $(probe "sirkel-stress drag")
+end
+
+begin "no session on a window KWin is moving" "moving 1"
+send abs 800 450; sync_input
+spawn window-drag.qml
+sessions=$(count "sirkel: session started")
+geo=$(probe "sirkel-stress drag")
+read -r x y w h <<<"$geo"
+send abs "$(( ${x%.*} + ${w%.*} / 2 ))" "$(( ${y%.*} + ${h%.*} / 2 ))"
+# Meta + drag starts KWin's move; it goes on while the button is held.
+send key $META 1; send sleep 50; send button $BTN_LEFT 1; send sleep 50; send key $META 0
+send move 40 0; send sleep 50
+send key $F24 1; send sleep 50; send move 0 -200; send sleep 50; send key $F24 0; send sleep 50
+send button $BTN_LEFT 0; sync_input
+sleep 0.5
+check_true "no session started during the move" [ "$(count "sirkel: session started")" -eq "$sessions" ]
 end
 
 begin "a window in KWin's own tiling leaves its tile when Sirkel moves it"
