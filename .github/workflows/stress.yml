@@ -34,6 +34,9 @@ jobs:
       - name: Build and run the stress test in Arch Linux
         run: |
           docker run --rm --device /dev/udmabuf -v "$PWD:/src" -w /src archlinux:latest bash -euo pipefail -c '
+            # The results are made by the container's test user; let the
+            # runner read them for the upload, whatever the outcome.
+            trap "chmod -R a+rX /src/build/stress 2>/dev/null || true" EXIT
             pacman -Syu --noconfirm --needed \
               base-devel git cmake extra-cmake-modules vulkan-headers gettext \
               kwin qt6-base qt6-declarative qt6-wayland qt6-tools kconfig kcolorscheme \
@@ -56,5 +59,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: stress-results
-          path: build/stress/run-*/
+          path: |
+            build/stress/run-*/
+            !build/stress/run-*/cache/
           if-no-files-found: ignore
