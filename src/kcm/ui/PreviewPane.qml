@@ -161,6 +161,7 @@ Item {
     Binding { target: overlay.indicatorItem; property: "height"; value: kcm.settings.indicatorSize }
     Binding { target: overlay.indicatorItem; property: "cornerRadius"; value: kcm.settings.indicatorCornerRadius }
     Binding { target: overlay.indicatorItem; property: "ringWidth"; value: kcm.settings.indicatorRingWidth }
+    Binding { target: overlay.indicatorItem; property: "pointerLengthPercent"; value: kcm.settings.indicatorPointerLengthPercent }
     Binding { target: overlay.indicatorItem; property: "highlightColor"; value: kcm.resolvedPointerColor }
     Binding { target: overlay.indicatorItem; property: "ringColor"; value: kcm.resolvedRingColor }
     Binding { target: overlay.indicatorItem; property: "baseOpacity"; value: kcm.settings.indicatorRingFillOpacity / 100 }

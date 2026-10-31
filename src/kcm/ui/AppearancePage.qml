@@ -66,6 +66,16 @@ FormPage {
         }
 
         SliderRow {
+            Kirigami.FormData.label: i18n("Pointer length:")
+            fieldWidth: root.fieldWidth
+            from: 10
+            to: 60
+            unit: "%"
+            value: kcm.settings.indicatorPointerLengthPercent
+            onMoved: (v) => kcm.settings.indicatorPointerLengthPercent = v
+        }
+
+        SliderRow {
             Kirigami.FormData.label: i18n("Ring opacity:")
             fieldWidth: root.fieldWidth
             from: 0

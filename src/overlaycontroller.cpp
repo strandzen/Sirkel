@@ -107,6 +107,7 @@ void OverlayController::applyStyle()
     if (m_indicator) {
         m_indicator->setProperty("cornerRadius", SirkelConfig::indicatorCornerRadius());
         m_indicator->setProperty("ringWidth", SirkelConfig::indicatorRingWidth());
+        m_indicator->setProperty("pointerLengthPercent", SirkelConfig::indicatorPointerLengthPercent());
         m_indicator->setProperty("highlightColor", resolveColor(ColorTarget::Pointer));
         m_indicator->setProperty("ringColor", resolveColor(ColorTarget::Ring));
         m_indicator->setProperty("baseOpacity", SirkelConfig::indicatorRingFillOpacity() / 100.0);

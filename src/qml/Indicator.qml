@@ -26,9 +26,11 @@ Item {
     // The thickness actually drawn: at most half the indicator, or the
     // ring would fill it and the pointer band fold over itself.
     readonly property real band: Math.max(0, Math.min(ringWidth, width / 2, height / 2))
-    // Length of the pointer along the ring: follows the indicator's size
-    // (36 px at the default 120 px).
-    readonly property real pointerLength: width * 0.3
+    // Length of the pointer along the ring, in % of the indicator's width,
+    // so it follows the indicator's size (36 px at the default 30% of
+    // 120 px).
+    property real pointerLengthPercent: 30
+    readonly property real pointerLength: width * pointerLengthPercent / 100
     property color highlightColor: "#3daee9"
     property color ringColor: "#2e3440"
     // Ring opacity only; the pointer always stays at full strength.
@@ -128,12 +130,12 @@ Item {
     readonly property real inset: band / 2
     readonly property real cr: Math.max(r, inset)
     readonly property real rc: cr - inset
-    // The hole's corner radius: the outer one scaled to the hole's size, so
-    // inner and outer corners round together (a circle stays a circle).
-    // Thicker at the corners than a constant-width ring, which would keep
-    // the inside square until the roundness passes the ring width.
+    // The hole's corner radius: the same as the outer one, so both corners
+    // look alike, capped where the hole becomes a circle. Thicker at the
+    // corners than a constant-width ring, which would keep the inside
+    // square until the roundness passes the ring width.
     readonly property real holeSize: Math.max(0, Math.min(width, height) - 2 * band)
-    readonly property real ri: Math.min(holeSize / 2, Math.min(width, height) > 0 ? r * holeSize / Math.min(width, height) : 0)
+    readonly property real ri: Math.min(holeSize / 2, r)
     readonly property real straightX: Math.max(0, width - 2 * cr)
     readonly property real straightY: Math.max(0, height - 2 * cr)
     readonly property real arcLength: (Math.PI / 2) * rc
@@ -155,8 +157,9 @@ Item {
         const w = width, h = height;
         const L1 = straightX / 2, Lv = straightY, Lh = straightX, La = arcLength;
         const arcAt = (cx, cy, phi0) => {
-            const phi = phi0 + (La > 0 ? rem / La : 0) * (Math.PI / 2);
-            return { x: cx + rc * Math.cos(phi), y: cy + rc * Math.sin(phi), angle: (phi + Math.PI / 2) * 180 / Math.PI };
+            const f = La > 0 ? rem / La : 0;
+            const phi = phi0 + f * (Math.PI / 2);
+            return { x: cx + rc * Math.cos(phi), y: cy + rc * Math.sin(phi), angle: (phi + Math.PI / 2) * 180 / Math.PI, corner: Math.round((phi0 / (Math.PI / 2) + 1 + 4) % 4), f: f };
         };
 
         if (rem <= L1) return { x: w / 2 + rem, y: inset, angle: 0 };
@@ -286,6 +289,48 @@ Item {
         return Qt.point(x1, Math.min(Math.max(y, y0), y1));
     }
 
+    // Corner k (0 top-right, clockwise): the centerline arc's center and
+    // start angle, and the hole's corner center.
+    function cornerOf(k) {
+        const c = cr, hr = band + ri;
+        const right = k === 0 || k === 1, bottom = k === 1 || k === 2;
+        return {
+            cx: right ? width - c : c,
+            cy: bottom ? height - c : c,
+            phi0: -Math.PI / 2 + k * Math.PI / 2,
+            hx: right ? width - hr : hr,
+            hy: bottom ? height - hr : hr,
+        };
+    }
+    // The corner of the ring a point is in (by quadrant).
+    function cornerAt(x, y) {
+        const right = x > width / 2, bottom = y > height / 2;
+        return right ? (bottom ? 1 : 0) : (bottom ? 2 : 3);
+    }
+    // A point fraction f of the way round the hole's corner k, from where
+    // the hole edge meets point a to where it meets point b (both on its
+    // edge). Walking the corner by angle keeps the pointer's inner side in
+    // order: projecting each point separately can fold it back on itself.
+    function holeCornerPoint(k, a, b, f) {
+        const g = cornerOf(k);
+        if (ri <= 0) {
+            return Qt.point(g.hx, g.hy);
+        }
+        const a0 = Math.atan2(a.y - g.hy, a.x - g.hx);
+        let d = Math.atan2(b.y - g.hy, b.x - g.hx) - a0;
+        d = Math.atan2(Math.sin(d), Math.cos(d));
+        const ang = a0 + f * d;
+        return Qt.point(g.hx + ri * Math.cos(ang), g.hy + ri * Math.sin(ang));
+    }
+    // Where the inner side meets the hole at the start (end = false) or end
+    // of corner k's centerline arc.
+    function holeAtArcEnd(k, end) {
+        const g = cornerOf(k);
+        const phi = g.phi0 + (end ? Math.PI / 2 : 0);
+        const d = rc - band / 2;
+        return holePoint(g.cx + d * Math.cos(phi), g.cy + d * Math.sin(phi));
+    }
+
     readonly property var markerPolygon: {
         const center = (((unwrappedProgress % 1) + 1) % 1) * totalPathLength;
         const span = Math.min(effectiveSpan, totalPathLength);
@@ -322,10 +367,21 @@ Item {
                     const a = a1 + (Math.PI / 2) * (steps > 0 ? k / steps : 0.5);
                     outer.push(Qt.point(steps > 0 ? ax + ar * Math.cos(a) : ox, steps > 0 ? ay + ar * Math.sin(a) : oy));
                 }
-                inner.push(holePoint(cx + mx * half, cy + my * half));
+                // The hole's corner, from the previous sample's inner point
+                // to this one's.
+                const k = cornerAt(cx, cy);
+                const ha = holePoint(prev.x - Math.sin(prad) * half, prev.y + Math.cos(prad) * half);
+                const hb = holePoint(p.x + nx * half, p.y + ny * half);
+                for (let j = 1; j < 8; j++) {
+                    inner.push(holeCornerPoint(k, ha, hb, j / 8));
+                }
             }
             outer.push(Qt.point(p.x - nx * half, p.y - ny * half));
-            inner.push(holePoint(p.x + nx * half, p.y + ny * half));
+            if (p.corner !== undefined) {
+                inner.push(holeCornerPoint(p.corner, holeAtArcEnd(p.corner, false), holeAtArcEnd(p.corner, true), p.f));
+            } else {
+                inner.push(holePoint(p.x + nx * half, p.y + ny * half));
+            }
             prev = p;
         }
         inner.reverse();

@@ -41,6 +41,14 @@
     <entry name="IndicatorRingWidth" type="Int">
       <default>24</default>
     </entry>
+    <!-- Length of the pointer along the ring, in % of the indicator's
+         width. (A new name: the old pixel IndicatorPointerLength was
+         removed in 0.5.2.) -->
+    <entry name="IndicatorPointerLengthPercent" type="Int">
+      <default>30</default>
+      <min>10</min>
+      <max>60</max>
+    </entry>
     <!-- Opacity (%) of the indicator's base ring only. The pointer always
          stays at full strength. 100 = fully opaque. -->
     <entry name="IndicatorRingFillOpacity" type="Int">

@@ -5,6 +5,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 ## [Unreleased]
 
 ### Added
+- **Pointer length** is a setting again (Appearance → Indicator), now in % of the indicator's width: 10-60%, 30% by default (the length it has had since it became fixed).
 - A notification at login when Sirkel needs a rebuild after a KWin update, so it no longer just stops working without a word. It can be turned off in System Settings → Notifications or Autostart.
 - A **Rebuild** button, in that notification and on the About page, for Sirkel installed as a package: it opens your default terminal (Konsole if none is set), which builds and installs it again with `makepkg -si` and closes when you press Enter. The package now carries the PKGBUILD it was built from for this. The button names the KWin version it rebuilds for, and says so first if the build tools (`base-devel`) are missing. The rebuild check reads the installed Sirkel itself, so the About page is right straight after a rebuild.
 - The output of the last rebuild is saved in `~/.cache/sirkel/rebuild.log`, and the About page can show it, to attach to a bug report if a rebuild fails.
@@ -14,7 +15,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - Software centers like Discover can list Sirkel (AppStream metadata).
 
 ### Changed
-- The ring's inner corners now round together with the outer ones (the inner radius is the outer one scaled to the hole), instead of staying square until the roundness passes the ring width.
+- The ring's inner corners now use the same radius as the outer ones (up to a full circle inside), instead of staying square until the roundness passes the ring width.
 - The Shortcuts page no longer lists the direct shortcuts (snap straight to a half or quarter). They're set under Sirkel in System Settings → Shortcuts, which the page links to. **Defaults** leaves them alone.
 - Settings now wait for **Apply** instead of applying as you change them, shortcuts included. The preview still shows every change straight away, and closing the window with unapplied changes asks whether to apply or discard them. **Defaults** fills in the defaults (no trigger, Enter/Backspace/R while holding), also applied only with Apply.
 - The pacman hook says to rebuild right away: Sirkel keeps working until you log out after a KWin update, so rebuilding before that means it never stops working.
@@ -27,6 +28,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - The About page is tidier: a larger (128 px), centered icon and version, one message saying which KWin Sirkel is built for and whether it runs, and the keyd steps (with a copy button) only until keyd is set up, recommended whatever the trigger. Once it is, a single "keyd is set up" line.
 
 ### Fixed
+- Between a square and a full circle, the pointer and the Maximize fill could show thin stray lines near the corners: their inner side folded back on itself there. It now follows the ring's inner corner in one smooth pass.
 - With little or no ring roundness, the pointer and the Maximize fill cut diagonally across the corners. They now follow square corners exactly and match a slightly rounded ring.
 - With "move the window under the mouse", an excluded app's window under the mouse (for example a desktop shell's window over the desktop) made Sirkel refuse to start. Excluded windows are now looked through, like panels.
 - Running `makepkg -si` again in a folder used for an earlier build, after a KWin update, could produce a package still built for the old KWin (the new KWin's files looked older than the leftover build). The PKGBUILDs now always build from scratch.

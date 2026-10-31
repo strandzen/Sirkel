@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-31 13:34+0100\n"
+"POT-Creation-Date: 2026-10-31 14:13+0100\n"
 "PO-Revision-Date: 2026-10-26 01:40\n"
 "Last-Translator: Strandzen <strandzen@gmail.com>\n"
 "Language-Team: Norwegian Bokmål\n"
@@ -164,7 +164,7 @@ msgstr "Avansert"
 msgid "Indicator"
 msgstr "Indikator"
 
-#: src/kcm/ui/AppearancePage.qml:24 src/kcm/ui/AppearancePage.qml:84
+#: src/kcm/ui/AppearancePage.qml:24 src/kcm/ui/AppearancePage.qml:94
 #, kde-format
 msgid "Show:"
 msgstr "Vis:"
@@ -194,47 +194,52 @@ msgstr "Størrelse:"
 msgid "Thickness:"
 msgstr "Tykkelse:"
 
-#: src/kcm/ui/AppearancePage.qml:59 src/kcm/ui/AppearancePage.qml:101
+#: src/kcm/ui/AppearancePage.qml:59 src/kcm/ui/AppearancePage.qml:111
 #, kde-format
 msgid "Roundness:"
 msgstr "Avrunding:"
 
 #: src/kcm/ui/AppearancePage.qml:69
 #, kde-format
+msgid "Pointer length:"
+msgstr "Pekerlengde:"
+
+#: src/kcm/ui/AppearancePage.qml:79
+#, kde-format
 msgid "Ring opacity:"
 msgstr "Ringens dekkevne:"
 
-#: src/kcm/ui/AppearancePage.qml:80
+#: src/kcm/ui/AppearancePage.qml:90
 #, kde-format
 msgid "Outline preview"
 msgstr "Forhåndsvisning av omriss"
 
-#: src/kcm/ui/AppearancePage.qml:85
+#: src/kcm/ui/AppearancePage.qml:95
 #, kde-format
 msgid "Show where the window will go"
 msgstr "Vis hvor vinduet havner"
 
-#: src/kcm/ui/AppearancePage.qml:91
+#: src/kcm/ui/AppearancePage.qml:101
 #, kde-format
 msgid "Border:"
 msgstr "Kant:"
 
-#: src/kcm/ui/AppearancePage.qml:111
+#: src/kcm/ui/AppearancePage.qml:121
 #, kde-format
 msgid "Fill opacity:"
 msgstr "Fyllets dekkevne:"
 
-#: src/kcm/ui/AppearancePage.qml:121
+#: src/kcm/ui/AppearancePage.qml:131
 #, kde-format
 msgid "Blur:"
 msgstr "Uskarphet:"
 
-#: src/kcm/ui/AppearancePage.qml:122
+#: src/kcm/ui/AppearancePage.qml:132
 #, kde-format
 msgid "Blur the desktop behind the fill"
 msgstr "Gjør skrivebordet bak fyllet uskarpt"
 
-#: src/kcm/ui/AppearancePage.qml:126
+#: src/kcm/ui/AppearancePage.qml:136
 #, kde-format
 msgid ""
 "Needs Desktop Effects' Blur enabled. Fill opacity controls how much shows "
@@ -243,17 +248,17 @@ msgstr ""
 "Krever at effekten Uskarphet er slått på i Skrivebordseffekter. Fyllets "
 "dekkevne styrer hvor mye som skinner gjennom."
 
-#: src/kcm/ui/AppearancePage.qml:132
+#: src/kcm/ui/AppearancePage.qml:142
 #, kde-format
 msgid "Motion"
 msgstr "Bevegelse"
 
-#: src/kcm/ui/AppearancePage.qml:136
+#: src/kcm/ui/AppearancePage.qml:146
 #, kde-format
 msgid "Animation duration (ms):"
 msgstr "Animasjonens varighet (ms):"
 
-#: src/kcm/ui/AppearancePage.qml:144
+#: src/kcm/ui/AppearancePage.qml:154
 #, kde-format
 msgid ""
 "Sets the pace for every animation (glide, pointer slide, entrance, exit). "
@@ -262,32 +267,32 @@ msgstr ""
 "Setter tempoet for alle animasjoner (gliding, viserens bevegelse, inngang, "
 "utgang). Følger også den globale animasjonsfarten. 0 = umiddelbart."
 
-#: src/kcm/ui/AppearancePage.qml:149
+#: src/kcm/ui/AppearancePage.qml:159
 #, kde-format
 msgid "Easing:"
 msgstr "Myk overgang:"
 
-#: src/kcm/ui/AppearancePage.qml:154
+#: src/kcm/ui/AppearancePage.qml:164
 #, kde-format
 msgid "Fluid"
 msgstr "Flytende"
 
-#: src/kcm/ui/AppearancePage.qml:155
+#: src/kcm/ui/AppearancePage.qml:165
 #, kde-format
 msgid "Linear"
 msgstr "Lineær"
 
-#: src/kcm/ui/AppearancePage.qml:156
+#: src/kcm/ui/AppearancePage.qml:166
 #, kde-format
 msgid "Smooth"
 msgstr "Myk"
 
-#: src/kcm/ui/AppearancePage.qml:157
+#: src/kcm/ui/AppearancePage.qml:167
 #, kde-format
 msgid "Overshoot"
 msgstr "Overskyting"
 
-#: src/kcm/ui/AppearancePage.qml:162
+#: src/kcm/ui/AppearancePage.qml:172
 #, kde-format
 msgid ""
 "Fluid: fast start, long gentle settle, no bounce. Linear: constant speed. "
@@ -746,7 +751,9 @@ msgstr "Fest nå; høyreklikk avbryter"
 msgid ""
 "More shortcuts, such as snapping straight to a half or quarter without the "
 "indicator, are in the Shortcuts settings."
-msgstr "Flere snarveier, som å feste rett til en halvdel eller firedel uten indikatoren, finner du i snarveisinnstillingene."
+msgstr ""
+"Flere snarveier, som å feste rett til en halvdel eller firedel uten "
+"indikatoren, finner du i snarveisinnstillingene."
 
 #: src/kcm/ui/ShortcutsPage.qml:158
 #, kde-format
@@ -756,7 +763,8 @@ msgstr "Åpne innstillinger for snarveier …"
 #: src/kcm/ui/ShortcutsPage.qml:162
 #, kde-format
 msgid "Sirkel's shortcuts are under Sirkel in System Settings → Shortcuts."
-msgstr "Sirkels snarveier ligger under Sirkel i Systeminnstillinger → Snarveier."
+msgstr ""
+"Sirkels snarveier ligger under Sirkel i Systeminnstillinger → Snarveier."
 
 #: src/kcm/ui/main.qml:82
 #, kde-format
