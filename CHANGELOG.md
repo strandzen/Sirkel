@@ -14,6 +14,8 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - Software centers like Discover can list Sirkel (AppStream metadata).
 
 ### Changed
+- The Shortcuts page no longer lists the direct shortcuts (snap straight to a half or quarter). They're set under Sirkel in System Settings → Shortcuts, which the page links to. **Defaults** leaves them alone.
+- Settings now wait for **Apply** instead of applying as you change them, shortcuts included. The preview still shows every change straight away, and closing the window with unapplied changes asks whether to apply or discard them. **Defaults** fills in the defaults (no trigger, Enter/Backspace/R while holding), also applied only with Apply.
 - The pacman hook says to rebuild right away: Sirkel keeps working until you log out after a KWin update, so rebuilding before that means it never stops working.
 - Sirkel now also needs KNotifications, KIO and KService. Building without the rebuild notification and button: `-DBUILD_REBUILD_HELPER=OFF`.
 - Trigger + Enter now picks maximize like a direction: the outline shows the full screen and the window is maximized when you let go of the trigger, so you can still pick something else or cancel. Backspace (minimize) still acts at once.

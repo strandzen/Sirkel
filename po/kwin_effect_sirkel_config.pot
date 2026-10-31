@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-30 12:35+0100\n"
+"POT-Creation-Date: 2026-10-31 13:34+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/kcm/sirkelconfigmodule.cpp:192
+#: src/kcm/sirkelconfigmodule.cpp:179
 #, kde-format
 msgid "Caps Lock"
 msgstr ""
@@ -681,26 +681,21 @@ msgstr ""
 msgid "Snap now; right-click cancels"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:152
-#, kde-format
-msgid "Direct shortcuts"
-msgstr ""
-
-#: src/kcm/ui/ShortcutsPage.qml:160
+#: src/kcm/ui/ShortcutsPage.qml:153
 #, kde-format
 msgid ""
-"Act on the active window at once, without the indicator. None are set by "
-"default."
+"More shortcuts, such as snapping straight to a half or quarter without the "
+"indicator, are in the Shortcuts settings."
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:179
+#: src/kcm/ui/ShortcutsPage.qml:158
 #, kde-format
 msgid "Open Shortcuts settings…"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:183
+#: src/kcm/ui/ShortcutsPage.qml:162
 #, kde-format
-msgid "All of these are also under Sirkel in System Settings → Shortcuts."
+msgid "Sirkel's shortcuts are under Sirkel in System Settings → Shortcuts."
 msgstr ""
 
 #: src/kcm/ui/main.qml:82

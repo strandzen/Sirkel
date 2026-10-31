@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-30 12:35+0100\n"
+"POT-Creation-Date: 2026-10-31 13:34+0100\n"
 "PO-Revision-Date: 2026-10-26 01:40\n"
 "Last-Translator: Strandzen <strandzen@gmail.com>\n"
 "Language-Team: Norwegian Bokmål\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/kcm/sirkelconfigmodule.cpp:192
+#: src/kcm/sirkelconfigmodule.cpp:179
 #, kde-format
 msgid "Caps Lock"
 msgstr "Caps Lock"
@@ -741,29 +741,22 @@ msgstr "Klikk:"
 msgid "Snap now; right-click cancels"
 msgstr "Fest nå; høyreklikk avbryter"
 
-#: src/kcm/ui/ShortcutsPage.qml:152
-#, kde-format
-msgid "Direct shortcuts"
-msgstr "Direkte snarveier"
-
-#: src/kcm/ui/ShortcutsPage.qml:160
+#: src/kcm/ui/ShortcutsPage.qml:153
 #, kde-format
 msgid ""
-"Act on the active window at once, without the indicator. None are set by "
-"default."
-msgstr ""
-"Virker på det aktive vinduet med en gang, uten indikatoren. Ingen er satt "
-"som standard."
+"More shortcuts, such as snapping straight to a half or quarter without the "
+"indicator, are in the Shortcuts settings."
+msgstr "Flere snarveier, som å feste rett til en halvdel eller firedel uten indikatoren, finner du i snarveisinnstillingene."
 
-#: src/kcm/ui/ShortcutsPage.qml:179
+#: src/kcm/ui/ShortcutsPage.qml:158
 #, kde-format
 msgid "Open Shortcuts settings…"
 msgstr "Åpne innstillinger for snarveier …"
 
-#: src/kcm/ui/ShortcutsPage.qml:183
+#: src/kcm/ui/ShortcutsPage.qml:162
 #, kde-format
-msgid "All of these are also under Sirkel in System Settings → Shortcuts."
-msgstr "Alle disse finnes også under Sirkel i Systeminnstillinger → Snarveier."
+msgid "Sirkel's shortcuts are under Sirkel in System Settings → Shortcuts."
+msgstr "Sirkels snarveier ligger under Sirkel i Systeminnstillinger → Snarveier."
 
 #: src/kcm/ui/main.qml:82
 #, kde-format
@@ -799,6 +792,18 @@ msgstr "Snarveier"
 #, kde-format
 msgid "About"
 msgstr "Om"
+
+#, kde-format
+#~ msgid "Direct shortcuts"
+#~ msgstr "Direkte snarveier"
+
+#, kde-format
+#~ msgid ""
+#~ "Act on the active window at once, without the indicator. None are set by "
+#~ "default."
+#~ msgstr ""
+#~ "Virker på det aktive vinduet med en gang, uten indikatoren. Ingen er satt "
+#~ "som standard."
 
 #, kde-format
 #~ msgid ""

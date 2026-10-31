@@ -24,8 +24,9 @@ class QTimer;
 // button, wired via metadata.json's X-KDE-ConfigModule).
 //
 // Plain settings are exposed directly as `kcm.settings.<name>` (the
-// generated SirkelConfig properties). Changes apply instantly: a short
-// debounce after any change saves and asks KWin to reconfigure the effect.
+// generated SirkelConfig properties). Nothing is stored until Apply: the
+// preview reads the edited values, and Apply saves them (shortcuts too)
+// and asks KWin to reconfigure the effect.
 class SirkelConfigModule : public KQuickManagedConfigModule
 {
     Q_OBJECT
@@ -69,9 +70,6 @@ class SirkelConfigModule : public KQuickManagedConfigModule
     // Settings -> Shortcuts): what the status messages are based on.
     Q_PROPERTY(QString triggerKind READ triggerKind NOTIFY shortcutsChanged)
     Q_PROPERTY(QString triggerText READ triggerText NOTIFY shortcutsChanged)
-    // [{ id, text }] for every direct action, in display order; text is the
-    // short label.
-    Q_PROPERTY(QVariantList shortcutActions READ shortcutActions CONSTANT)
     // [{ id, text }] for the keys that act while the trigger is held
     // (Enter, Backspace by default).
     Q_PROPERTY(QVariantList holdKeyActions READ holdKeyActions CONSTANT)
@@ -106,7 +104,6 @@ public:
     QString triggerId() const;
     QString triggerKind() const;
     QString triggerText() const;
-    QVariantList shortcutActions() const;
     QVariantList holdKeyActions() const;
     int shortcutsRevision() const;
     QUrl wallpaperUrl() const;
@@ -124,8 +121,8 @@ public:
     Q_INVOKABLE QVariantMap previewPlacement(const QString &name, qreal width, qreal height) const;
 
     Q_INVOKABLE QKeySequence shortcut(const QString &actionId) const;
-    // Applies immediately (KGlobalAccel isn't part of the Apply/Defaults
-    // cycle). An empty sequence clears the shortcut.
+    // Kept until Apply, like the other settings. An empty sequence clears
+    // the shortcut.
     Q_INVOKABLE void setShortcut(const QString &actionId, const QKeySequence &sequence);
     // Back to Caps Lock: the trigger becomes F24 again.
     Q_INVOKABLE void useHyperkeyTrigger();
@@ -144,7 +141,13 @@ public:
     // Opens a terminal that rebuilds and reinstalls the package.
     Q_INVOKABLE void rebuild();
 
+    void load() override;
     void save() override;
+    void defaults() override;
+
+protected:
+    bool isSaveNeeded() const override;
+    bool isDefaults() const override;
 
 Q_SIGNALS:
     void colorsChanged();
@@ -162,10 +165,17 @@ private Q_SLOTS:
 private:
     void checkKeyd();
     void reloadShortcuts();
+    // Stores one action's keys with KGlobalAccel.
+    void storeShortcut(const QString &actionId, const QList<QKeySequence> &keys);
+    // Sets an edited (not yet applied) shortcut; dropped again if it's
+    // what's stored.
+    void setPendingShortcut(const QString &actionId, const QList<QKeySequence> &keys);
+    // What the page shows: the edited keys, else the stored ones.
+    QList<QKeySequence> currentShortcuts(const QString &actionId) const;
+    void notifyShortcutsChanged();
     void checkEffect();
     void setRequestedPage(const QVariantList &args);
 
-    QTimer *m_saveTimer = nullptr;
     QPointer<QPropertyAnimation> m_resizeAnimation;
     bool m_keydOk = true;
     QString m_kwinBuildVersion;
@@ -177,7 +187,9 @@ private:
     QUrl m_rebuildLogUrl;
     QString m_requestedPage;
     int m_shortcutsRevision = 0;
-    // Action id -> shortcut, see reloadShortcuts().
-    QHash<QString, QKeySequence> m_shortcuts;
+    // Action id -> keys stored by KGlobalAccel, see reloadShortcuts().
+    QHash<QString, QList<QKeySequence>> m_shortcuts;
+    // Action id -> edited keys, written on Apply.
+    QHash<QString, QList<QKeySequence>> m_pendingShortcuts;
     KConfigWatcher::Ptr m_globalsWatcher;
 };

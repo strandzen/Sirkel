@@ -8,10 +8,10 @@ import org.kde.kirigami as Kirigami
 import org.kde.kquickcontrols as KQuickControls
 
 // Shortcuts: what starts Sirkel (Caps Lock via keyd, or a key combination
-// for setups without keyd), direct shortcuts for each action, and the keys
-// that work while holding the trigger. Shortcut changes apply immediately;
-// they're stored by KGlobalAccel, also editable in System Settings ->
-// Shortcuts -> Sirkel.
+// for setups without keyd) and the keys that work while holding the
+// trigger; the direct shortcuts are only in System Settings -> Shortcuts.
+// Shortcut changes wait for Apply like the rest; they're stored by
+// KGlobalAccel, also editable in System Settings -> Shortcuts -> Sirkel.
 FormPage {
     id: root
 
@@ -141,37 +141,16 @@ FormPage {
         }
     }
 
-    // Its own form: Kirigami.FormLayout puts Repeater-created rows after all
-    // its other rows, so the repeated rows need a form where they come last.
-    Kirigami.FormLayout {
-        Layout.fillWidth: true
-        twinFormLayouts: [mainForm]
-
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Direct shortcuts")
-        }
-
-        QQC2.Label {
-            Kirigami.FormData.label: " "
-            Layout.preferredWidth: root.fieldWidth
-            wrapMode: Text.WordWrap
-            color: Kirigami.Theme.disabledTextColor
-            text: i18n("Act on the active window at once, without the indicator. None are set by default.")
-        }
-
-        Repeater {
-            model: kcm.shortcutActions
-            delegate: KQuickControls.KeySequenceItem {
-                required property var modelData
-                Kirigami.FormData.label: modelData.text + ":"
-                checkForConflictsAgainst: KQuickControls.ShortcutType.GlobalShortcuts | KQuickControls.ShortcutType.StandardShortcuts
-                // shortcutsRevision makes the row re-read after any change,
-                // e.g. a conflict reassignment that took this row's keys.
-                keySequence: kcm.shortcutsRevision, kcm.shortcut(modelData.id)
-                onKeySequenceModified: kcm.setShortcut(modelData.id, keySequence)
-            }
-        }
+    // The direct shortcuts (snap without the indicator) are only in System
+    // Settings -> Shortcuts.
+    QQC2.Label {
+        Layout.alignment: Qt.AlignHCenter
+        Layout.topMargin: Kirigami.Units.largeSpacing
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+        Layout.maximumWidth: root.fieldWidth * 2
+        color: Kirigami.Theme.disabledTextColor
+        text: i18n("More shortcuts, such as snapping straight to a half or quarter without the indicator, are in the Shortcuts settings.")
     }
 
     QQC2.Button {
@@ -180,7 +159,7 @@ FormPage {
         icon.name: "preferences-desktop-keyboard-shortcut"
         onClicked: kcm.openShortcutsSettings()
 
-        QQC2.ToolTip.text: i18n("All of these are also under Sirkel in System Settings → Shortcuts.")
+        QQC2.ToolTip.text: i18n("Sirkel's shortcuts are under Sirkel in System Settings → Shortcuts.")
         QQC2.ToolTip.visible: hovered
     }
 

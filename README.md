@@ -122,12 +122,12 @@ Enter, Backspace and R can be changed to other keys, either on Sirkel's Shortcut
 
 ## Settings
 
-You'll find them under **System Settings → Desktop Effects → Sirkel**, or by searching for **Sirkel** in the app launcher. Changes apply right away.
+You'll find them under **System Settings → Desktop Effects → Sirkel**, or by searching for **Sirkel** in the app launcher. The preview shows your changes as you make them; press **Apply** to use them. **Defaults** fills in the default values, which are also only used after Apply.
 
 - **General:** how you pick a direction, which keys to use, scrolling to resize, which window and monitor to tile, gaps, auto-cancel and excluded apps
 - **Appearance:** size, shape and look of the ring and the outline, plus animation speed and style
 - **Colors:** colors for the outline, the pointer and the ring
-- **Shortcuts:** the trigger and your own key bindings.
+- **Shortcuts:** the trigger and the keys that work while you hold it. Shortcuts that snap straight to a half or quarter without the indicator are set under Sirkel in **System Settings → Shortcuts** (the page has a button for it).
 
 The Appearance and Colors pages have a preview on the right. Drag the window edge to make it bigger, or hide it with the button at the top.
 

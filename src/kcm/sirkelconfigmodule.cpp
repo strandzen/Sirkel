@@ -31,7 +31,6 @@
 #include <QProcess>
 #include <QPropertyAnimation>
 #include <QRegularExpression>
-#include <QTimer>
 
 SirkelConfigModule::SirkelConfigModule(QObject *parent, const KPluginMetaData &metaData, const QVariantList &args)
     : KQuickManagedConfigModule(parent, metaData)
@@ -40,20 +39,8 @@ SirkelConfigModule::SirkelConfigModule(QObject *parent, const KPluginMetaData &m
     setRequestedPage(args);
     connect(this, &KAbstractConfigModule::activationRequested, this, &SirkelConfigModule::setRequestedPage);
 
-    setButtons(KAbstractConfigModule::Default);
+    setButtons(KAbstractConfigModule::Apply | KAbstractConfigModule::Default);
     registerSettings(SirkelConfig::self());
-
-    // Instant apply, debounced so dragging a spin box doesn't write kwinrc
-    // and reconfigure KWin on every step.
-    m_saveTimer = new QTimer(this);
-    m_saveTimer->setSingleShot(true);
-    m_saveTimer->setInterval(300);
-    connect(m_saveTimer, &QTimer::timeout, this, &SirkelConfigModule::save);
-    connect(this, &KAbstractConfigModule::needsSaveChanged, this, [this]() {
-        if (needsSave()) {
-            m_saveTimer->start();
-        }
-    });
 
     SirkelConfig *config = SirkelConfig::self();
     for (auto signal : {&SirkelConfig::OutlineColorChanged,
@@ -192,15 +179,6 @@ QString SirkelConfigModule::triggerText() const
     return kind == QLatin1String("capslock") ? i18n("Caps Lock") : shortcut(triggerId()).toString(QKeySequence::NativeText);
 }
 
-QVariantList SirkelConfigModule::shortcutActions() const
-{
-    QVariantList list;
-    for (const ShortcutAction &action : ::shortcutActions()) {
-        list.append(QVariantMap{{QStringLiteral("id"), QString::fromLatin1(action.id)}, {QStringLiteral("text"), translatedText(action.label)}});
-    }
-    return list;
-}
-
 QVariantList SirkelConfigModule::holdKeyActions() const
 {
     QVariantList list;
@@ -217,7 +195,13 @@ int SirkelConfigModule::shortcutsRevision() const
 
 QKeySequence SirkelConfigModule::shortcut(const QString &actionId) const
 {
-    return m_shortcuts.value(actionId);
+    return currentShortcuts(actionId).value(0);
+}
+
+QList<QKeySequence> SirkelConfigModule::currentShortcuts(const QString &actionId) const
+{
+    const auto pending = m_pendingShortcuts.constFind(actionId);
+    return pending != m_pendingShortcuts.cend() ? *pending : m_shortcuts.value(actionId);
 }
 
 void SirkelConfigModule::reloadShortcuts()
@@ -240,11 +224,44 @@ void SirkelConfigModule::reloadShortcuts()
         return;
     }
     for (const KGlobalShortcutInfo &info : reply.value()) {
-        m_shortcuts.insert(info.uniqueName(), info.keys().value(0));
+        m_shortcuts.insert(info.uniqueName(), info.keys());
     }
 }
 
 void SirkelConfigModule::setShortcut(const QString &actionId, const QKeySequence &sequence)
+{
+    // Keys taken from another of Sirkel's actions are taken from it too,
+    // as KGlobalAccel would on Apply.
+    if (!sequence.isEmpty()) {
+        for (const QString &other : m_shortcuts.keys() + m_pendingShortcuts.keys()) {
+            QList<QKeySequence> keys = currentShortcuts(other);
+            if (other != actionId && keys.removeAll(sequence) > 0) {
+                setPendingShortcut(other, keys);
+            }
+        }
+    }
+    setPendingShortcut(actionId, sequence.isEmpty() ? QList<QKeySequence>() : QList<QKeySequence>{sequence});
+    notifyShortcutsChanged();
+}
+
+void SirkelConfigModule::setPendingShortcut(const QString &actionId, const QList<QKeySequence> &keys)
+{
+    if (keys == m_shortcuts.value(actionId)) {
+        m_pendingShortcuts.remove(actionId);
+    } else {
+        m_pendingShortcuts.insert(actionId, keys);
+    }
+}
+
+void SirkelConfigModule::notifyShortcutsChanged()
+{
+    ++m_shortcutsRevision;
+    Q_EMIT shortcutsChanged();
+    // Updates the Apply and Defaults buttons (isSaveNeeded(), isDefaults()).
+    settingsChanged();
+}
+
+void SirkelConfigModule::storeShortcut(const QString &actionId, const QList<QKeySequence> &keys)
 {
     // The actions belong to KWin's process; setForeignShortcut is
     // KGlobalAccel's way to change another process's shortcut. KWin's
@@ -267,23 +284,22 @@ void SirkelConfigModule::setShortcut(const QString &actionId, const QKeySequence
     if (text.isEmpty()) {
         return;
     }
-    QList<int> keys;
-    if (!sequence.isEmpty()) {
-        keys.append(sequence[0].toCombined());
+    QList<int> combined;
+    for (const QKeySequence &key : keys) {
+        if (!key.isEmpty()) {
+            combined.append(key[0].toCombined());
+        }
     }
     QDBusMessage message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.kglobalaccel"),
                                                           QStringLiteral("/kglobalaccel"),
                                                           QStringLiteral("org.kde.KGlobalAccel"),
                                                           QStringLiteral("setForeignShortcut"));
-    message << QStringList{QString::fromLatin1(kShortcutComponent), actionId, QString::fromLatin1(kShortcutComponentName), text} << QVariant::fromValue(keys);
+    message << QStringList{QString::fromLatin1(kShortcutComponent), actionId, QString::fromLatin1(kShortcutComponentName), text}
+            << QVariant::fromValue(combined);
     const QDBusMessage reply = QDBusConnection::sessionBus().call(message);
     if (reply.type() == QDBusMessage::ErrorMessage) {
         qCWarning(SIRKEL_KCM) << "couldn't set the shortcut for" << actionId << reply.errorMessage();
     }
-    // Re-read all: a reassignment can take another action's keys too.
-    reloadShortcuts();
-    ++m_shortcutsRevision;
-    Q_EMIT shortcutsChanged();
 }
 
 void SirkelConfigModule::useHyperkeyTrigger()
@@ -446,10 +462,57 @@ void SirkelConfigModule::resetColors()
     config->indicatorRingColorSourceItem()->setDefault();
 }
 
+void SirkelConfigModule::load()
+{
+    KQuickManagedConfigModule::load();
+    m_pendingShortcuts.clear();
+    reloadShortcuts();
+    notifyShortcutsChanged();
+}
+
+void SirkelConfigModule::defaults()
+{
+    KQuickManagedConfigModule::defaults();
+    // No trigger by default; the hold keys have theirs (Enter, Backspace,
+    // R). The direct shortcuts aren't on these pages (System Settings ->
+    // Shortcuts), so they're left alone.
+    setPendingShortcut(triggerId(), {});
+    for (const HoldKeyAction &action : ::holdKeyActions()) {
+        setPendingShortcut(QString::fromLatin1(action.id), action.defaults);
+    }
+    notifyShortcutsChanged();
+}
+
+bool SirkelConfigModule::isSaveNeeded() const
+{
+    return !m_pendingShortcuts.isEmpty();
+}
+
+bool SirkelConfigModule::isDefaults() const
+{
+    if (!currentShortcuts(triggerId()).isEmpty()) {
+        return false;
+    }
+    for (const HoldKeyAction &action : ::holdKeyActions()) {
+        if (currentShortcuts(QString::fromLatin1(action.id)) != action.defaults) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void SirkelConfigModule::save()
 {
-    m_saveTimer->stop();
     KQuickManagedConfigModule::save();
+    if (!m_pendingShortcuts.isEmpty()) {
+        for (auto it = m_pendingShortcuts.cbegin(); it != m_pendingShortcuts.cend(); ++it) {
+            storeShortcut(it.key(), it.value());
+        }
+        m_pendingShortcuts.clear();
+        // Re-read all: KGlobalAccel has the final word on what's stored.
+        reloadShortcuts();
+        notifyShortcutsChanged();
+    }
     // The effect runs inside kwin_wayland with its own cached copy of the
     // config; this makes it re-read kwinrc.
     QDBusMessage message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin"),
