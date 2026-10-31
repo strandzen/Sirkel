@@ -14,6 +14,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - Software centers like Discover can list Sirkel (AppStream metadata).
 
 ### Changed
+- The ring's inner corners now round together with the outer ones (the inner radius is the outer one scaled to the hole), instead of staying square until the roundness passes the ring width.
 - The Shortcuts page no longer lists the direct shortcuts (snap straight to a half or quarter). They're set under Sirkel in System Settings → Shortcuts, which the page links to. **Defaults** leaves them alone.
 - Settings now wait for **Apply** instead of applying as you change them, shortcuts included. The preview still shows every change straight away, and closing the window with unapplied changes asks whether to apply or discard them. **Defaults** fills in the defaults (no trigger, Enter/Backspace/R while holding), also applied only with Apply.
 - The pacman hook says to rebuild right away: Sirkel keeps working until you log out after a KWin update, so rebuilding before that means it never stops working.

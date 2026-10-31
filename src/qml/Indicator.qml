@@ -128,6 +128,12 @@ Item {
     readonly property real inset: band / 2
     readonly property real cr: Math.max(r, inset)
     readonly property real rc: cr - inset
+    // The hole's corner radius: the outer one scaled to the hole's size, so
+    // inner and outer corners round together (a circle stays a circle).
+    // Thicker at the corners than a constant-width ring, which would keep
+    // the inside square until the roundness passes the ring width.
+    readonly property real holeSize: Math.max(0, Math.min(width, height) - 2 * band)
+    readonly property real ri: Math.min(holeSize / 2, Math.min(width, height) > 0 ? r * holeSize / Math.min(width, height) : 0)
     readonly property real straightX: Math.max(0, width - 2 * cr)
     readonly property real straightY: Math.max(0, height - 2 * cr)
     readonly property real arcLength: (Math.PI / 2) * rc
@@ -173,8 +179,7 @@ Item {
         return { x: c + rem, y: inset, angle: 0 };
     }
 
-    // Path lengths to sample between start and end: just the endpoints of
-    // straight runs, and a point every ~3px around corners.
+    // Path lengths to sample between start and end: a point every ~3px.
     function sampleLengths(start, end) {
         // Total derived from the same segments being walked: mid-resize,
         // the segments and totalPathLength bindings can briefly disagree,
@@ -196,13 +201,11 @@ Item {
         let guard = 0;
         while (s < end && guard++ < 64) {
             const segEnd = Math.min(segStart + segments[idx][0], end);
-            if (segments[idx][1]) {
-                const n = Math.max(1, Math.ceil((segEnd - s) / 3));
-                for (let k = 1; k <= n; k++) {
-                    out.push(s + (segEnd - s) * k / n);
-                }
-            } else {
-                out.push(segEnd);
+            // Every ~3px, straights too: the hole's rounded corners reach
+            // into the straight runs (see holePoint()).
+            const n = Math.max(1, Math.ceil((segEnd - s) / 3));
+            for (let k = 1; k <= n; k++) {
+                out.push(s + (segEnd - s) * k / n);
             }
             s = segEnd;
             segStart += segments[idx][0];
@@ -265,6 +268,24 @@ Item {
 
     // A band hugging the ring: each sample point on the centerline offset by
     // half the ring width to either side, with flat ends.
+    // The closest point on the hole's edge (its rounded corners included):
+    // where the pointer's inner side goes, so it covers the ring exactly.
+    function holePoint(x, y) {
+        const x0 = band, y0 = band, x1 = width - band, y1 = height - band, q = ri;
+        const cx = Math.min(Math.max(x, x0 + q), x1 - q);
+        const cy = Math.min(Math.max(y, y0 + q), y1 - q);
+        if (cx !== x && cy !== y) {
+            const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy);
+            return d > 0 ? Qt.point(cx + dx / d * q, cy + dy / d * q) : Qt.point(cx, cy);
+        }
+        const dl = Math.abs(x - x0), dr = Math.abs(x1 - x), dt = Math.abs(y - y0), db = Math.abs(y1 - y);
+        const m = Math.min(dl, dr, dt, db);
+        if (m === dt) return Qt.point(Math.min(Math.max(x, x0), x1), y0);
+        if (m === db) return Qt.point(Math.min(Math.max(x, x0), x1), y1);
+        if (m === dl) return Qt.point(x0, Math.min(Math.max(y, y0), y1));
+        return Qt.point(x1, Math.min(Math.max(y, y0), y1));
+    }
+
     readonly property var markerPolygon: {
         const center = (((unwrappedProgress % 1) + 1) % 1) * totalPathLength;
         const span = Math.min(effectiveSpan, totalPathLength);
@@ -301,23 +322,44 @@ Item {
                     const a = a1 + (Math.PI / 2) * (steps > 0 ? k / steps : 0.5);
                     outer.push(Qt.point(steps > 0 ? ax + ar * Math.cos(a) : ox, steps > 0 ? ay + ar * Math.sin(a) : oy));
                 }
-                inner.push(Qt.point(cx + mx * half, cy + my * half));
+                inner.push(holePoint(cx + mx * half, cy + my * half));
             }
             outer.push(Qt.point(p.x - nx * half, p.y - ny * half));
-            inner.push(Qt.point(p.x + nx * half, p.y + ny * half));
+            inner.push(holePoint(p.x + nx * half, p.y + ny * half));
             prev = p;
         }
         inner.reverse();
         return outer.concat(inner);
     }
 
-    Rectangle {
+    Item {
         anchors.fill: parent
-        radius: root.r
-        color: "transparent"
-        border.width: root.band
-        border.color: root.ringColor
         opacity: root.baseOpacity
+
+        // The ring: the outer rounded rectangle minus the hole.
+        Shape {
+            anchors.fill: parent
+            preferredRendererType: Shape.CurveRenderer
+
+            ShapePath {
+                strokeWidth: 0
+                strokeColor: "transparent"
+                fillColor: root.ringColor
+                fillRule: ShapePath.OddEvenFill
+                PathRectangle {
+                    width: root.width
+                    height: root.height
+                    radius: root.r
+                }
+                PathRectangle {
+                    x: root.band
+                    y: root.band
+                    width: root.width - 2 * root.band
+                    height: root.height - 2 * root.band
+                    radius: root.ri
+                }
+            }
+        }
 
         // Hairlines along the ring's outer and inner edge: a thin light
         // line that keeps the ring crisp against any background.
@@ -331,7 +373,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             anchors.margins: root.band - 1
-            radius: Math.max(0, root.r - root.band + 1)
+            radius: root.ri > 0 ? root.ri + 1 : 0
             color: "transparent"
             border.width: 1
             border.color: Qt.rgba(1, 1, 1, 0.18)
