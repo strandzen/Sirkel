@@ -130,12 +130,10 @@ Item {
     readonly property real inset: band / 2
     readonly property real cr: Math.max(r, inset)
     readonly property real rc: cr - inset
-    // The hole's corner radius: the same as the outer one, so both corners
-    // look alike, capped where the hole becomes a circle. Thicker at the
-    // corners than a constant-width ring, which would keep the inside
-    // square until the roundness passes the ring width.
-    readonly property real holeSize: Math.max(0, Math.min(width, height) - 2 * band)
-    readonly property real ri: Math.min(holeSize / 2, r)
+    // The hole's corner radius, nested: the outer one minus the ring width,
+    // so both corners share a center and the ring is equally thick all
+    // round. Square inside until the roundness passes the ring width.
+    readonly property real ri: Math.max(0, r - band)
     readonly property real straightX: Math.max(0, width - 2 * cr)
     readonly property real straightY: Math.max(0, height - 2 * cr)
     readonly property real arcLength: (Math.PI / 2) * rc
