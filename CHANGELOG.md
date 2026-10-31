@@ -26,6 +26,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - The About page is tidier: a larger (128 px), centered icon and version, one message saying which KWin Sirkel is built for and whether it runs, and the keyd steps (with a copy button) only until keyd is set up, recommended whatever the trigger. Once it is, a single "keyd is set up" line.
 
 ### Fixed
+- With little or no ring roundness, the pointer and the Maximize fill cut diagonally across the corners. They now follow square corners exactly and match a slightly rounded ring.
 - With "move the window under the mouse", an excluded app's window under the mouse (for example a desktop shell's window over the desktop) made Sirkel refuse to start. Excluded windows are now looked through, like panels.
 - Running `makepkg -si` again in a folder used for an earlier build, after a KWin update, could produce a package still built for the old KWin (the new KWin's files looked older than the leftover build). The PKGBUILDs now always build from scratch.
 - A window tiled by KWin (Meta+arrow quick tiling or custom tiles) stayed in its KWin tile after Sirkel moved it.

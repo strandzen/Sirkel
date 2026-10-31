@@ -121,12 +121,15 @@ Item {
 
     // Ring geometry. The path runs along the ring's centerline, inset by
     // half the ring width; insetting a rounded corner shrinks its radius by
-    // the same amount, hence rc rather than r for the arcs.
+    // the same amount, hence rc rather than r for the arcs. Corners rounder
+    // than the inset are centered `cr` in from the edges; sharper ones meet
+    // in a point at the inset (cr = inset, rc = 0).
     readonly property real r: Math.min(cornerRadius, width / 2, height / 2)
     readonly property real inset: band / 2
-    readonly property real rc: Math.max(0, r - inset)
-    readonly property real straightX: Math.max(0, width - 2 * r)
-    readonly property real straightY: Math.max(0, height - 2 * r)
+    readonly property real cr: Math.max(r, inset)
+    readonly property real rc: cr - inset
+    readonly property real straightX: Math.max(0, width - 2 * cr)
+    readonly property real straightY: Math.max(0, height - 2 * cr)
     readonly property real arcLength: (Math.PI / 2) * rc
     readonly property real totalPathLength: 2 * straightX + 2 * straightY + 4 * arcLength
     // The loop clockwise from top-center, as [length, isArc] segments: half
@@ -152,21 +155,22 @@ Item {
 
         if (rem <= L1) return { x: w / 2 + rem, y: inset, angle: 0 };
         rem -= L1;
-        if (rem <= La) return arcAt(w - r, r, -Math.PI / 2);
+        const c = cr;
+        if (rem <= La) return arcAt(w - c, c, -Math.PI / 2);
         rem -= La;
-        if (rem <= Lv) return { x: w - inset, y: r + rem, angle: 90 };
+        if (rem <= Lv) return { x: w - inset, y: c + rem, angle: 90 };
         rem -= Lv;
-        if (rem <= La) return arcAt(w - r, h - r, 0);
+        if (rem <= La) return arcAt(w - c, h - c, 0);
         rem -= La;
-        if (rem <= Lh) return { x: (w - r) - rem, y: h - inset, angle: 180 };
+        if (rem <= Lh) return { x: (w - c) - rem, y: h - inset, angle: 180 };
         rem -= Lh;
-        if (rem <= La) return arcAt(r, h - r, Math.PI / 2);
+        if (rem <= La) return arcAt(c, h - c, Math.PI / 2);
         rem -= La;
-        if (rem <= Lv) return { x: inset, y: (h - r) - rem, angle: 270 };
+        if (rem <= Lv) return { x: inset, y: (h - c) - rem, angle: 270 };
         rem -= Lv;
-        if (rem <= La) return arcAt(r, r, Math.PI);
+        if (rem <= La) return arcAt(c, c, Math.PI);
         rem -= La;
-        return { x: r + rem, y: inset, angle: 0 };
+        return { x: c + rem, y: inset, angle: 0 };
     }
 
     // Path lengths to sample between start and end: just the endpoints of
@@ -269,12 +273,39 @@ Item {
         const half = band / 2;
         const outer = [];
         const inner = [];
+        let prev = null;
         for (const len of lengths) {
             const p = pointAndAngleAt(len / total);
             const rad = p.angle * Math.PI / 180;
             const nx = -Math.sin(rad), ny = Math.cos(rad);
+            // A sharp (or barely rounded) corner turns 90 degrees between
+            // two samples: add the corner itself, mitered, or the band
+            // would cut across it.
+            const turn = ((p.angle - (prev ? prev.angle : p.angle)) % 360 + 360) % 360;
+            if (prev && turn > 45 && turn < 135) {
+                const prad = prev.angle * Math.PI / 180;
+                const dx1 = Math.cos(prad), dy1 = Math.sin(prad);
+                const dx2 = Math.cos(rad), dy2 = Math.sin(rad);
+                const cross = dx1 * dy2 - dy1 * dx2;
+                const t = ((p.x - prev.x) * dy2 - (p.y - prev.y) * dx2) / cross;
+                const cx = prev.x + t * dx1, cy = prev.y + t * dy1;
+                const mx = -Math.sin(prad) + nx, my = Math.cos(prad) + ny;
+                // The ring's outer corner is still rounded by r (smaller
+                // than the inset here): follow it rather than poke out.
+                const ox = cx - mx * half, oy = cy - my * half;
+                const ar = Math.min(root.r, half);
+                const ax = ox + mx * ar, ay = oy + my * ar;
+                const a1 = Math.atan2(Math.cos(prad), -Math.sin(prad)) + Math.PI;
+                const steps = ar > 0.5 ? 6 : 0;
+                for (let k = 0; k <= steps; k++) {
+                    const a = a1 + (Math.PI / 2) * (steps > 0 ? k / steps : 0.5);
+                    outer.push(Qt.point(steps > 0 ? ax + ar * Math.cos(a) : ox, steps > 0 ? ay + ar * Math.sin(a) : oy));
+                }
+                inner.push(Qt.point(cx + mx * half, cy + my * half));
+            }
             outer.push(Qt.point(p.x - nx * half, p.y - ny * half));
             inner.push(Qt.point(p.x + nx * half, p.y + ny * half));
+            prev = p;
         }
         inner.reverse();
         return outer.concat(inner);
