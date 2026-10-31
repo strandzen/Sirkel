@@ -34,8 +34,9 @@ jobs:
       - name: Build and run the stress test in Arch Linux
         run: |
           docker run --rm --device /dev/udmabuf -v "$PWD:/src" -w /src archlinux:latest bash -euo pipefail -c '
-            # The results are made by the container's test user; let the
-            # runner read them for the upload, whatever the outcome.
+            # The results belong to the test user in here; let the runner
+            # read them for the upload, whatever the outcome. (No single
+            # quotes in this script: it is one single-quoted argument.)
             trap "chmod -R a+rX /src/build/stress 2>/dev/null || true" EXIT
             pacman -Syu --noconfirm --needed \
               base-devel git cmake extra-cmake-modules vulkan-headers gettext \
