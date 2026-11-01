@@ -6,12 +6,23 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// About: version, how to use it, whether Sirkel is built for the installed
-// KWin, and the keyd setup steps until keyd is set up.
+// About: version and what Sirkel does, then Status (whether Sirkel is built
+// for the installed KWin, and whether keyd is set up, with its setup steps
+// until it is) and Links.
 FormPage {
     id: root
 
     readonly property string repoUrl: "https://github.com/strandzen/Sirkel"
+
+    // A section heading like the other pages' (a FormLayout section line).
+    component SectionHeading: Kirigami.FormLayout {
+        property string title
+        Layout.fillWidth: true
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: parent.title
+        }
+    }
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -33,6 +44,10 @@ FormPage {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             text: i18n("Loop-inspired window snapping for KDE Plasma. Hold your trigger (set on the Shortcuts page), move the mouse or press a direction key, and let go to snap the window there.")
+        }
+
+        SectionHeading {
+            title: i18n("Status")
         }
 
         // KWin only loads Sirkel if it was built for the exact KWin version,
@@ -110,9 +125,11 @@ FormPage {
             visible: !kcm.keydOk
             spacing: Kirigami.Units.smallSpacing
 
-            Kirigami.Heading {
-                level: 3
-                text: i18n("Recommended: Caps Lock as the trigger")
+            Kirigami.InlineMessage {
+                Layout.fillWidth: true
+                visible: true
+                type: Kirigami.MessageType.Information
+                text: i18n("keyd isn't set up. Caps Lock as the trigger is recommended:")
             }
 
             QQC2.Label {
@@ -154,6 +171,10 @@ FormPage {
                 textFormat: Text.RichText
                 text: i18n("Then enable keyd with <code>sudo systemctl enable --now keyd</code>, and choose Caps Lock on the Shortcuts page. Reopen these settings to check again.")
             }
+        }
+
+        SectionHeading {
+            title: i18n("Links")
         }
 
         RowLayout {

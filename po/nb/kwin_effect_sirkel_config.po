@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-31 14:13+0100\n"
+"POT-Creation-Date: 2026-11-01 14:01+0100\n"
 "PO-Revision-Date: 2026-10-26 01:40\n"
 "Last-Translator: Strandzen <strandzen@gmail.com>\n"
 "Language-Team: Norwegian Bokmål\n"
@@ -23,12 +23,12 @@ msgstr ""
 msgid "Caps Lock"
 msgstr "Caps Lock"
 
-#: src/kcm/ui/AboutPage.qml:29
+#: src/kcm/ui/AboutPage.qml:40
 #, kde-format
 msgid "Sirkel %1"
 msgstr "Sirkel %1"
 
-#: src/kcm/ui/AboutPage.qml:35
+#: src/kcm/ui/AboutPage.qml:46
 #, kde-format
 msgid ""
 "Loop-inspired window snapping for KDE Plasma. Hold your trigger (set on the "
@@ -41,10 +41,15 @@ msgstr ""
 
 #: src/kcm/ui/AboutPage.qml:50
 #, kde-format
+msgid "Status"
+msgstr "Status"
+
+#: src/kcm/ui/AboutPage.qml:65
+#, kde-format
 msgid "Sirkel is built for KWin %1 and running."
 msgstr "Sirkel er bygget for KWin %1 og kjører."
 
-#: src/kcm/ui/AboutPage.qml:51
+#: src/kcm/ui/AboutPage.qml:66
 #, kde-format
 msgid ""
 "Sirkel is built for KWin %1, but KWin %2 is installed, so KWin won't load "
@@ -53,24 +58,24 @@ msgstr ""
 "Sirkel er bygget for KWin %1, men KWin %2 er installert, så KWin laster den "
 "ikke. Bygg og installer Sirkel på nytt, og logg så ut og inn igjen."
 
-#: src/kcm/ui/AboutPage.qml:52
+#: src/kcm/ui/AboutPage.qml:67
 #, kde-format
 msgid "Sirkel is built for KWin %1 but isn't running yet. Log out and back in."
 msgstr ""
 "Sirkel er bygget for KWin %1, men kjører ikke ennå. Logg ut og inn igjen."
 
-#: src/kcm/ui/AboutPage.qml:53
+#: src/kcm/ui/AboutPage.qml:68
 #, kde-format
 msgid "Sirkel isn't active. Turn it on in System Settings → Desktop Effects."
 msgstr ""
 "Sirkel er ikke aktiv. Slå den på i Systeminnstillinger → Skrivebordseffekter."
 
-#: src/kcm/ui/AboutPage.qml:64
+#: src/kcm/ui/AboutPage.qml:79
 #, kde-format
 msgid "Rebuild for KWin %1"
 msgstr "Bygg på nytt for KWin %1"
 
-#: src/kcm/ui/AboutPage.qml:69
+#: src/kcm/ui/AboutPage.qml:84
 #, kde-format
 msgid ""
 "Opens a terminal that builds and installs Sirkel. You'll be asked for your "
@@ -79,7 +84,7 @@ msgstr ""
 "Åpner en terminal som bygger og installerer Sirkel. Du blir spurt om "
 "passordet ditt."
 
-#: src/kcm/ui/AboutPage.qml:77
+#: src/kcm/ui/AboutPage.qml:92
 #, kde-format
 msgid ""
 "To rebuild Sirkel from here, first install the build tools: sudo pacman -S --"
@@ -88,7 +93,7 @@ msgstr ""
 "For å bygge Sirkel på nytt herfra må du først installere byggeverktøyene: "
 "sudo pacman -S --needed base-devel"
 
-#: src/kcm/ui/AboutPage.qml:86
+#: src/kcm/ui/AboutPage.qml:101
 #, kde-format
 msgid ""
 "# Built from source, in the source folder:\n"
@@ -105,22 +110,22 @@ msgstr ""
 "# Installert med PKGBUILD, i mappa der den ligger:\n"
 "makepkg -si"
 
-#: src/kcm/ui/AboutPage.qml:94
+#: src/kcm/ui/AboutPage.qml:109
 #, kde-format
 msgid "Show the last rebuild's output"
 msgstr "Vis utdata fra forrige bygging"
 
-#: src/kcm/ui/AboutPage.qml:105
+#: src/kcm/ui/AboutPage.qml:120
 #, kde-format
 msgid "keyd is set up."
 msgstr "keyd er satt opp."
 
-#: src/kcm/ui/AboutPage.qml:115
+#: src/kcm/ui/AboutPage.qml:132
 #, kde-format
-msgid "Recommended: Caps Lock as the trigger"
-msgstr "Anbefalt: Caps Lock som utløser"
+msgid "keyd isn't set up. Caps Lock as the trigger is recommended:"
+msgstr "keyd er ikke satt opp. Caps Lock anbefales som utløser:"
 
-#: src/kcm/ui/AboutPage.qml:121
+#: src/kcm/ui/AboutPage.qml:138
 #, kde-format
 msgid ""
 "Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to /"
@@ -129,12 +134,12 @@ msgstr ""
 "Sirkel lytter etter F24, og keyd kan gjøre Caps Lock om til F24. Legg dette "
 "til i /etc/keyd/default.conf (Sirkel skriver aldri dit selv):"
 
-#: src/kcm/ui/AboutPage.qml:140
+#: src/kcm/ui/AboutPage.qml:157
 #, kde-format
 msgid "Copy"
 msgstr "Kopier"
 
-#: src/kcm/ui/AboutPage.qml:155
+#: src/kcm/ui/AboutPage.qml:172
 #, kde-format
 msgid ""
 "Then enable keyd with <code>sudo systemctl enable --now keyd</code>, and "
@@ -144,12 +149,17 @@ msgstr ""
 "Caps Lock på siden Snarveier. Åpne disse innstillingene igjen for å sjekke "
 "på nytt."
 
-#: src/kcm/ui/AboutPage.qml:163
+#: src/kcm/ui/AboutPage.qml:177
+#, kde-format
+msgid "Links"
+msgstr "Lenker"
+
+#: src/kcm/ui/AboutPage.qml:184
 #, kde-format
 msgid "Project page"
 msgstr "Prosjektside"
 
-#: src/kcm/ui/AboutPage.qml:168
+#: src/kcm/ui/AboutPage.qml:189
 #, kde-format
 msgid "Report a problem"
 msgstr "Rapporter et problem"
@@ -800,6 +810,10 @@ msgstr "Snarveier"
 #, kde-format
 msgid "About"
 msgstr "Om"
+
+#, kde-format
+#~ msgid "Recommended: Caps Lock as the trigger"
+#~ msgstr "Anbefalt: Caps Lock som utløser"
 
 #, kde-format
 #~ msgid "Direct shortcuts"

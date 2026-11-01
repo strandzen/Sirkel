@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-31 15:32+0100\n"
+"POT-Creation-Date: 2026-11-01 14:01+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,12 +22,12 @@ msgstr ""
 msgid "Caps Lock"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:29
+#: src/kcm/ui/AboutPage.qml:40
 #, kde-format
 msgid "Sirkel %1"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:35
+#: src/kcm/ui/AboutPage.qml:46
 #, kde-format
 msgid ""
 "Loop-inspired window snapping for KDE Plasma. Hold your trigger (set on the "
@@ -37,46 +37,51 @@ msgstr ""
 
 #: src/kcm/ui/AboutPage.qml:50
 #, kde-format
+msgid "Status"
+msgstr ""
+
+#: src/kcm/ui/AboutPage.qml:65
+#, kde-format
 msgid "Sirkel is built for KWin %1 and running."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:51
+#: src/kcm/ui/AboutPage.qml:66
 #, kde-format
 msgid ""
 "Sirkel is built for KWin %1, but KWin %2 is installed, so KWin won't load "
 "it. Rebuild and reinstall Sirkel, then log out and back in."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:52
+#: src/kcm/ui/AboutPage.qml:67
 #, kde-format
 msgid "Sirkel is built for KWin %1 but isn't running yet. Log out and back in."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:53
+#: src/kcm/ui/AboutPage.qml:68
 #, kde-format
 msgid "Sirkel isn't active. Turn it on in System Settings → Desktop Effects."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:64
+#: src/kcm/ui/AboutPage.qml:79
 #, kde-format
 msgid "Rebuild for KWin %1"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:69
+#: src/kcm/ui/AboutPage.qml:84
 #, kde-format
 msgid ""
 "Opens a terminal that builds and installs Sirkel. You'll be asked for your "
 "password."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:77
+#: src/kcm/ui/AboutPage.qml:92
 #, kde-format
 msgid ""
 "To rebuild Sirkel from here, first install the build tools: sudo pacman -S --"
 "needed base-devel"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:86
+#: src/kcm/ui/AboutPage.qml:101
 #, kde-format
 msgid ""
 "# Built from source, in the source folder:\n"
@@ -87,46 +92,51 @@ msgid ""
 "makepkg -si"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:94
+#: src/kcm/ui/AboutPage.qml:109
 #, kde-format
 msgid "Show the last rebuild's output"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:105
+#: src/kcm/ui/AboutPage.qml:120
 #, kde-format
 msgid "keyd is set up."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:115
+#: src/kcm/ui/AboutPage.qml:132
 #, kde-format
-msgid "Recommended: Caps Lock as the trigger"
+msgid "keyd isn't set up. Caps Lock as the trigger is recommended:"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:121
+#: src/kcm/ui/AboutPage.qml:138
 #, kde-format
 msgid ""
 "Sirkel listens for F24, and keyd can turn Caps Lock into F24. Add this to /"
 "etc/keyd/default.conf (Sirkel never writes there itself):"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:140
+#: src/kcm/ui/AboutPage.qml:157
 #, kde-format
 msgid "Copy"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:155
+#: src/kcm/ui/AboutPage.qml:172
 #, kde-format
 msgid ""
 "Then enable keyd with <code>sudo systemctl enable --now keyd</code>, and "
 "choose Caps Lock on the Shortcuts page. Reopen these settings to check again."
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:163
+#: src/kcm/ui/AboutPage.qml:177
+#, kde-format
+msgid "Links"
+msgstr ""
+
+#: src/kcm/ui/AboutPage.qml:184
 #, kde-format
 msgid "Project page"
 msgstr ""
 
-#: src/kcm/ui/AboutPage.qml:168
+#: src/kcm/ui/AboutPage.qml:189
 #, kde-format
 msgid "Report a problem"
 msgstr ""

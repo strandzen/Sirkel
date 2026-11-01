@@ -25,7 +25,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - Faster: checking whether Sirkel needs a rebuild no longer starts `kwin_wayland` (65 ms each time) or a full app at login, the settings read all shortcuts in one go, and a trigger press no longer re-reads the shortcut and color settings unless they changed.
 - The settings' live preview follows Plasma's animation speed, like the real overlay.
 - The outline's shadow is drawn in one pass with the outline instead of through a blurred copy redrawn every frame, and no longer darkens a see-through fill. The blur behind the outline is updated once per frame instead of up to four times, the pointer is drawn with fewer points, and theme colors and excluded apps are no longer worked out again on every press.
-- The About page is tidier: a larger (128 px), centered icon and version, one message saying which KWin Sirkel is built for and whether it runs, and the keyd steps (with a copy button) only until keyd is set up, recommended whatever the trigger. Once it is, a single "keyd is set up" line.
+- The About page is tidier: a larger (128 px), centered icon and version, one message saying which KWin Sirkel is built for and whether it runs, and the keyd steps (with a copy button) only until keyd is set up, recommended whatever the trigger. Once it is, a single "keyd is set up" line. Status (the build check and keyd) and Links have their own sections.
 
 ### Fixed
 - A mouse button already held when you pressed the trigger (for example while dragging a window) ended the session as a click when you let go of it. Only a click made during the session counts now.

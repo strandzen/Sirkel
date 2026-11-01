@@ -104,7 +104,7 @@ Finally, check that Sirkel's settings under **Shortcuts** say **Start Sirkel wit
 
 1. Hold the trigger.
 2. Move the mouse toward an edge or corner, or press a direction key. Keep the mouse near the middle of the ring to fill the screen.
-3. Let go of trigger to tile.
+3. Let go of trigger or left-click with mouse to tile.
 
 While you hold the trigger, you can also press:
 
