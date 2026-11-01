@@ -29,6 +29,15 @@ qt6_add_resources(kwin_effect_sirkel_config sirkel_preview_qml
         ../qml/Overlay.qml
 )
 
+# The logo on the About page (the full icon, with its rounded square), as
+# in the README; the installed app icon below is the simpler ring.
+qt6_add_resources(kwin_effect_sirkel_config sirkel_logo
+    PREFIX "/kcm/kwin_effect_sirkel_config"
+    BASE "${CMAKE_SOURCE_DIR}/assets"
+    FILES
+        ${CMAKE_SOURCE_DIR}/assets/icon-sirkel.svg
+)
+
 # The About page's Rebuild button runs sirkel-rebuild (src/rebuild/).
 target_compile_definitions(kwin_effect_sirkel_config PRIVATE
     SIRKEL_REBUILD_EXECUTABLE="${KDE_INSTALL_FULL_BINDIR}/sirkel-rebuild"
@@ -67,8 +76,9 @@ target_link_libraries(kwin_effect_sirkel_config PRIVATE
 # Launcher entry: opens the same settings in their own window.
 install(FILES io.github.strandzen.sirkel.settings.desktop DESTINATION ${KDE_INSTALL_APPDIR})
 
-# Sirkel's icon, named after the app id: the launcher, the settings window
-# and the effect's entry in Desktop Effects all use it.
-install(FILES ${CMAKE_SOURCE_DIR}/assets/icon-sirkel.svg
+# Sirkel's icon, named after the app id: the launcher, the panel, the
+# settings window, notifications and the effect's entry in Desktop Effects
+# all use it. Just the ring, which stays legible at panel sizes.
+install(FILES ${CMAKE_SOURCE_DIR}/assets/alt-icon-sirkel.svg
     DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps
     RENAME io.github.strandzen.sirkel.svg)

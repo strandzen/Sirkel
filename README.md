@@ -6,7 +6,7 @@
 Window tiling for KDE Plasma 6.7+ on Wayland, inspired by [Loop](https://github.com/MrKai77/Loop) for macOS.
 
 Hold custom key combination or Caps Lock (via keyd), move the mouse toward where you want the window, and let go of key. Window tiles to that half or quarter of the screen. Can maximize the window if you move the mouse to the center of the indicator. A small ring-indicator follows your direction and a window-outline shows where the window will go.
-This is version 0.5.3. It's early and I've only tested it on my own machine and in a VM, so settings may still change.
+This is version 0.5.4. It's early and I've only tested it on my own machine and in a VM, so settings may still change.
 
 > [!WARNING]
 > You have to rebuild Sirkel after every Plasma update, even small ones like 6.8.0 to 6.8.1. KWin refuses to load effects that were built for a different version. See [Installation](#installation).

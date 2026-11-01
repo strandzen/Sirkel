@@ -4,6 +4,8 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-11-01
+
 ### Added
 - **Pointer length** is a setting again (Appearance → Indicator), now in % of the indicator's width: 10-60%, 30% by default (the length it has had since it became fixed).
 - A notification at login when Sirkel needs a rebuild after a KWin update, so it no longer just stops working without a word. It can be turned off in System Settings → Notifications or Autostart.
@@ -15,6 +17,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - Software centers like Discover can list Sirkel (AppStream metadata).
 
 ### Changed
+- New app icon for the panel, launcher, notifications and System Settings: just the ring, which stays sharp and legible at small sizes. The full logo (ring on a rounded square) stays on the About page and in the README.
 - The Shortcuts page no longer lists the direct shortcuts (snap straight to a half or quarter). They're set under Sirkel in System Settings → Shortcuts, which the page links to. **Defaults** leaves them alone.
 - Settings now wait for **Apply** instead of applying as you change them, shortcuts included. The preview still shows every change straight away, and closing the window with unapplied changes asks whether to apply or discard them. **Defaults** fills in the defaults (Caps Lock via keyd as the trigger, Enter/Backspace/R while holding), also applied only with Apply.
 - The pacman hook says to rebuild right away: Sirkel keeps working until you log out after a KWin update, so rebuilding before that means it never stops working.
@@ -186,6 +189,7 @@ First versioned release.
 - Desktop, panels and other special windows are ignored.
 - GPL-2.0-or-later license.
 
+[0.5.4]: https://github.com/strandzen/Sirkel/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/strandzen/Sirkel/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/strandzen/Sirkel/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/strandzen/Sirkel/compare/v0.5.0...v0.5.1

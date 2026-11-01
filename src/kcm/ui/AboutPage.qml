@@ -30,7 +30,8 @@ FormPage {
 
         Kirigami.Icon {
             Layout.alignment: Qt.AlignHCenter
-            source: "io.github.strandzen.sirkel"
+            // The full logo (as in the README), not the installed app icon.
+            source: Qt.resolvedUrl("icon-sirkel.svg")
             implicitWidth: Kirigami.Units.iconSizes.enormous
             implicitHeight: Kirigami.Units.iconSizes.enormous
         }
