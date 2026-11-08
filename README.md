@@ -18,6 +18,7 @@ This is version 0.5.4. It's early and I've only tested it on my own machine and 
 ## Features
 
 - Tile to the left, right, top or bottom half, any of the four quarters, or full screen.
+- Fill the gap: hold Shift as well and point toward empty space, and the window fills the largest free space there, between your other windows.
 - Pick a direction with the mouse or the keyboard (arrow keys, WASD or HJKL).
 - Start it with any key combination you like. If you want a dedicated key, you can turn Caps Lock into one with keyd.
 - Set your own shortcuts that snap straight away, without the ring. None are set out of the box.
@@ -117,6 +118,18 @@ While you hold the trigger, you can also press:
 | The same direction key again | Change the size: 1/2, 1/3, 1/4, 2/3 and round again (left, right, top and bottom) |
 | Scroll wheel | Change the size (if turned on) |
 | Click | Snap now, without waiting for you to let go. Right-click cancels |
+| Shift (held) | Fill the gap: see below |
+
+### Fill the gap
+
+Hold the trigger, then hold **Shift** too, and point the mouse (or press a direction key) toward empty space. The outline shows the window filling the largest free space on that side, between your other windows and the screen edges, and letting go of the trigger puts it there. With no direction, it fills the largest free space anywhere. Let go of Shift to go back to the normal placement.
+
+- Only windows you can see on the current desktop count; minimized windows and excluded apps don't.
+- If there's no free space on that side, there's no outline and the ring dims; letting go then does nothing.
+- Press the trigger first, then Shift: with Shift held first, the trigger isn't recognized.
+- The size is whatever fits, so scrolling doesn't change it.
+
+Caps Lock + Shift is the way it's meant to be used. Shift can be changed to another key on the Shortcuts page.
 
 Enter, Backspace and R can be changed to other keys, either on Sirkel's Shortcuts page or under Sirkel in **System Settings → Shortcuts**. They only do something while you hold the trigger. Putting a window back also works as a direct shortcut (**Restore size**, not set out of the box).
 

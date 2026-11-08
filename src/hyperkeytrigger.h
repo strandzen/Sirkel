@@ -39,6 +39,10 @@ public:
     // Lock). It can also be a direction key; while it's held its repeats
     // must not pick a direction.
     bool isTriggerKey(int key) const;
+    // Whether `key` is part of the trigger: its key or one of its modifiers
+    // (Shift in Meta+Shift+Z). Such a key is held for the whole session, so
+    // it can't also be the Fill the gap key.
+    bool isPartOfTrigger(int key) const;
 
     // Grabs the keyboard if not already held. Returns false if the grab
     // failed (another effect holds it), in which case no session may start:

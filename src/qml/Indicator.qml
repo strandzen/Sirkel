@@ -38,6 +38,13 @@ Item {
     // How committed the current pick reads, in [0.55, 1.0] (see
     // DirectionInput::intensity()). Dims the pointer for edges/corners.
     property real intensity: 1.0
+    // Fill the gap found no free space: ring and pointer fade back.
+    property bool dimmed: false
+    property real dimLevel: dimmed ? 0.35 : 1
+    Behavior on dimLevel {
+        enabled: root.motionScale > 0
+        NumberAnimation { duration: root.ms(120); easing.type: Easing.OutCubic }
+    }
     property real motionScale: 1
     property int easingType: Easing.OutBack
     // Bezier control points, used when easingType is BezierSpline.
@@ -72,6 +79,7 @@ Item {
         visible = false;
         direction = "none";
         ringIndex = -1;
+        dimmed = false;
         // The first pick lands directly, rather than sliding over from
         // wherever the previous session left the pointer.
         jumpNext = true;
@@ -417,7 +425,7 @@ Item {
 
     Item {
         anchors.fill: parent
-        opacity: root.baseOpacity
+        opacity: root.baseOpacity * root.dimLevel
 
         // The ring: the outer rounded rectangle minus the hole.
         Shape {
@@ -467,6 +475,7 @@ Item {
         id: markerShape
         anchors.fill: parent
         visible: root.direction !== "none"
+        opacity: root.dimLevel
         // Analytic antialiasing; the default renderer leaves jagged edges.
         preferredRendererType: Shape.CurveRenderer
 

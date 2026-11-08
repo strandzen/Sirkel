@@ -11,6 +11,27 @@ class ShortcutActionsTest : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    // The Fill the gap key: a lone modifier, however the shortcut editor
+    // and KGlobalAccel's file store it.
+    void heldKeyOfModifierOnly()
+    {
+        QCOMPARE(heldKeyOf(QKeySequence(Qt::Key_Shift)), int(Qt::Key_Shift));
+        QCOMPARE(heldKeyOf(QKeySequence(QKeyCombination(Qt::ShiftModifier, Qt::Key_unknown))), int(Qt::Key_Shift));
+        QCOMPARE(heldKeyOf(QKeySequence(QKeyCombination(Qt::ControlModifier, Qt::Key(0)))), int(Qt::Key_Control));
+        QCOMPARE(heldKeyOf(QKeySequence(Qt::Key_Space)), int(Qt::Key_Space));
+        QCOMPARE(heldKeyOf(QKeySequence()), 0);
+        // Round trip through the stored text.
+        const QString stored = QKeySequence(Qt::Key_Shift).toString(QKeySequence::PortableText);
+        QCOMPARE(heldKeyOf(parseStoredShortcuts(stored).value(0)), int(Qt::Key_Shift));
+    }
+
+    // A trigger with Shift in it holds Shift all along.
+    void fillKeyInTrigger()
+    {
+        QVERIFY(isTriggerRelease(QKeyCombination(Qt::MetaModifier | Qt::ShiftModifier, Qt::Key_Z), Qt::Key_Shift));
+        QVERIFY(!isTriggerRelease(QKeyCombination(Qt::Key_F24), Qt::Key_Shift));
+    }
+
     void idsAreUnique();
     void parseStored();
     void matching();

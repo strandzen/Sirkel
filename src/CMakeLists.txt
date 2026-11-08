@@ -10,6 +10,7 @@ configure_file(metadata.json.in ${CMAKE_CURRENT_BINARY_DIR}/metadata.json @ONLY)
 add_library(sirkel_core STATIC
     placement.cpp
     directioninput.cpp
+    gapfinder.cpp
     shortcutactions.cpp
 )
 set_target_properties(sirkel_core PROPERTIES POSITION_INDEPENDENT_CODE ON)

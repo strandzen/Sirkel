@@ -197,6 +197,28 @@ void OverlayController::setIntensity(qreal intensity)
     }
 }
 
+void OverlayController::setDimmed(bool dimmed)
+{
+    if (m_indicator) {
+        m_indicator->setProperty("dimmed", dimmed);
+    }
+}
+
+void OverlayController::hidePlacement(SnapDirection direction)
+{
+    const Placement *p = placementFor(direction);
+    if (m_indicator) {
+        m_indicator->setProperty("ringIndex", p ? p->ringIndex : -1);
+        m_indicator->setProperty("direction", placementName(direction));
+    }
+    if (m_outline && m_outlineShown) {
+        // The next placement grows out of the window again.
+        QMetaObject::invokeMethod(m_outline, "reset");
+        m_outlineShown = false;
+        clearBlur();
+    }
+}
+
 void OverlayController::end()
 {
     // Blur can't fade with the rest, so it goes first.

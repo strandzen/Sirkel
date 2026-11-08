@@ -37,6 +37,11 @@ const QList<HoldKeyAction> &holdKeyActions()
          kli18n("Restore size"),
          {QKeySequence(Qt::Key_R)},
          {K::Restore}},
+        {"SirkelHoldFillGap",
+         kli18n("Sirkel: Fill the free space in the picked direction (hold while holding the trigger)"),
+         kli18n("Fill the gap"),
+         {QKeySequence(Qt::Key_Shift)},
+         {K::FillGap}},
     };
     return actions;
 }
@@ -54,6 +59,32 @@ QList<QKeySequence> parseStoredShortcuts(const QString &keys)
         }
     }
     return result;
+}
+
+int heldKeyOf(const QKeySequence &binding)
+{
+    if (binding.isEmpty()) {
+        return 0;
+    }
+    const QKeyCombination combination = binding[0];
+    const int key = combination.key();
+    if (key != 0 && key != Qt::Key_unknown) {
+        return key;
+    }
+    const Qt::KeyboardModifiers mods = combination.keyboardModifiers();
+    if (mods & Qt::ShiftModifier) {
+        return Qt::Key_Shift;
+    }
+    if (mods & Qt::ControlModifier) {
+        return Qt::Key_Control;
+    }
+    if (mods & Qt::AltModifier) {
+        return Qt::Key_Alt;
+    }
+    if (mods & Qt::MetaModifier) {
+        return Qt::Key_Meta;
+    }
+    return 0;
 }
 
 bool matchesKey(const QKeySequence &binding, int key, Qt::KeyboardModifiers held)

@@ -55,6 +55,11 @@ bool HyperkeyTrigger::isTriggerKey(int key) const
     return key == m_combo.key();
 }
 
+bool HyperkeyTrigger::isPartOfTrigger(int key) const
+{
+    return isTriggerRelease(m_combo, key);
+}
+
 bool HyperkeyTrigger::ensureGrab()
 {
     if (!m_grabbed) {

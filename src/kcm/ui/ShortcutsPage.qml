@@ -123,6 +123,24 @@ FormPage {
             QQC2.ToolTip.text: i18n("Puts the window back where it was before Sirkel placed it.")
             QQC2.ToolTip.visible: hovered
         }
+        // Held like a modifier, so a lone Shift is allowed here.
+        KQuickControls.KeySequenceItem {
+            Kirigami.FormData.label: kcm.holdKeyActions[3].text + ":"
+            modifierlessAllowed: true
+            modifierOnlyAllowed: true
+            checkForConflictsAgainst: KQuickControls.ShortcutType.None
+            keySequence: kcm.shortcutsRevision, kcm.shortcut(kcm.holdKeyActions[3].id)
+            onKeySequenceModified: kcm.setShortcut(kcm.holdKeyActions[3].id, keySequence)
+
+            QQC2.ToolTip.text: i18n("Hold it while picking a direction: the window fills the largest free space on that side, between the other windows. Without a direction, the largest free space anywhere.")
+            QQC2.ToolTip.visible: hovered
+        }
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            visible: kcm.fillKeyInTrigger
+            type: Kirigami.MessageType.Warning
+            text: i18n("The trigger already uses this key, so it's held all the time. Choose another key for Fill the gap.")
+        }
         QQC2.Label {
             Kirigami.FormData.label: i18n("Cancel:")
             text: i18n("Esc")

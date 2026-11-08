@@ -4,6 +4,7 @@
 #pragma once
 
 #include "directioninput.h"
+#include "gapfinder.h"
 #include "globalshortcuts.h"
 #include "placement.h"
 #include "shortcutactions.h"
@@ -17,6 +18,7 @@
 #include <QRectF>
 
 #include <memory>
+#include <optional>
 #include <utility>
 
 class HyperkeyTrigger;
@@ -83,6 +85,19 @@ private:
     // (Backspace: minimize, R: restore). Placement rows (Enter: maximize)
     // pick instead, applied on release.
     void runKeyAction(const WindowAction &action);
+    // Fill the gap: the key (Shift) went down or up. While it's held, the
+    // pick fills the free space in its direction instead (gapfinder.h).
+    void setFilling(bool filling);
+    // The other windows that block free space: visible on this desktop
+    // and screen, not minimized, not the target, not excluded.
+    QList<QRectF> fillObstacles() const;
+    // Where the target goes when filling for the current pick: the free
+    // space there with padding, or the window's own size centered in it.
+    // Nothing if there's no free space there or the window doesn't fit.
+    std::optional<QRectF> fillGeometry() const;
+    // Puts `window` at `geometry` the way a snap does (restore record,
+    // untile and unmaximize, focus).
+    void placeAt(KWin::EffectWindow *window, const QRectF &geometry);
     // Does `action` to `window` within `area` (`step` = scroll-resize step,
     // -1 for the normal size).
     void perform(KWin::EffectWindow *window, const QRectF &area, const WindowAction &action, int step);
@@ -158,6 +173,10 @@ private:
     SnapDirection m_direction = SnapDirection::None;
     // Scroll-resize step for m_direction; reset on every new pick.
     int m_sizeStep = 0;
+    // The Fill the gap key is held, and the free spaces found when it was
+    // first pressed this session (the other windows don't move meanwhile).
+    bool m_filling = false;
+    std::optional<QList<QRectF>> m_freeSpaces;
     // Windows Sirkel placed: their size from before (`restore`) and where
     // Sirkel put them (`snapped`). Dropped when the window is closed, or
     // when a drag finds it somewhere else.

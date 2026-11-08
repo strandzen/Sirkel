@@ -136,7 +136,7 @@ STATUS=0
 trap '' PIPE
 
 # Evdev key and button codes.
-F24=194 LEFT=105 RIGHT=106 UP=103 DOWN=108 ENTER=28 BACKSPACE=14 ESC=1 META=125 SPACE=57 KEY_R=19 KEY_A=30
+F24=194 LEFT=105 RIGHT=106 UP=103 DOWN=108 ENTER=28 BACKSPACE=14 ESC=1 META=125 SPACE=57 KEY_R=19 KEY_A=30 SHIFT=42
 BTN_LEFT=272 BTN_RIGHT=273
 # Qt key codes, as the key-logging test window prints them.
 QT_RETURN=16777220 QT_BACKSPACE=16777219 QT_R=82
@@ -415,7 +415,9 @@ done
 end
 
 begin "window closes mid-session" "target window closed"
-for _ in $(seq "$(share 5)"); do
+# At least three tries: the close lands mid-session only most of the time.
+tries=$(share 5); [ "$tries" -lt 3 ] && tries=3
+for _ in $(seq "$tries"); do
     "${CLIENT_ENV[@]}" qml6 "$HERE/window-normal.qml" >/dev/null 2>&1 &
     victim=$!
     sleep 0.5
@@ -784,6 +786,45 @@ check_true "sirkel-rebuild --updated was started" grep -q -- "--updated" "$RUN/h
 touch "$RUN/fakekwin/other-file"
 sleep 4.5
 check_true "and only once ($(grep -c -- --updated "$RUN/helper.log" 2>/dev/null) times)" [ "$(grep -c -- --updated "$RUN/helper.log")" -eq 1 ]
+end
+
+begin "fill the gap (trigger + Shift toward free space)" "filling the gap"
+# With gaps, so the filled window must line up with its snapped neighbours.
+setting PaddingHorizontal 12; setting PaddingVertical 12; reconfigure; sleep 0.3
+close_windows
+# A layout with a free strip: one window at the left quarter, one at the
+# right half. The mouse on the first screen first: KWin opens new windows
+# on the screen under it.
+send abs 800 450; sync_input
+spawn window-normal.qml
+keysnap $LEFT 3
+send abs 800 450; sync_input
+spawn window-normal.qml
+keysnap $RIGHT 1
+normals=$(probe_all "sirkel-stress normal" | tr '\n' ';')
+send abs 800 450; sync_input
+spawn window-drag.qml
+# Shift + left: the free strip between them, padded like its neighbours.
+send abs 800 450; send key $F24 1; send sleep 50; send key $SHIFT 1; send sleep 50
+send move -300 0; send sleep 100
+send key $F24 0; send key $SHIFT 0; sync_input
+sleep 0.8
+check "filled the free strip between the windows, 12 px gaps (layout: ${normals:-?})" "x >= 399 && x <= 401 && w >= 399 && w <= 401 && y >= 11 && y <= 13 && h >= 875 && h <= 877" $(probe "sirkel-stress drag")
+# Shift + right: no free space there, so nothing changes.
+before=$(probe "sirkel-stress drag")
+send abs 800 450; send key $F24 1; send sleep 50; send key $SHIFT 1; send sleep 50
+send move 300 0; send sleep 100
+send key $F24 0; send key $SHIFT 0; sync_input
+sleep 0.8
+check_true "no free space on the right: the window didn't move" [ -n "$before" -a "$before" = "$(probe "sirkel-stress drag")" ]
+check_true "and the log says so" grep -q "no free space" "$LOG"
+# Letting go of Shift before the trigger: a normal snap.
+send abs 800 450; send key $F24 1; send sleep 50; send key $SHIFT 1; send sleep 50
+send move -300 0; send sleep 100; send key $SHIFT 0; send sleep 50
+send key $F24 0; sync_input
+sleep 0.8
+check "Shift let go first: a normal left half" "x <= 14 && w >= 770 && w <= 803" $(probe "sirkel-stress drag")
+setting PaddingHorizontal 0; setting PaddingVertical 0; reconfigure
 end
 
 # ---- Locked screen: a KWin started locked; nothing may start or move -------

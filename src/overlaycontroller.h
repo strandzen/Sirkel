@@ -48,6 +48,10 @@ public:
     // pick (the target window's current frame).
     void showPlacement(SnapDirection direction, const QRectF &target, const QRectF &windowFrame);
     void setIntensity(qreal intensity);
+    // Fill the gap found no free space: the indicator dims, and
+    // hidePlacement() shows the pick on the ring with no outline.
+    void setDimmed(bool dimmed);
+    void hidePlacement(SnapDirection direction);
     // Plays the exit, then hides.
     void end();
 

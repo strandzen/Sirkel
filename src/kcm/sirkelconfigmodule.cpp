@@ -188,6 +188,21 @@ QVariantList SirkelConfigModule::holdKeyActions() const
     return list;
 }
 
+bool SirkelConfigModule::fillKeyInTrigger() const
+{
+    const QKeySequence trigger = shortcut(triggerId());
+    if (trigger.isEmpty()) {
+        return false;
+    }
+    for (const HoldKeyAction &action : ::holdKeyActions()) {
+        if (action.action.kind == WindowAction::Kind::FillGap) {
+            const int key = heldKeyOf(shortcut(QString::fromLatin1(action.id)));
+            return key != 0 && isTriggerRelease(trigger[0], key);
+        }
+    }
+    return false;
+}
+
 int SirkelConfigModule::shortcutsRevision() const
 {
     return m_shortcutsRevision;

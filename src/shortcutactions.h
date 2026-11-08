@@ -26,12 +26,15 @@ inline constexpr KLazyLocalizedString kTriggerActionText = kli18n("Sirkel: hold 
 
 // What an action does to a window: place it, minimize it, or put it back
 // where it was before Sirkel placed it (Restore). Shared by the keys that
-// work while holding the trigger and by the direct shortcuts.
+// work while holding the trigger and by the direct shortcuts. FillGap is
+// a hold key only: held (like a modifier) while picking, it fills the free
+// space in that direction instead (see gapfinder.h).
 struct WindowAction {
     enum class Kind {
         Place,
         Minimize,
-        Restore
+        Restore,
+        FillGap
     };
     Kind kind = Kind::Place;
     SnapDirection direction = SnapDirection::None;
@@ -70,6 +73,11 @@ const QList<HoldKeyAction> &holdKeyActions();
 // Parses the keys part of a kglobalshortcutsrc entry (several shortcuts
 // separated by tabs, "none" for no shortcut).
 QList<QKeySequence> parseStoredShortcuts(const QString &keys);
+
+// The key that holds `binding` down: its key, or for a modifier on its
+// own (Shift, as the Fill the gap key) that modifier's key, however the
+// shortcut editor stored it (as the key, or as the modifier flag alone).
+int heldKeyOf(const QKeySequence &binding);
 
 // Whether a key press matches `binding` (its first key). Extra held
 // modifiers are ignored, since the trigger itself may be a combination

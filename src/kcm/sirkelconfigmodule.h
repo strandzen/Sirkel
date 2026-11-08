@@ -76,6 +76,9 @@ class SirkelConfigModule : public KQuickManagedConfigModule
     // Bumped on every shortcut change, so QML bindings calling shortcut()
     // re-read (a reassignment can change another action's shortcut too).
     Q_PROPERTY(int shortcutsRevision READ shortcutsRevision NOTIFY shortcutsChanged)
+    // The Fill the gap key is part of the trigger (Shift in Meta+Shift+Z),
+    // so it would be held all the time; the effect ignores it then.
+    Q_PROPERTY(bool fillKeyInTrigger READ fillKeyInTrigger NOTIFY shortcutsChanged)
     // The primary screen's Plasma wallpaper (an image file), for the
     // preview's background. Empty until Plasma has answered, or if it isn't
     // a plain image wallpaper.
@@ -106,6 +109,7 @@ public:
     QString triggerText() const;
     QVariantList holdKeyActions() const;
     int shortcutsRevision() const;
+    bool fillKeyInTrigger() const;
     QUrl wallpaperUrl() const;
     qreal animationFactor() const;
 
