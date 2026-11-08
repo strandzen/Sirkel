@@ -89,7 +89,9 @@ private:
     // pick fills the free space in its direction instead (gapfinder.h).
     void setFilling(bool filling);
     // The other windows that block free space: visible on this desktop
-    // and screen, not minimized, not the target, not excluded.
+    // and screen, not minimized, not the target, not excluded, and not
+    // one the target lies completely on top of (a maximized window behind
+    // it), whose space is where the target already is.
     QList<QRectF> fillObstacles() const;
     // Where the target goes when filling for the current pick: the free
     // space there with padding, or the window's own size centered in it.
@@ -177,6 +179,9 @@ private:
     // first pressed this session (the other windows don't move meanwhile).
     bool m_filling = false;
     std::optional<QList<QRectF>> m_freeSpaces;
+    // Letting go of the fill key ends filling after a short grace time, so
+    // letting go of it just before the trigger still fills.
+    QTimer *m_fillReleaseTimer = nullptr;
     // Windows Sirkel placed: their size from before (`restore`) and where
     // Sirkel put them (`snapped`). Dropped when the window is closed, or
     // when a drag finds it somewhere else.

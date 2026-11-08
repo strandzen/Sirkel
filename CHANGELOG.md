@@ -5,7 +5,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 ## [Unreleased]
 
 ### Added
-- **Fill the gap:** hold Shift as well while picking, and the window fills the largest free space in that direction, between the other windows (with no direction, the largest free space anywhere). With no free space there, the outline disappears and the ring dims. Shift can be changed on the Shortcuts page; Caps Lock + Shift is the recommended way.
+- **Fill the gap:** hold Shift as well while picking, and the window fills the largest free space in that direction, between the other windows (with no direction, the largest free space anywhere). Windows behind the one you're moving (that it lies completely on top of) don't block, and letting go of Shift just before the trigger still fills. With no free space there, the outline disappears and the ring dims. Shift can be changed on the Shortcuts page; Caps Lock + Shift is the recommended way.
 - When KWin is updated while you're logged in, Sirkel says so right away: a notification that it keeps working until you log out but needs a rebuild before then. The General page of its settings shows it too.
 
 ### Changed

@@ -792,9 +792,14 @@ begin "fill the gap (trigger + Shift toward free space)" "filling the gap"
 # With gaps, so the filled window must line up with its snapped neighbours.
 setting PaddingHorizontal 12; setting PaddingVertical 12; reconfigure; sleep 0.3
 close_windows
-# A layout with a free strip: one window at the left quarter, one at the
-# right half. The mouse on the first screen first: KWin opens new windows
-# on the screen under it.
+# A maximized window behind everything (like an editor), which the moved
+# window lies on top of: it mustn't block. Then a layout with a free strip:
+# one window at the left quarter, one at the right half. The mouse on the
+# first screen first: KWin opens new windows on the screen under it.
+send abs 800 450; sync_input
+spawn window-normal.qml
+qd org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut "Window Maximize"
+sleep 0.5
 send abs 800 450; sync_input
 spawn window-normal.qml
 keysnap $LEFT 3
@@ -818,12 +823,18 @@ send key $F24 0; send key $SHIFT 0; sync_input
 sleep 0.8
 check_true "no free space on the right: the window didn't move" [ -n "$before" -a "$before" = "$(probe "sirkel-stress drag")" ]
 check_true "and the log says so" grep -q "no free space" "$LOG"
-# Letting go of Shift before the trigger: a normal snap.
+# Letting go of Shift well before the trigger: a normal snap.
 send abs 800 450; send key $F24 1; send sleep 50; send key $SHIFT 1; send sleep 50
-send move -300 0; send sleep 100; send key $SHIFT 0; send sleep 50
+send move -300 0; send sleep 100; send key $SHIFT 0; send sleep 500
 send key $F24 0; sync_input
 sleep 0.8
-check "Shift let go first: a normal left half" "x <= 14 && w >= 770 && w <= 803" $(probe "sirkel-stress drag")
+check "Shift let go well before the trigger: a normal left half" "x <= 14 && w >= 770 && w <= 803" $(probe "sirkel-stress drag")
+# Letting go of Shift just before the trigger (grace time): still fills.
+send abs 800 450; send key $F24 1; send sleep 50; send key $SHIFT 1; send sleep 50
+send move -300 0; send sleep 100; send key $SHIFT 0; send sleep 30
+send key $F24 0; sync_input
+sleep 0.8
+check "Shift let go just before the trigger: still filled" "x >= 399 && x <= 401 && w >= 399 && w <= 401" $(probe "sirkel-stress drag")
 setting PaddingHorizontal 0; setting PaddingVertical 0; reconfigure
 end
 

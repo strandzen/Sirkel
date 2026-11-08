@@ -97,20 +97,20 @@ std::optional<QRectF> pickFreeSpace(const QList<QRectF> &spaces, const QRectF &a
     const bool wantTop = direction == SnapDirection::Top || direction == SnapDirection::TopLeft || direction == SnapDirection::TopRight;
     const bool wantBottom = direction == SnapDirection::Bottom || direction == SnapDirection::BottomLeft || direction == SnapDirection::BottomRight;
 
-    // How far a space is from the wanted edge(s), for ties.
-    const auto edgeDistance = [&](const QRectF &r) {
+    // How far a space lies toward the wanted side(s), for ties.
+    const auto towardSide = [&](const QRectF &r) {
         qreal d = 0;
         if (wantLeft) {
-            d += r.left() - area.left();
+            d -= r.center().x();
         }
         if (wantRight) {
-            d += area.right() - r.right();
+            d += r.center().x();
         }
         if (wantTop) {
-            d += r.top() - area.top();
+            d -= r.center().y();
         }
         if (wantBottom) {
-            d += area.bottom() - r.bottom();
+            d += r.center().y();
         }
         return d;
     };
@@ -120,9 +120,11 @@ std::optional<QRectF> pickFreeSpace(const QList<QRectF> &spaces, const QRectF &a
         if (space.width() < minSize.width() - kEpsilon || space.height() < minSize.height() - kEpsilon) {
             continue;
         }
-        const QPointF c = space.center();
-        if ((wantLeft && c.x() >= middle.x()) || (wantRight && c.x() <= middle.x()) || (wantTop && c.y() >= middle.y())
-            || (wantBottom && c.y() <= middle.y())) {
+        // At least minSize of it on that side, not just a sliver past the
+        // middle (a padded gap ends a few pixels beyond it).
+        if ((wantLeft && middle.x() - space.left() < minSize.width() - kEpsilon) || (wantRight && space.right() - middle.x() < minSize.width() - kEpsilon)
+            || (wantTop && middle.y() - space.top() < minSize.height() - kEpsilon)
+            || (wantBottom && space.bottom() - middle.y() < minSize.height() - kEpsilon)) {
             continue;
         }
         const qreal area1 = space.width() * space.height();
@@ -131,7 +133,7 @@ std::optional<QRectF> pickFreeSpace(const QList<QRectF> &spaces, const QRectF &a
             continue;
         }
         const qreal area2 = best->width() * best->height();
-        if (area1 > area2 + kEpsilon || (area1 > area2 - kEpsilon && edgeDistance(space) < edgeDistance(*best))) {
+        if (area1 > area2 + kEpsilon || (area1 > area2 - kEpsilon && towardSide(space) > towardSide(*best))) {
             best = space;
         }
     }

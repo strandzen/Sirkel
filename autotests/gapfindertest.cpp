@@ -19,9 +19,10 @@ private Q_SLOTS:
         const QList<QRectF> spaces = freeSpaces(kArea, {});
         QCOMPARE(spaces.size(), 1);
         QCOMPARE(spaces.first(), kArea);
-        // The center picks it; a side doesn't (its center is the middle).
+        // It reaches into every half, so any direction fills it.
         QCOMPARE(pickFreeSpace(spaces, kArea, SnapDirection::Maximize, kMin), kArea);
-        QVERIFY(!pickFreeSpace(spaces, kArea, SnapDirection::Left, kMin));
+        QCOMPARE(pickFreeSpace(spaces, kArea, SnapDirection::Left, kMin), kArea);
+        QCOMPARE(pickFreeSpace(spaces, kArea, SnapDirection::BottomRight, kMin), kArea);
     }
 
     // The original example: Left at 1/4 and Right at 1/2 leave a quarter
@@ -57,7 +58,9 @@ private Q_SLOTS:
         QVERIFY(spaces.contains(QRectF(0, 450, 1600, 450)));
         QCOMPARE(pickFreeSpace(spaces, kArea, SnapDirection::Right, kMin), QRectF(800, 0, 800, 900));
         QCOMPARE(pickFreeSpace(spaces, kArea, SnapDirection::Bottom, kMin), QRectF(0, 450, 1600, 450));
-        QVERIFY(!pickFreeSpace(spaces, kArea, SnapDirection::Left, kMin));
+        // The only free space reaching left is the bottom half.
+        QCOMPARE(pickFreeSpace(spaces, kArea, SnapDirection::Left, kMin), QRectF(0, 450, 1600, 450));
+        QVERIFY(!pickFreeSpace(spaces, kArea, SnapDirection::TopLeft, kMin));
     }
 
     void overlappingWindows()
@@ -109,6 +112,15 @@ private Q_SLOTS:
         const QRectF space(394, 0, 412, 900);
         QCOMPARE(paddedFreeSpace(space, kArea, 12, 12), QRectF(400, 12, 400, 876));
         QCOMPARE(paddedFreeSpace(kArea, kArea, 12, 8), QRectF(12, 8, 1576, 884));
+    }
+
+    // A padded gap ending a few pixels past the middle isn't on that side.
+    void sliverPastTheMiddle()
+    {
+        const QList<QRectF> windows{QRectF(12, 12, 382, 876), QRectF(806, 12, 782, 876)};
+        const QList<QRectF> spaces = freeSpaces(kArea, windows);
+        QVERIFY(pickFreeSpace(spaces, kArea, SnapDirection::Left, kMin));
+        QVERIFY(!pickFreeSpace(spaces, kArea, SnapDirection::Right, kMin));
     }
 };
 

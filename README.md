@@ -122,9 +122,10 @@ While you hold the trigger, you can also press:
 
 ### Fill the gap
 
-Hold the trigger, then hold **Shift** too, and point the mouse (or press a direction key) toward empty space. The outline shows the window filling the largest free space on that side, between your other windows and the screen edges, and letting go of the trigger puts it there. With no direction, it fills the largest free space anywhere. Let go of Shift to go back to the normal placement.
+Hold the trigger, then hold **Shift** too, and point the mouse (or press a direction key) toward empty space. The outline shows the window filling the largest free space on that side, between your other windows and the screen edges, and letting go of the trigger puts it there. With no direction, it fills the largest free space anywhere. Let go of Shift (keeping the trigger held) to go back to the normal placement; letting go of both at almost the same time still fills.
 
-- Only windows you can see on the current desktop count; minimized windows and excluded apps don't.
+- Only windows you can see on the current desktop count; minimized windows and excluded apps don't, and neither does a window the one you're moving lies completely on top of (for example a maximized window behind it).
+- With nothing else on the screen, the free space is the whole screen, so any direction fills it.
 - If there's no free space on that side, there's no outline and the ring dims; letting go then does nothing.
 - Press the trigger first, then Shift: with Shift held first, the trigger isn't recognized.
 - The size is whatever fits, so scrolling doesn't change it.

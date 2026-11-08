@@ -22,9 +22,11 @@
 QList<QRectF> freeSpaces(const QRectF &area, const QList<QRectF> &obstacles);
 
 // The free space for `direction`: among `spaces` at least `minSize` big,
-// those whose center is on that side of the area's center (corners: both
-// axes; Maximize: any), the largest; a tie goes to the one nearer that
-// edge. Nothing if no space qualifies.
+// those reaching at least `minSize` into that half of the area (corners:
+// both halves;
+// Maximize: any), the largest; a tie goes to the one further that way.
+// A space across the middle counts for every side, so with nothing else
+// on screen any direction fills it. Nothing if no space qualifies.
 std::optional<QRectF> pickFreeSpace(const QList<QRectF> &spaces, const QRectF &area, SnapDirection direction, const QSizeF &minSize);
 
 // `space` with Sirkel's padding, as placements get it: the full padding on

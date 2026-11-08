@@ -57,6 +57,15 @@ SirkelEffect::SirkelEffect()
 
     readExcludedApps();
 
+    m_fillReleaseTimer = new QTimer(this);
+    m_fillReleaseTimer->setSingleShot(true);
+    m_fillReleaseTimer->setInterval(250);
+    connect(m_fillReleaseTimer, &QTimer::timeout, this, [this]() {
+        if (m_active) {
+            setFilling(false);
+        }
+    });
+
     // A KWin update while Sirkel runs: the running KWin keeps Sirkel, the
     // next login won't load it. The folder holding KWin's library is
     // watched (the link itself is replaced, not changed); an update touches
@@ -185,6 +194,7 @@ void SirkelEffect::arm()
     m_scrollSteps.reset();
     m_filling = false;
     m_freeSpaces.reset();
+    m_fillReleaseTimer->stop();
     m_input.reset();
     m_input.setDeadzone(SirkelConfig::deadzone());
     m_input.setAngleMode(SirkelConfig::pickingMode() == QStringLiteral("angle") ? SirkelConfig::centerRadius() : 0);
@@ -356,6 +366,7 @@ void SirkelEffect::finish(bool apply, bool beforeRelease)
     m_engaged = false;
     m_filling = false;
     m_freeSpaces.reset();
+    m_fillReleaseTimer->stop();
 }
 
 void SirkelEffect::pick(SnapDirection direction)
@@ -464,6 +475,8 @@ void SirkelEffect::setFilling(bool filling)
 QList<QRectF> SirkelEffect::fillObstacles() const
 {
     QList<QRectF> obstacles;
+    // A few pixels' slack: a window exactly as big as the one behind it.
+    const QRectF target = m_targetWindow ? QRectF(m_targetWindow->frameGeometry()).adjusted(2, 2, -2, -2) : QRectF();
     const QList<KWin::EffectWindow *> stack = KWin::effects->stackingOrder();
     for (KWin::EffectWindow *w : stack) {
         if (w == m_targetWindow || w->isDeleted() || w->isMinimized() || w->isHidden() || !w->isOnCurrentDesktop() || !w->isOnCurrentActivity()) {
@@ -473,7 +486,7 @@ QList<QRectF> SirkelEffect::fillObstacles() const
             continue;
         }
         const QRectF frame = w->frameGeometry();
-        if (frame.intersects(m_area)) {
+        if (frame.intersects(m_area) && !(target.isValid() && frame.contains(target))) {
             obstacles.append(frame);
         }
     }
@@ -678,8 +691,14 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
             }
             for (const QKeySequence &binding : keys) {
                 if (heldKeyOf(binding) == event->key()) {
-                    if (!event->isAutoRepeat()) {
-                        setFilling(press);
+                    if (event->isAutoRepeat()) {
+                        return;
+                    }
+                    if (press) {
+                        m_fillReleaseTimer->stop();
+                        setFilling(true);
+                    } else if (m_filling) {
+                        m_fillReleaseTimer->start();
                     }
                     return;
                 }
