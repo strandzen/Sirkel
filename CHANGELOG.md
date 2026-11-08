@@ -4,6 +4,17 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+### Added
+- When KWin is updated while you're logged in, Sirkel says so right away: a notification that it keeps working until you log out but needs a rebuild before then. The General page of its settings shows it too.
+
+### Changed
+- Clicking the rebuild notification opens the About page of Sirkel's settings, with the details and the Rebuild button. The notification's own button, **Rebuild now**, starts the rebuild directly.
+
+### Fixed
+- A trigger that includes a direction key (for example Meta+A with WASD as direction keys) picked that direction while held, and letting go of the key didn't end the session.
+- Scrolling on high-resolution mouse wheels and touchpads stepped through several sizes at once. Sizes now change once per wheel notch, or per short stretch of touchpad scrolling; normal wheels work as before.
+- The login check no longer logs a warning about the application path.
+
 ## [0.5.4] - 2026-11-01
 
 ### Added

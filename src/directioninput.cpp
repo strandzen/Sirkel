@@ -72,6 +72,35 @@ SnapDirection composeDirection(bool up, bool down, bool left, bool right)
     return SnapDirection::None;
 }
 
+void ScrollSteps::reset()
+{
+    m_accumulated = 0;
+}
+
+int ScrollSteps::add(qreal delta, int deltaV120, Source source)
+{
+    const bool pixels = source == Source::Touchpad;
+    if (!pixels && deltaV120 == 0) {
+        // No notch information: one step per event.
+        return delta < 0 ? -1 : (delta > 0 ? 1 : 0);
+    }
+    if (pixels != m_pixels) {
+        m_pixels = pixels;
+        m_accumulated = 0;
+    }
+    // A change of direction starts over, so a reversed scroll steps back
+    // after a full notch, not after undoing what was left over.
+    const qreal amount = pixels ? delta : qreal(deltaV120);
+    if ((amount < 0) != (m_accumulated < 0)) {
+        m_accumulated = 0;
+    }
+    m_accumulated += amount;
+    const qreal unit = pixels ? kPixelsPerStep : qreal(kUnitsPerNotch);
+    const int steps = int(m_accumulated / unit);
+    m_accumulated -= steps * unit;
+    return steps;
+}
+
 void EdgeOverflow::reset(const QPointF &position)
 {
     m_lastPosition = position;

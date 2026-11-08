@@ -5,6 +5,7 @@
 #include "globalshortcuts.h"
 #include "hyperkeytrigger.h"
 #include "overlaycontroller.h"
+#include "rebuildstatus.h"
 #include "shortcutactions.h"
 #include "sirkel_debug.h"
 #include "sirkelconfig.h"
@@ -16,10 +17,14 @@
 #include <window.h>
 
 #include <QAction>
+#include <QFileInfo>
+#include <QFileSystemWatcher>
 #include <QKeyEvent>
+#include <QProcess>
 #include <QTimer>
 
 #include <algorithm>
+#include <cstdlib>
 
 SirkelEffect::SirkelEffect()
 {
@@ -51,6 +56,18 @@ SirkelEffect::SirkelEffect()
     }
 
     readExcludedApps();
+
+    // A KWin update while Sirkel runs: the running KWin keeps Sirkel, the
+    // next login won't load it. The folder holding KWin's library is
+    // watched (the link itself is replaced, not changed); an update touches
+    // many files there, so the check waits until it has settled.
+    m_runningKWin = Rebuild::installedKWin();
+    m_kwinCheckTimer = new QTimer(this);
+    m_kwinCheckTimer->setSingleShot(true);
+    m_kwinCheckTimer->setInterval(3000);
+    connect(m_kwinCheckTimer, &QTimer::timeout, this, &SirkelEffect::checkKWinUpdate);
+    auto *kwinWatcher = new QFileSystemWatcher({QFileInfo(Rebuild::kwinLibraryLink()).absolutePath()}, this);
+    connect(kwinWatcher, &QFileSystemWatcher::directoryChanged, m_kwinCheckTimer, qOverload<>(&QTimer::start));
 
     // Safety net for a missed key release: cancels a session that has seen
     // no input for SessionTimeout seconds, or lets go of the keyboard after a
@@ -165,6 +182,7 @@ void SirkelEffect::arm()
     m_active = true;
     m_engaged = false;
     m_pressedButtons = {};
+    m_scrollSteps.reset();
     m_input.reset();
     m_input.setDeadzone(SirkelConfig::deadzone());
     m_input.setAngleMode(SirkelConfig::pickingMode() == QStringLiteral("angle") ? SirkelConfig::centerRadius() : 0);
@@ -199,6 +217,21 @@ void SirkelEffect::readHoldKeys()
     for (const HoldKeyAction &def : holdKeyActions()) {
         m_holdKeys.append({storedShortcuts(QString::fromLatin1(def.id), def.defaults), def.action});
     }
+}
+
+void SirkelEffect::checkKWinUpdate()
+{
+    const QString installed = Rebuild::installedKWin();
+    if (installed.isEmpty() || installed == m_runningKWin || installed == m_reportedKWin) {
+        return;
+    }
+    m_reportedKWin = installed;
+    qCWarning(SIRKEL) << "KWin was updated from" << m_runningKWin << "to" << installed << "- Sirkel needs a rebuild before the next login";
+#if SIRKEL_HAS_REBUILD_HELPER
+    // $SIRKEL_TEST_REBUILD_HELPER: the stress test's stand-in.
+    const QString test = qEnvironmentVariable("SIRKEL_TEST_REBUILD_HELPER");
+    QProcess::startDetached(test.isEmpty() ? QStringLiteral(SIRKEL_REBUILD_EXECUTABLE) : test, {QStringLiteral("--updated")});
+#endif
 }
 
 void SirkelEffect::readExcludedApps()
@@ -321,6 +354,7 @@ void SirkelEffect::pick(SnapDirection direction)
         // A scroll-resize step only means something for the pick it was
         // dialed in for.
         m_sizeStep = normalStep(direction);
+        m_scrollSteps.reset();
         refreshPreview();
     }
     m_overlay->setIntensity(m_input.intensity());
@@ -528,6 +562,17 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
     const bool press = event->type() == QEvent::KeyPress;
     const bool release = event->type() == QEvent::KeyRelease;
 
+    // The trigger first: its key may also be a direction key (Meta+Up with
+    // the arrows, Meta+A with WASD). Letting go of it ends the session, and
+    // its presses (the held key's repeats) pick nothing.
+    if (m_trigger->isRelease(event)) {
+        finish(true);
+        return;
+    }
+    if (press && m_trigger->isTriggerKey(event->key())) {
+        return;
+    }
+
     const KeyAxis axis = axisForKey(event->key(), SirkelConfig::keybindScheme());
     if (axis != KeyAxis::None && (press || release)) {
         engage();
@@ -574,8 +619,6 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
                 return;
             }
         }
-    } else if (m_trigger->isRelease(event)) {
-        finish(true);
     }
 }
 
@@ -627,8 +670,13 @@ void SirkelEffect::pointerAxis(KWin::PointerAxisEvent *event)
     if (!SirkelConfig::scrollResizeEnabled()) {
         return;
     }
-    // Scrolling up (negative delta) grows the target.
-    stepSize(event->delta < 0 ? +1 : -1);
+    const bool touchpad = event->source == KWin::PointerAxisSource::Finger || event->source == KWin::PointerAxisSource::Continuous;
+    const int steps = m_scrollSteps.add(event->delta, event->deltaV120, touchpad ? ScrollSteps::Source::Touchpad : ScrollSteps::Source::Wheel);
+    // Scrolling up (negative) grows the target. At most a few steps per
+    // event, however fast the wheel spins.
+    for (int i = 0; i < std::min(std::abs(steps), 4); ++i) {
+        stepSize(steps < 0 ? +1 : -1);
+    }
 }
 
 void SirkelEffect::stepSize(int delta)

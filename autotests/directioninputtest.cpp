@@ -10,6 +10,69 @@ class DirectionInputTest : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    // A normal wheel (G502 and most mice): one step per notch, as before.
+    void scrollWholeNotches()
+    {
+        ScrollSteps steps;
+        QCOMPARE(steps.add(-15, -120, ScrollSteps::Source::Wheel), -1);
+        QCOMPARE(steps.add(-15, -120, ScrollSteps::Source::Wheel), -1);
+        QCOMPARE(steps.add(15, 120, ScrollSteps::Source::Wheel), 1);
+    }
+
+    // A high-resolution wheel sends a notch as 8 events of 15: one step for
+    // all eight, not eight steps.
+    void scrollHighResolution()
+    {
+        ScrollSteps steps;
+        int total = 0;
+        for (int i = 0; i < 8; ++i) {
+            total += steps.add(-1.875, -15, ScrollSteps::Source::Wheel);
+        }
+        QCOMPARE(total, -1);
+        // Half a notch does nothing yet; the other half completes it.
+        for (int i = 0; i < 4; ++i) {
+            QCOMPARE(steps.add(1.875, 15, ScrollSteps::Source::Wheel), 0);
+        }
+        QCOMPARE(steps.add(1.875, 15, ScrollSteps::Source::Wheel) + steps.add(1.875, 15, ScrollSteps::Source::Wheel)
+                     + steps.add(1.875, 15, ScrollSteps::Source::Wheel) + steps.add(1.875, 15, ScrollSteps::Source::Wheel),
+                 1);
+    }
+
+    // Turning the other way starts over: a full notch back steps back.
+    void scrollReversal()
+    {
+        ScrollSteps steps;
+        for (int i = 0; i < 7; ++i) {
+            QCOMPARE(steps.add(-1.875, -15, ScrollSteps::Source::Wheel), 0);
+        }
+        int back = 0;
+        for (int i = 0; i < 8; ++i) {
+            back += steps.add(1.875, 15, ScrollSteps::Source::Wheel);
+        }
+        QCOMPARE(back, 1);
+    }
+
+    // A touchpad swipe: many small pixel distances, one step per 50 px.
+    void scrollTouchpad()
+    {
+        ScrollSteps steps;
+        int total = 0;
+        for (int i = 0; i < 40; ++i) {
+            total += steps.add(-3, 0, ScrollSteps::Source::Touchpad);
+        }
+        QCOMPARE(total, -2); // 120 px
+    }
+
+    // No notch information (for example simulated input): one step per
+    // event, as before.
+    void scrollWithoutNotchInfo()
+    {
+        ScrollSteps steps;
+        QCOMPARE(steps.add(-10, 0, ScrollSteps::Source::Wheel), -1);
+        QCOMPARE(steps.add(10, 0, ScrollSteps::Source::Wheel), 1);
+        QCOMPARE(steps.add(0, 0, ScrollSteps::Source::Wheel), 0);
+    }
+
     void init();
     void schemes();
     void composeCorners();

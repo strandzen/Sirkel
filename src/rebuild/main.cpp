@@ -4,8 +4,11 @@
 // sirkel-rebuild: KWin silently refuses to load Sirkel after every KWin
 // update, and the effect can't warn about its own failure. This runs on its
 // own instead:
-//   --check  at login (autostart): a notification when Sirkel needs a
-//            rebuild, with Rebuild and Open settings buttons.
+//   --check    at login (autostart): a notification when Sirkel needs a
+//              rebuild. Clicking it opens the About page; Rebuild now
+//              starts the rebuild directly.
+//   --updated  the effect saw KWin being updated mid-session: the same
+//              notification, saying Sirkel works until logout.
 //   (none)   the Rebuild button (notification or About page): opens a
 //            terminal that builds and installs the package again.
 
@@ -148,33 +151,31 @@ void startRebuild()
     job->start();
 }
 
-// The login check found that Sirkel needs a rebuild.
-void notifyRebuildNeeded(const QString &builtFor, const QString &installed)
+// Sirkel needs a rebuild: found at login, or (`updated`) the effect saw
+// KWin being updated while it runs. Clicking the notification opens the
+// About page, which has the details and its own Rebuild button.
+void notifyRebuildNeeded(const QString &builtFor, const QString &installed, bool updated)
 {
-    // Stays until dismissed: Sirkel doesn't work until it's rebuilt.
+    // Stays until dismissed: Sirkel stops working at the next login.
     auto *notification = new KNotification(kRebuildNeeded, KNotification::Persistent);
     notification->setComponentName(QStringLiteral("sirkel"));
     notification->setTitle(i18n("Sirkel needs a rebuild"));
-    const QString text = i18n("KWin %1 is installed, but Sirkel was built for KWin %2, so KWin doesn't load it.", installed, builtFor);
+    QString text = updated ? i18n("KWin was updated to %1. Sirkel keeps working until you log out, but needs a rebuild before then.", installed)
+                           : i18n("KWin %1 is installed, but Sirkel was built for KWin %2, so KWin doesn't load it.", installed, builtFor);
 
-    // Rebuild quits once the terminal is open; everything else quits when
-    // the notification closes.
+    // Rebuild now quits once the terminal is open; everything else quits
+    // when the notification closes.
     auto rebuilding = std::make_shared<bool>(false);
     if (Rebuild::canRebuild() && Rebuild::hasBuildTools()) {
-        notification->setText(text);
-        KNotificationAction *rebuild = notification->addAction(i18n("Rebuild for KWin %1", installed));
+        KNotificationAction *rebuild = notification->addAction(i18n("Rebuild now"));
         QObject::connect(rebuild, &KNotificationAction::activated, qApp, [rebuilding]() {
             *rebuilding = true;
             startRebuild();
         });
     } else if (Rebuild::canRebuild()) {
-        notification->setText(text + QLatin1Char(' ') + i18n("To rebuild it, first install the build tools: sudo pacman -S --needed base-devel"));
-    } else {
-        notification->setText(text);
+        text += QLatin1Char(' ') + i18n("To rebuild it, first install the build tools: sudo pacman -S --needed base-devel");
     }
-    KNotificationAction *settings = notification->addAction(i18n("Open settings"));
-    QObject::connect(settings, &KNotificationAction::activated, qApp, &openSettings);
-    // Clicking the notification itself opens the settings too.
+    notification->setText(text);
     KNotificationAction *open = notification->addDefaultAction(i18n("Open settings"));
     QObject::connect(open, &KNotificationAction::activated, qApp, &openSettings);
     QObject::connect(notification, &KNotification::closed, qApp, [rebuilding]() {
@@ -191,15 +192,21 @@ int main(int argc, char **argv)
 {
     // The login check is decided from a few file reads before anything is
     // started: almost every login has nothing to report.
-    const bool check = std::any_of(argv + 1, argv + argc, [](const char *arg) {
-        return qstrcmp(arg, "--check") == 0;
-    });
+    const auto hasArg = [argc, argv](const char *name) {
+        return std::any_of(argv + 1, argv + argc, [name](const char *arg) {
+            return qstrcmp(arg, name) == 0;
+        });
+    };
+    const bool check = hasArg("--check");
+    const bool updated = hasArg("--updated");
     const QString builtFor = Rebuild::builtForKWin();
     const QString installed = Rebuild::installedKWin();
-    if (check) {
+    if (check || updated) {
         const bool enabled = Rebuild::effectEnabled();
         qCDebug(SIRKEL_REBUILD) << "built for KWin" << builtFor << "installed" << installed << "enabled" << enabled;
-        if (!Rebuild::shouldNotify(builtFor, installed, enabled)) {
+        // Mid-session the effect is running, so it's on; only a rebuild
+        // already done since the update makes this unnecessary.
+        if (updated ? !Rebuild::needsRebuild(builtFor, installed) : !Rebuild::shouldNotify(builtFor, installed, enabled)) {
             return 0;
         }
     }
@@ -215,10 +222,13 @@ int main(int argc, char **argv)
     parser.addHelpOption();
     const QCommandLineOption checkOption(QStringLiteral("check"), i18n("Show a notification if Sirkel needs a rebuild (run at login)."));
     parser.addOption(checkOption);
+    const QCommandLineOption updatedOption(QStringLiteral("updated"),
+                                           i18n("Show a notification that KWin was updated and Sirkel needs a rebuild before the next login."));
+    parser.addOption(updatedOption);
     parser.process(app);
 
-    if (parser.isSet(checkOption)) {
-        notifyRebuildNeeded(builtFor, installed);
+    if (parser.isSet(checkOption) || parser.isSet(updatedOption)) {
+        notifyRebuildNeeded(builtFor, installed, parser.isSet(updatedOption));
     } else {
         startRebuild();
     }

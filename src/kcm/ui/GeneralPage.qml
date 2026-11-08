@@ -10,6 +10,24 @@ import org.kde.kirigami as Kirigami
 FormPage {
     id: root
 
+    // KWin only loads Sirkel if it was built for the exact KWin version, so
+    // after a KWin update (also one installed during this session) it needs
+    // a rebuild before the next login. The details and the Rebuild button
+    // are on About.
+    Kirigami.InlineMessage {
+        Layout.fillWidth: true
+        visible: kcm.effectStatus === "rebuild"
+        type: Kirigami.MessageType.Error
+        text: i18n("Sirkel needs a rebuild: it was built for KWin %1, but KWin %2 is installed. Rebuild it before you log out, or it won't load in your next session.", kcm.kwinBuildVersion, kcm.kwinInstalledVersion)
+        actions: [
+            Kirigami.Action {
+                text: i18n("Go to About")
+                icon.name: "help-about"
+                onTriggered: kcm.showPage("about")
+            }
+        ]
+    }
+
     // Which trigger is set and whether it works, as one status line. Green
     // when Sirkel can be used; orange when nothing would start it (no
     // trigger, or Caps Lock without keyd). The keyd steps are on About.

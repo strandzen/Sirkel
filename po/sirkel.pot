@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-10-31 15:48+0100\n"
+"POT-Creation-Date: 2026-11-08 16:44+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,90 +17,104 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/rebuild/main.cpp:50
+#: src/rebuild/main.cpp:53
 #, kde-format
 msgid "Sirkel"
 msgstr ""
 
-#: src/rebuild/main.cpp:108
+#: src/rebuild/main.cpp:111
 #, kde-format
 msgid ""
 "Sirkel can only rebuild itself when it was installed as a package. See the "
 "About page in its settings for how to rebuild it."
 msgstr ""
 
-#: src/rebuild/main.cpp:112
+#: src/rebuild/main.cpp:115
 #, kde-format
 msgid "A rebuild of Sirkel is already running."
 msgstr ""
 
-#: src/rebuild/main.cpp:120
+#: src/rebuild/main.cpp:123
 #, kde-format
 msgid "Couldn't prepare the rebuild: %1 can't be written."
 msgstr ""
 
-#: src/rebuild/main.cpp:142
+#: src/rebuild/main.cpp:145
 #, kde-format
 msgid "Couldn't open a terminal for the rebuild: %1"
 msgstr ""
 
-#: src/rebuild/main.cpp:157
+#: src/rebuild/main.cpp:162
 #, kde-format
 msgid "Sirkel needs a rebuild"
 msgstr ""
 
-#: src/rebuild/main.cpp:158
+#: src/rebuild/main.cpp:163
+#, kde-format
+msgid ""
+"KWin was updated to %1. Sirkel keeps working until you log out, but needs a "
+"rebuild before then."
+msgstr ""
+
+#: src/rebuild/main.cpp:164
 #, kde-format
 msgid ""
 "KWin %1 is installed, but Sirkel was built for KWin %2, so KWin doesn't load "
 "it."
 msgstr ""
 
-#: src/rebuild/main.cpp:165
+#: src/rebuild/main.cpp:170
 #, kde-format
-msgid "Rebuild for KWin %1"
+msgid "Rebuild now"
 msgstr ""
 
-#: src/rebuild/main.cpp:171
+#: src/rebuild/main.cpp:176
 #, kde-format
 msgid ""
 "To rebuild it, first install the build tools: sudo pacman -S --needed base-"
 "devel"
 msgstr ""
 
-#: src/rebuild/main.cpp:175 src/rebuild/main.cpp:178
+#: src/rebuild/main.cpp:179
 #, kde-format
 msgid "Open settings"
 msgstr ""
 
-#: src/rebuild/main.cpp:214
+#: src/rebuild/main.cpp:221
 #, kde-format
 msgid "Rebuilds Sirkel after a KWin update, or tells you when it needs one."
 msgstr ""
 
-#: src/rebuild/main.cpp:216
+#: src/rebuild/main.cpp:223
 #, kde-format
 msgid "Show a notification if Sirkel needs a rebuild (run at login)."
 msgstr ""
 
-#: src/rebuild/rebuildstatus.cpp:138
+#: src/rebuild/main.cpp:226
+#, kde-format
+msgid ""
+"Show a notification that KWin was updated and Sirkel needs a rebuild before "
+"the next login."
+msgstr ""
+
+#: src/rebuild/rebuildstatus.cpp:149
 #, kde-format
 msgid "A rebuild is already running in another window."
 msgstr ""
 
-#: src/rebuild/rebuildstatus.cpp:139
+#: src/rebuild/rebuildstatus.cpp:150
 #, kde-format
 msgid "Sirkel is rebuilt. Log out and back in to start it."
 msgstr ""
 
-#: src/rebuild/rebuildstatus.cpp:140
+#: src/rebuild/rebuildstatus.cpp:151
 #, kde-format
 msgid ""
 "The rebuild didn't finish. Everything above is also saved in %1, which you "
 "can attach to a bug report at %2."
 msgstr ""
 
-#: src/rebuild/rebuildstatus.cpp:143
+#: src/rebuild/rebuildstatus.cpp:154
 #, kde-format
 msgid "Press Enter to close this window."
 msgstr ""

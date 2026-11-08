@@ -123,12 +123,17 @@ private:
     void readHoldKeys();
     // ExcludedApps, trimmed and lowercased, into m_excluded.
     void readExcludedApps();
+    // KWin's library changed on disk: if it's a new KWin version, Sirkel
+    // keeps running in this one but won't load after the next login, so
+    // sirkel-rebuild --updated asks for a rebuild now.
+    void checkKWinUpdate();
 
     HyperkeyTrigger *m_trigger = nullptr;
     QTimer *m_idleTimer = nullptr;
     std::unique_ptr<OverlayController> m_overlay;
     DirectionInput m_input;
     EdgeOverflow m_edgeOverflow;
+    ScrollSteps m_scrollSteps;
 
     bool m_active = false;
     // A session ended before the trigger was let go. Until it is, the
@@ -163,6 +168,11 @@ private:
     QHash<KWin::EffectWindow *, SnapRecord> m_snapped;
     // holdKeyActions() with their configured keys (see readHoldKeys()).
     QList<std::pair<QList<QKeySequence>, WindowAction>> m_holdKeys;
+    // The KWin running Sirkel (installed when it loaded), and the newer one
+    // already reported, so an update is reported once.
+    QString m_runningKWin;
+    QString m_reportedKWin;
+    QTimer *m_kwinCheckTimer = nullptr;
     // ExcludedApps as compared (see readExcludedApps()).
     QStringList m_excluded;
     // KGlobalAccel's file, open for the effect's lifetime. Opened before the

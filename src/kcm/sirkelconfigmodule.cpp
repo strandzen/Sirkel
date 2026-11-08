@@ -437,6 +437,12 @@ void SirkelConfigModule::rebuild()
     QProcess::startDetached(QStringLiteral(SIRKEL_REBUILD_EXECUTABLE), {});
 }
 
+void SirkelConfigModule::showPage(const QString &page)
+{
+    m_requestedPage = page;
+    Q_EMIT requestedPageChanged();
+}
+
 void SirkelConfigModule::pickColor(const QString &target, const QColor &color)
 {
     if (target == QStringLiteral("outline")) {

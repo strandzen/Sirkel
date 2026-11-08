@@ -84,6 +84,15 @@ if [ "${1:-}" != "--inner" ]; then
 
     printf '[Plugins]\nkwin_effect_sirkelEnabled=true\n' > "$RUN/config/kwinrc"
 
+    # A fake KWin library link for the effect to watch (a KWin update is
+    # faked by repointing it), and a stand-in for sirkel-rebuild that only
+    # records how it was called.
+    mkdir -p "$RUN/fakekwin"
+    touch "$RUN/fakekwin/libkwin.so.6.8.2" "$RUN/fakekwin/libkwin.so.6.9.0"
+    ln -s libkwin.so.6.8.2 "$RUN/fakekwin/libkwin.so.6"
+    printf '#!/bin/sh\necho "$@" >> "%s/helper.log"\n' "$RUN" > "$RUN/fake-rebuild-helper"
+    chmod +x "$RUN/fake-rebuild-helper"
+
     # A private session bus with no service directories: nothing can be
     # auto-started on it. Otherwise the test clients start their own
     # xdg-document-portal, which fights the real session's over
@@ -112,6 +121,7 @@ BUS
         QT_LOGGING_RULES="sirkel*.debug=true;js=true" QT_FORCE_STDERR_LOGGING=1 \
         STRESS_TRACE="${STRESS_TRACE:-}" STRESS_RUN="$RUN" STRESS_ROUNDS="$ROUNDS" STRESS_SEED="$SEED" STRESS_INPUT="$OUT/sirkel-input" \
         QT_NO_XDG_DESKTOP_PORTAL=1 KSCREEN_BACKEND_INPROCESS=1 \
+        SIRKEL_TEST_KWIN_LIBRARY="$RUN/fakekwin/libkwin.so.6" SIRKEL_TEST_REBUILD_HELPER="$RUN/fake-rebuild-helper" \
         dbus-run-session --config-file="$RUN/session-bus.conf" -- "$0" --inner
 fi
 
@@ -126,7 +136,7 @@ STATUS=0
 trap '' PIPE
 
 # Evdev key and button codes.
-F24=194 LEFT=105 RIGHT=106 UP=103 DOWN=108 ENTER=28 BACKSPACE=14 ESC=1 META=125 SPACE=57 KEY_R=19
+F24=194 LEFT=105 RIGHT=106 UP=103 DOWN=108 ENTER=28 BACKSPACE=14 ESC=1 META=125 SPACE=57 KEY_R=19 KEY_A=30
 BTN_LEFT=272 BTN_RIGHT=273
 # Qt key codes, as the key-logging test window prints them.
 QT_RETURN=16777220 QT_BACKSPACE=16777219 QT_R=82
@@ -504,6 +514,27 @@ set_trigger $((0x01000047))
 sleep 0.5
 end
 
+begin "a trigger with a direction key in it (Meta+A with WASD)" 'trigger is "Meta+A"'
+# Meta+A: A is Left in WASD. (Meta+arrows belong to KWin's quick tiling.)
+setting KeybindScheme wasd; reconfigure
+set_trigger $((0x10000041))
+sleep 0.5
+send abs 800 450; sync_input
+spawn window-drag.qml
+snaps=$(count "sirkel: snapping to")
+# Held past the key repeat delay: A's repeats must not pick Left over the
+# mouse's Right, and letting go of A (Meta still held) ends the session.
+send abs 800 450; send key $META 1; send key $KEY_A 1; send sleep 50
+send move 300 0; send sleep 1200
+send key $KEY_A 0; send sleep 100; send key $META 0; sync_input
+sleep 0.8
+check "snapped to the right half, not the left" "x >= 798 && x <= 802 && w >= 797 && w <= 803 && h >= 890" $(probe "sirkel-stress drag")
+check_true "letting go of A ended the session (one snap)" [ $(( $(count "sirkel: snapping to") - snaps )) -eq 1 ]
+set_trigger $((0x01000047))
+setting KeybindScheme arrows; reconfigure
+sleep 0.5
+end
+
 begin "fullscreen window (sessions must be refused)" "not starting"
 "${CLIENT_ENV[@]}" qml6 "$HERE/window-fullscreen.qml" >/dev/null 2>&1 &
 full=$!
@@ -743,6 +774,16 @@ send key $F24 0; sync_input
 sleep 0.8
 check "nothing under the mouse: the active window went to the right half" "x >= 798 && x <= 802 && h >= 890" $(probe "sirkel-stress drag")
 setting TargetWindowUnderCursor false; setting IndicatorFollowsMouse false; reconfigure
+end
+
+begin "a KWin update while Sirkel runs asks for a rebuild once" "KWin was updated"
+ln -sfn libkwin.so.6.9.0 "$RUN/fakekwin/libkwin.so.6"
+sleep 4.5
+check_true "sirkel-rebuild --updated was started" grep -q -- "--updated" "$RUN/helper.log"
+# More changes in the folder (the rest of the update): no second request.
+touch "$RUN/fakekwin/other-file"
+sleep 4.5
+check_true "and only once ($(grep -c -- --updated "$RUN/helper.log" 2>/dev/null) times)" [ "$(grep -c -- --updated "$RUN/helper.log")" -eq 1 ]
 end
 
 # ---- Locked screen: a KWin started locked; nothing may start or move -------

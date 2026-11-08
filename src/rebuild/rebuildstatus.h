@@ -35,6 +35,10 @@ QString versionFromLibraryLink(const QString &link);
 // the settings are open, unlike a version compiled into them. The version
 // this binary was built against if the plugin can't be found.
 QString builtForKWin();
+// The link to KWin's library (libkwin.so.6) whose target names the
+// installed version. $SIRKEL_TEST_KWIN_LIBRARY replaces it in the stress
+// test, which fakes a KWin update by repointing its own link.
+QString kwinLibraryLink();
 // The installed KWin, which is what the next login runs.
 QString installedKWin();
 // Whether Sirkel is turned on in Desktop Effects (kwinrc, read fresh).

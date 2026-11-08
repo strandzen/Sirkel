@@ -50,6 +50,35 @@ private:
     QPointF m_overflow;
 };
 
+// Turns scroll events into whole size steps (scroll-resize). Wheels report
+// a notch as 120 units (v120); high-resolution wheels split it into smaller
+// events (often 8 x 15), and touchpads report a distance in pixels, many
+// small events per swipe. Stepping once per event would race through the
+// sizes on those, so the amounts are added up: one step per notch, or per
+// kPixelsPerStep of touchpad scrolling. Events with no v120 and no
+// touchpad source step once each, as before.
+class ScrollSteps
+{
+public:
+    enum class Source {
+        Wheel,
+        Touchpad,
+    };
+    static constexpr int kUnitsPerNotch = 120;
+    static constexpr qreal kPixelsPerStep = 50;
+
+    void reset();
+    // Returns the whole steps this event completes, negative for scrolling
+    // up (`delta` and `deltaV120` negative).
+    int add(qreal delta, int deltaV120, Source source);
+
+private:
+    qreal m_accumulated = 0;
+    // What m_accumulated counts (v120 units or pixels), to start over when
+    // that changes.
+    bool m_pixels = false;
+};
+
 // Turns raw key and pointer input during a session into placement picks.
 // Pure logic, no KWin dependency, so it can be unit tested.
 //

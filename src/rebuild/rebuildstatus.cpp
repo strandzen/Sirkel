@@ -8,6 +8,7 @@
 #include <KLocalizedString>
 #include <KPluginMetaData>
 
+#include <QCoreApplication>
 #include <QFileInfo>
 #include <QJsonObject>
 #include <QPluginLoader>
@@ -36,16 +37,26 @@ QString versionFromLibraryLink(const QString &link)
 
 QString builtForKWin()
 {
-    // Found the way KWin finds effects; the metadata is read without
-    // loading the plugin.
-    const KPluginMetaData plugin = KPluginMetaData::findPluginById(QStringLiteral("kwin/effects/plugins"), QStringLiteral("kwin_effect_sirkel"));
-    const QString version = plugin.isValid() ? versionFromIid(QPluginLoader(plugin.fileName()).metaData().value(QLatin1String("IID")).toString()) : QString();
+    // The metadata is read without loading the plugin. Where it's installed
+    // first: searching the plugin paths the way KWin does needs an
+    // application object, which the login check doesn't create.
+    QString file = QStringLiteral(SIRKEL_PLUGIN_FILE);
+    if (!QFileInfo::exists(file) && QCoreApplication::instance()) {
+        file = KPluginMetaData::findPluginById(QStringLiteral("kwin/effects/plugins"), QStringLiteral("kwin_effect_sirkel")).fileName();
+    }
+    const QString version = QFileInfo::exists(file) ? versionFromIid(QPluginLoader(file).metaData().value(QLatin1String("IID")).toString()) : QString();
     return version.isEmpty() ? QStringLiteral(SIRKEL_KWIN_VERSION) : version;
+}
+
+QString kwinLibraryLink()
+{
+    const QString test = qEnvironmentVariable("SIRKEL_TEST_KWIN_LIBRARY");
+    return test.isEmpty() ? QStringLiteral(SIRKEL_KWIN_LIBRARY_LINK) : test;
 }
 
 QString installedKWin()
 {
-    return versionFromLibraryLink(QStringLiteral(SIRKEL_KWIN_LIBRARY_LINK));
+    return versionFromLibraryLink(kwinLibraryLink());
 }
 
 bool effectEnabled()

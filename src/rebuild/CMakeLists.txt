@@ -14,6 +14,7 @@ target_link_libraries(sirkel_rebuild_core PUBLIC Qt6::Core KF6::ConfigCore KF6::
 target_compile_definitions(sirkel_rebuild_core PRIVATE
     SIRKEL_KWIN_VERSION="${KWin_VERSION}"
     SIRKEL_KWIN_LIBRARY_LINK="$<TARGET_SONAME_FILE:KWin::kwin>"
+    SIRKEL_PLUGIN_FILE="${KDE_INSTALL_FULL_PLUGINDIR}/kwin/effects/plugins/kwin_effect_sirkel.so"
     SIRKEL_REBUILD_DATADIR="${KDE_INSTALL_FULL_DATADIR}/sirkel/rebuild"
     SIRKEL_HAS_REBUILD_HELPER=$<BOOL:${BUILD_REBUILD_HELPER}>
     TRANSLATION_DOMAIN="sirkel"

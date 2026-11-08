@@ -50,6 +50,11 @@ bool HyperkeyTrigger::isRelease(const QKeyEvent *event) const
     return event->type() == QEvent::KeyRelease && isTriggerRelease(m_combo, event->key());
 }
 
+bool HyperkeyTrigger::isTriggerKey(int key) const
+{
+    return key == m_combo.key();
+}
+
 bool HyperkeyTrigger::ensureGrab()
 {
     if (!m_grabbed) {

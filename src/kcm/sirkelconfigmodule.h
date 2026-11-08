@@ -140,6 +140,8 @@ public:
     Q_INVOKABLE void refreshStatus();
     // Opens a terminal that rebuilds and reinstalls the package.
     Q_INVOKABLE void rebuild();
+    // Switches the settings to `page` ("about"), as requestedPage does.
+    Q_INVOKABLE void showPage(const QString &page);
 
     void load() override;
     void save() override;

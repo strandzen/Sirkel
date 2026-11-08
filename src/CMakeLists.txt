@@ -32,7 +32,11 @@ kcoreaddons_add_plugin(kwin_effect_sirkel
 )
 
 target_include_directories(kwin_effect_sirkel PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_compile_definitions(kwin_effect_sirkel PRIVATE TRANSLATION_DOMAIN="sirkel")
+target_compile_definitions(kwin_effect_sirkel PRIVATE
+    TRANSLATION_DOMAIN="sirkel"
+    SIRKEL_REBUILD_EXECUTABLE="${KDE_INSTALL_FULL_BINDIR}/sirkel-rebuild"
+    SIRKEL_HAS_REBUILD_HELPER=$<BOOL:${BUILD_REBUILD_HELPER}>
+)
 # KWIN_EFFECT_FACTORY declares the plugin's QObject; without this AutoMoc
 # warns that sirkeleffect.cpp includes a moc file it sees no reason for.
 set_property(TARGET kwin_effect_sirkel APPEND PROPERTY AUTOMOC_MACRO_NAMES KWIN_EFFECT_FACTORY)
@@ -59,6 +63,7 @@ qt6_add_resources(kwin_effect_sirkel sirkel_qml
 
 target_link_libraries(kwin_effect_sirkel PRIVATE
     sirkel_core
+    sirkel_rebuild_core
     Qt6::Core
     Qt6::Gui
     Qt6::DBus
