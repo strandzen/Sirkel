@@ -488,8 +488,11 @@ QList<QRectF> SirkelEffect::fillObstacles() const
         const QRectF frame = w->frameGeometry();
         if (frame.intersects(m_area) && !(target.isValid() && frame.contains(target))) {
             obstacles.append(frame);
+            qCDebug(SIRKEL) << "fill the gap: blocked by" << w->windowClass() << w->caption() << frame;
         }
     }
+    qCDebug(SIRKEL) << "fill the gap: moving" << (m_targetWindow ? m_targetWindow->windowClass() : QString())
+                    << (m_targetWindow ? QRectF(m_targetWindow->frameGeometry()) : QRectF()) << "in" << m_area;
     return obstacles;
 }
 
