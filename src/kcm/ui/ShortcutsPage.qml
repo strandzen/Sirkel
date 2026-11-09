@@ -93,12 +93,16 @@ FormPage {
         }
         QQC2.Label {
             Kirigami.FormData.label: i18n("Same key again:")
-            text: i18n("Change the size (1/2, 1/3, 1/4, 2/3)")
+            text: i18n("Change the size (1/2, 1/3, 1/4, 2/3); for a corner, hold one key and tap the other")
+            wrapMode: Text.WordWrap
+            Layout.maximumWidth: root.fieldWidth * 1.5
         }
-        // Rebindable, also under Sirkel in System Settings -> Shortcuts. Only
-        // active while the trigger is held, so a plain key like Enter is
-        // fine. Two explicit rows rather than a Repeater, which
-        // Kirigami.FormLayout would move to the end of the form.
+        // The holdKeyActions() rows, in their order (Maximize, Minimize,
+        // Restore size, Fill the gap). Rebindable, also under Sirkel in
+        // System Settings -> Shortcuts. Only active while the trigger is
+        // held, so a plain key like Enter is fine. Explicit rows rather than
+        // a Repeater, which Kirigami.FormLayout would move to the end of the
+        // form.
         KQuickControls.KeySequenceItem {
             Kirigami.FormData.label: kcm.holdKeyActions[0].text + ":"
             modifierlessAllowed: true
@@ -181,11 +185,16 @@ FormPage {
         QQC2.ToolTip.visible: hovered
     }
 
-    // Re-read after any change (including ones made elsewhere this session).
+    // A combination recorded: show it. Reset and Defaults put back what's
+    // stored (Caps Lock by default), so the choice follows again; only
+    // picking "A key combination" before recording one keeps it apart.
     Connections {
         target: kcm
         function onShortcutsChanged() {
             root.comboMode = root.comboMode || kcm.triggerKind !== "capslock";
+        }
+        function onShortcutsReset() {
+            root.comboMode = kcm.triggerKind !== "capslock";
         }
     }
 }

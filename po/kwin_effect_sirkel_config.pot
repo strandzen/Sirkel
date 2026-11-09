@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sirkel\n"
 "Report-Msgid-Bugs-To: https://github.com/strandzen/Sirkel/issues\n"
-"POT-Creation-Date: 2026-11-08 17:07+0100\n"
+"POT-Creation-Date: 2026-11-09 19:59+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/kcm/sirkelconfigmodule.cpp:179
+#: src/kcm/sirkelconfigmodule.cpp:175
 #, kde-format
 msgid "Caps Lock"
 msgstr ""
@@ -430,7 +430,7 @@ msgstr ""
 msgid "None (mouse only)"
 msgstr ""
 
-#: src/kcm/ui/GeneralPage.qml:93 src/kcm/ui/ShortcutsPage.qml:149
+#: src/kcm/ui/GeneralPage.qml:93 src/kcm/ui/ShortcutsPage.qml:153
 #, kde-format
 msgid "Scroll wheel:"
 msgstr ""
@@ -660,15 +660,17 @@ msgstr ""
 
 #: src/kcm/ui/ShortcutsPage.qml:96
 #, kde-format
-msgid "Change the size (1/2, 1/3, 1/4, 2/3)"
+msgid ""
+"Change the size (1/2, 1/3, 1/4, 2/3); for a corner, hold one key and tap the "
+"other"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:123
+#: src/kcm/ui/ShortcutsPage.qml:127
 #, kde-format
 msgid "Puts the window back where it was before Sirkel placed it."
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:135
+#: src/kcm/ui/ShortcutsPage.qml:139
 #, kde-format
 msgid ""
 "Hold it while picking a direction: the window fills the largest free space "
@@ -676,66 +678,66 @@ msgid ""
 "free space anywhere."
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:142
+#: src/kcm/ui/ShortcutsPage.qml:146
 #, kde-format
 msgid ""
 "The trigger already uses this key, so it's held all the time. Choose another "
 "key for Fill the gap."
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:145
+#: src/kcm/ui/ShortcutsPage.qml:149
 #, kde-format
 msgid "Cancel:"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:146
+#: src/kcm/ui/ShortcutsPage.qml:150
 #, kde-format
 msgid "Esc"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:150
+#: src/kcm/ui/ShortcutsPage.qml:154
 #, kde-format
 msgid "Resize the target"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:150
+#: src/kcm/ui/ShortcutsPage.qml:154
 #, kde-format
 msgid "Resize the target (turned off on General)"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:153
+#: src/kcm/ui/ShortcutsPage.qml:157
 #, kde-format
 msgid "Release:"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:154
+#: src/kcm/ui/ShortcutsPage.qml:158
 #, kde-format
 msgid "Snap the window"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:157
+#: src/kcm/ui/ShortcutsPage.qml:161
 #, kde-format
 msgid "Click:"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:158
+#: src/kcm/ui/ShortcutsPage.qml:162
 #, kde-format
 msgid "Snap now; right-click cancels"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:171
+#: src/kcm/ui/ShortcutsPage.qml:175
 #, kde-format
 msgid ""
 "More shortcuts, such as snapping straight to a half or quarter without the "
 "indicator, are in the Shortcuts settings."
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:176
+#: src/kcm/ui/ShortcutsPage.qml:180
 #, kde-format
 msgid "Open Shortcuts settings…"
 msgstr ""
 
-#: src/kcm/ui/ShortcutsPage.qml:180
+#: src/kcm/ui/ShortcutsPage.qml:184
 #, kde-format
 msgid "Sirkel's shortcuts are under Sirkel in System Settings → Shortcuts."
 msgstr ""

@@ -65,6 +65,9 @@ private Q_SLOTS:
 
 private:
     QQuickItem *root() const;
+    // Shows `direction` on the indicator's ring; its placement, nullptr for
+    // none.
+    const Placement *showPick(SnapDirection direction);
     void updateBlur();
     // Turns off the blur behind the outline, if it's on.
     void clearBlur();

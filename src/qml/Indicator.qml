@@ -142,11 +142,6 @@ Item {
     // so both corners share a center and the ring is equally thick all
     // round. Square inside until the roundness passes the ring width.
     readonly property real ri: Math.max(0, r - band)
-    // How far the hole's rounded corner reaches into the straight runs of
-    // the centerline: there the pointer's inner side needs dense samples to
-    // follow it (see holePoint()). 0 once the roundness passes the ring
-    // width (the corners then share a center).
-    readonly property real cornerZone: Math.max(0, band + ri - cr)
     readonly property real straightX: Math.max(0, width - 2 * cr)
     readonly property real straightY: Math.max(0, height - 2 * cr)
     readonly property real arcLength: (Math.PI / 2) * rc
@@ -168,9 +163,8 @@ Item {
         const w = width, h = height;
         const L1 = straightX / 2, Lv = straightY, Lh = straightX, La = arcLength;
         const arcAt = (cx, cy, phi0) => {
-            const f = La > 0 ? rem / La : 0;
-            const phi = phi0 + f * (Math.PI / 2);
-            return { x: cx + rc * Math.cos(phi), y: cy + rc * Math.sin(phi), angle: (phi + Math.PI / 2) * 180 / Math.PI, corner: Math.round((phi0 / (Math.PI / 2) + 1 + 4) % 4), f: f };
+            const phi = phi0 + (La > 0 ? rem / La : 0) * (Math.PI / 2);
+            return { x: cx + rc * Math.cos(phi), y: cy + rc * Math.sin(phi), angle: (phi + Math.PI / 2) * 180 / Math.PI };
         };
 
         if (rem <= L1) return { x: w / 2 + rem, y: inset, angle: 0 };
@@ -193,8 +187,8 @@ Item {
         return { x: c + rem, y: inset, angle: 0 };
     }
 
-    // Path lengths to sample between start and end: every ~3px around
-    // corners, and just the ends of straight runs elsewhere.
+    // Path lengths to sample between start and end: just the endpoints of
+    // straight runs, and a point every ~3px around corners.
     function sampleLengths(start, end) {
         // Total derived from the same segments being walked: mid-resize,
         // the segments and totalPathLength bindings can briefly disagree,
@@ -222,27 +216,7 @@ Item {
                     out.push(s + (segEnd - s) * k / n);
                 }
             } else {
-                // Straights: every ~3px within cornerZone of either end,
-                // otherwise just the ends.
-                const a = segStart, b = segStart + segments[idx][0];
-                const z = Math.min(root.cornerZone, (b - a) / 2);
-                let t = s;
-                let steps = 0;
-                while (t < segEnd && steps++ < 256) {
-                    let next = segEnd;
-                    if (t < a + z) {
-                        next = Math.min(t + 3, a + z, segEnd);
-                    } else if (t < b - z) {
-                        next = Math.min(b - z, segEnd);
-                    } else {
-                        next = Math.min(t + 3, segEnd);
-                    }
-                    if (!(next > t)) {
-                        next = segEnd;
-                    }
-                    out.push(next);
-                    t = next;
-                }
+                out.push(segEnd);
             }
             s = segEnd;
             segStart += segments[idx][0];
@@ -303,69 +277,19 @@ Item {
         NumberAnimation { duration: root.ms(75); easing.type: root.easingType; easing.bezierCurve: root.easingCurve }
     }
 
-    // The closest point on the hole's edge (its rounded corners included):
-    // where the pointer's inner side goes, so it covers the ring exactly.
+    // Where the pointer's inner side goes: a point kept inside the hole's
+    // rectangle. With corners rounder than the ring is wide, the inner
+    // offsets lie on the hole's edge already (the radii are nested). With
+    // sharper ones the hole's corners are square, and a tight corner's inner
+    // offsets would cross over each other (thin stray lines on the GPU);
+    // kept inside the rectangle they meet at the hole's corner instead.
     function holePoint(x, y) {
-        const x0 = band, y0 = band, x1 = width - band, y1 = height - band, q = ri;
-        const cx = Math.min(Math.max(x, x0 + q), x1 - q);
-        const cy = Math.min(Math.max(y, y0 + q), y1 - q);
-        if (cx !== x && cy !== y) {
-            const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy);
-            return d > 0 ? Qt.point(cx + dx / d * q, cy + dy / d * q) : Qt.point(cx, cy);
-        }
-        const dl = Math.abs(x - x0), dr = Math.abs(x1 - x), dt = Math.abs(y - y0), db = Math.abs(y1 - y);
-        const m = Math.min(dl, dr, dt, db);
-        if (m === dt) return Qt.point(Math.min(Math.max(x, x0), x1), y0);
-        if (m === db) return Qt.point(Math.min(Math.max(x, x0), x1), y1);
-        if (m === dl) return Qt.point(x0, Math.min(Math.max(y, y0), y1));
-        return Qt.point(x1, Math.min(Math.max(y, y0), y1));
-    }
-
-    // Corner k (0 top-right, clockwise): the centerline arc's center and
-    // start angle, and the hole's corner center.
-    function cornerOf(k) {
-        const c = cr, hr = band + ri;
-        const right = k === 0 || k === 1, bottom = k === 1 || k === 2;
-        return {
-            cx: right ? width - c : c,
-            cy: bottom ? height - c : c,
-            phi0: -Math.PI / 2 + k * Math.PI / 2,
-            hx: right ? width - hr : hr,
-            hy: bottom ? height - hr : hr,
-        };
-    }
-    // The corner of the ring a point is in (by quadrant).
-    function cornerAt(x, y) {
-        const right = x > width / 2, bottom = y > height / 2;
-        return right ? (bottom ? 1 : 0) : (bottom ? 2 : 3);
-    }
-    // A point fraction f of the way round the hole's corner k, from where
-    // the hole edge meets point a to where it meets point b (both on its
-    // edge). Walking the corner by angle keeps the pointer's inner side in
-    // order: projecting each point separately can fold it back on itself.
-    function holeCornerPoint(k, a, b, f) {
-        const g = cornerOf(k);
-        if (ri <= 0) {
-            return Qt.point(g.hx, g.hy);
-        }
-        const a0 = Math.atan2(a.y - g.hy, a.x - g.hx);
-        let d = Math.atan2(b.y - g.hy, b.x - g.hx) - a0;
-        d = Math.atan2(Math.sin(d), Math.cos(d));
-        const ang = a0 + f * d;
-        return Qt.point(g.hx + ri * Math.cos(ang), g.hy + ri * Math.sin(ang));
-    }
-    // Where the inner side meets the hole at the start (end = false) or end
-    // of corner k's centerline arc.
-    function holeAtArcEnd(k, end) {
-        const g = cornerOf(k);
-        const phi = g.phi0 + (end ? Math.PI / 2 : 0);
-        const d = rc - band / 2;
-        return holePoint(g.cx + d * Math.cos(phi), g.cy + d * Math.sin(phi));
+        return Qt.point(Math.min(Math.max(x, band), width - band), Math.min(Math.max(y, band), height - band));
     }
 
     // The pointer: a band hugging the ring, each centerline sample offset
-    // by half the ring width outwards, and inwards onto the hole's edge;
-    // flat ends.
+    // by half the ring width to either side (the inner side through
+    // holePoint()), with flat ends.
     readonly property var markerPolygon: {
         const center = (((unwrappedProgress % 1) + 1) % 1) * totalPathLength;
         const span = Math.min(effectiveSpan, totalPathLength);
@@ -402,21 +326,10 @@ Item {
                     const a = a1 + (Math.PI / 2) * (steps > 0 ? k / steps : 0.5);
                     outer.push(Qt.point(steps > 0 ? ax + ar * Math.cos(a) : ox, steps > 0 ? ay + ar * Math.sin(a) : oy));
                 }
-                // The hole's corner, from the previous sample's inner point
-                // to this one's.
-                const k = cornerAt(cx, cy);
-                const ha = holePoint(prev.x - Math.sin(prad) * half, prev.y + Math.cos(prad) * half);
-                const hb = holePoint(p.x + nx * half, p.y + ny * half);
-                for (let j = 1; j < 8; j++) {
-                    inner.push(holeCornerPoint(k, ha, hb, j / 8));
-                }
+                inner.push(holePoint(cx + mx * half, cy + my * half));
             }
             outer.push(Qt.point(p.x - nx * half, p.y - ny * half));
-            if (p.corner !== undefined) {
-                inner.push(holeCornerPoint(p.corner, holeAtArcEnd(p.corner, false), holeAtArcEnd(p.corner, true), p.f));
-            } else {
-                inner.push(holePoint(p.x + nx * half, p.y + ny * half));
-            }
+            inner.push(holePoint(p.x + nx * half, p.y + ny * half));
             prev = p;
         }
         inner.reverse();

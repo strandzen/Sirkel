@@ -147,12 +147,8 @@ QString SirkelConfigModule::requestedPage() const
 
 void SirkelConfigModule::setRequestedPage(const QVariantList &args)
 {
-    for (const QVariant &arg : args) {
-        if (arg.toString() == QStringLiteral("about")) {
-            m_requestedPage = QStringLiteral("about");
-            Q_EMIT requestedPageChanged();
-            return;
-        }
+    if (args.contains(QStringLiteral("about"))) {
+        showPage(QStringLiteral("about"));
     }
 }
 
@@ -489,6 +485,7 @@ void SirkelConfigModule::load()
     m_pendingShortcuts.clear();
     reloadShortcuts();
     notifyShortcutsChanged();
+    Q_EMIT shortcutsReset();
 }
 
 void SirkelConfigModule::defaults()
@@ -503,6 +500,7 @@ void SirkelConfigModule::defaults()
         setPendingShortcut(QString::fromLatin1(action.id), action.defaults);
     }
     notifyShortcutsChanged();
+    Q_EMIT shortcutsReset();
 }
 
 bool SirkelConfigModule::isSaveNeeded() const

@@ -35,7 +35,7 @@ public:
     // snap). Follows changes made in the settings live, without restarting
     // KWin.
     bool isRelease(const QKeyEvent *event) const;
-    // Whether `key` is the trigger's own key (Up in Meta+Up, F24 for Caps
+    // Whether `key` is the trigger's own key (A in Meta+A, F24 for Caps
     // Lock). It can also be a direction key; while it's held its repeats
     // must not pick a direction.
     bool isTriggerKey(int key) const;

@@ -222,7 +222,6 @@ probe_line() {
 }
 # probe_all <window title>: every such window's "x y w h", one per line.
 probe_all() {
-    local line
     probe_line "$1" >/dev/null
     grep "SIRKEL-PROBE $(grep -o 'SIRKEL-PROBE p[0-9]*' "$LOG" | tail -1 | cut -d' ' -f2) $1|" "$LOG" | awk -F'|' '{print $2, $3, $4, $5}'
 }
@@ -560,7 +559,7 @@ end
 
 # ---- Where windows end up (geometry checks; screen 1 is 0,0 1600x900) ------
 
-begin "same direction key again steps the size (edges only)" "same direction again"
+begin "same direction key again steps the size (edges and corners)" "same direction again"
 send abs 800 450; sync_input
 spawn window-drag.qml
 # Left: 1 press = 1/2, then 1/3, 1/4, 2/3 and round to 1/2 (1600 px wide).
@@ -572,12 +571,25 @@ for presses in 1 2 3 4 5; do
 done
 keysnap $UP 2
 check "Up pressed twice: a third of the height (300 px) at the top" "y <= 2 && h >= 297 && h <= 303 && w >= 1597" $(probe "sirkel-stress drag")
-# A corner takes two keys: hold Left, press Up twice. Corners don't step (yet).
+# A corner: hold Up, tap Left. Each tap after the first steps the width
+# like an edge; the height stays half.
+for taps in 1 2 3 4 5; do
+    send abs 800 450; send key $F24 1; send sleep 50; send key $UP 1; send sleep 30
+    for _ in $(seq "$taps"); do send key $LEFT 1; send sleep 30; send key $LEFT 0; send sleep 30; done
+    send key $UP 0; send key $F24 0; sync_input
+    sleep 0.8
+    check "Up held, Left tapped $taps times: ${widths[$taps]} px wide, top-left, half height" \
+        "x <= 2 && y <= 2 && w >= ${widths[$taps]} - 3 && w <= ${widths[$taps]} + 3 && h >= 447 && h <= 453" $(probe "sirkel-stress drag")
+done
+# The other way round (Left held, Up tapped) steps too.
 send abs 800 450; send key $F24 1; send sleep 50; send key $LEFT 1; send sleep 30
 send key $UP 1; send sleep 30; send key $UP 0; send sleep 30; send key $UP 1; send sleep 30; send key $UP 0; send sleep 30
 send key $LEFT 0; send key $F24 0; sync_input
 sleep 0.8
-check "a corner pressed again stays a plain quarter (800 x 450)" "x <= 2 && y <= 2 && w >= 797 && w <= 803 && h >= 447 && h <= 453" $(probe "sirkel-stress drag")
+check "Left held, Up tapped twice: a third of the width, top-left" "x <= 2 && y <= 2 && w >= 530 && w <= 536 && h >= 447 && h <= 453" $(probe "sirkel-stress drag")
+# Both let go, then one alone: that edge, not the corner.
+keysnap $LEFT 1
+check "after a corner, Left alone picks the left half" "x <= 2 && w >= 797 && w <= 803 && h >= 897" $(probe "sirkel-stress drag")
 # Holding the key: its automatic repeats must not keep stepping.
 steps=$(count "same direction again")
 keysnap $LEFT 2 1500

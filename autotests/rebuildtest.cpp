@@ -98,7 +98,8 @@ private Q_SLOTS:
         QTest::newRow("updated, turned off") << QStringLiteral("6.8.2") << false << false << EffectStatus::Rebuild << false;
         QTest::newRow("just installed") << QStringLiteral("6.8.1") << false << true << EffectStatus::Relogin << false;
         QTest::newRow("turned off") << QStringLiteral("6.8.1") << false << false << EffectStatus::Disabled << false;
-        // kwin_wayland couldn't be run: never ask for a rebuild.
+        // The installed KWin is unknown (no libkwin link): never ask for a
+        // rebuild.
         QTest::newRow("unknown version") << QString() << false << true << EffectStatus::Relogin << false;
     }
     void status()

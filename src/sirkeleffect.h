@@ -4,7 +4,6 @@
 #pragma once
 
 #include "directioninput.h"
-#include "gapfinder.h"
 #include "globalshortcuts.h"
 #include "placement.h"
 #include "shortcutactions.h"
@@ -40,8 +39,9 @@ struct PointerAxisEvent;
 //
 // The pieces: HyperkeyTrigger decides when a session starts and owns the
 // keyboard grab, DirectionInput turns key/pointer input into picks,
-// placement.h maps a pick to geometry, OverlayController draws the preview.
-// This class is the session state machine tying them together.
+// placement.h maps a pick to geometry (gapfinder.h the free space for Fill
+// the gap), OverlayController draws the preview. This class is the session
+// state machine tying them together.
 class SirkelEffect : public KWin::Effect
 {
     Q_OBJECT
@@ -81,10 +81,6 @@ private:
     // wrapping round (scroll wheel, or the same direction key again).
     void stepSize(int delta);
     void refreshPreview();
-    // A holdKeyActions() row that acts at once and ends the session
-    // (Backspace: minimize, R: restore). Placement rows (Enter: maximize)
-    // pick instead, applied on release.
-    void runKeyAction(const WindowAction &action);
     // Fill the gap: the key (Shift) went down or up. While it's held, the
     // pick fills the free space in its direction instead (gapfinder.h).
     void setFilling(bool filling);
@@ -118,9 +114,8 @@ private:
     // window's own.
     KWin::LogicalOutput *screenFor(KWin::EffectWindow *window) const;
     // Placement geometry for `window` in `area`: the placement rect, or for
-    // a window that can't take that size (fixed size, or a minimum/maximum
-    // size), its own size centered on it and kept inside the area. Always
-    // in whole pixels (alignedToPixels()).
+    // a window that can't take that size, its own size centered on it and
+    // kept inside the area. In whole pixels.
     static QRectF geometryFor(KWin::EffectWindow *window, const QRectF &area, SnapDirection direction, int step);
     // Un-maximizes and untiles `window`, then moves it. Ignores an empty
     // geometry.
@@ -135,8 +130,8 @@ private:
     KWin::EffectWindow *windowUnderCursor() const;
     // (Re)starts the SessionTimeout countdown; called on every input.
     void restartIdleTimer();
-    // Reads the configured keys for holdKeyActions() into m_holdKeys, if
-    // they may have changed since the last session.
+    // Reads the configured keys for holdKeyActions() into m_holdKeys and
+    // m_fillKeys, if they may have changed since the last session.
     void readHoldKeys();
     // ExcludedApps, trimmed and lowercased, into m_excluded.
     void readExcludedApps();
@@ -190,8 +185,11 @@ private:
         QRectF snapped;
     };
     QHash<KWin::EffectWindow *, SnapRecord> m_snapped;
-    // holdKeyActions() with their configured keys (see readHoldKeys()).
+    // holdKeyActions() with their configured keys (see readHoldKeys()),
+    // except Fill the gap, whose keys are held rather than pressed: the
+    // keys that hold it down (Qt::Key_Shift) are in m_fillKeys.
     QList<std::pair<QList<QKeySequence>, WindowAction>> m_holdKeys;
+    QList<int> m_fillKeys;
     // The KWin running Sirkel (installed when it loaded), and the newer one
     // already reported, so an update is reported once.
     QString m_runningKWin;

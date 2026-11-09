@@ -6,6 +6,7 @@
 #include <KQuickManagedConfigModule>
 
 #include <QKeySequence>
+#include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTest>
 
@@ -99,6 +100,21 @@ private Q_SLOTS:
         QVERIFY(m_kcm->needsSave());
         m_kcm->load();
         QVERIFY(!m_kcm->needsSave());
+    }
+
+    // Reset and Defaults tell the Shortcuts page to show the trigger kind
+    // again (a picked but unrecorded combination goes back to Caps Lock).
+    void resetSignalsShortcuts()
+    {
+        QSignalSpy reset(m_kcm, SIGNAL(shortcutsReset()));
+        m_kcm->defaults();
+        QCOMPARE(reset.count(), 1);
+        m_kcm->load();
+        QCOMPARE(reset.count(), 2);
+        // An edit alone doesn't.
+        setShortcut(QStringLiteral("SirkelHoldRestore"), QKeySequence(Qt::Key_T));
+        QCOMPARE(reset.count(), 2);
+        m_kcm->load();
     }
 };
 

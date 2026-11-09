@@ -5,6 +5,7 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 ## [Unreleased]
 
 ### Added
+- Corners change size with the keyboard too: keep one of the corner's keys held and tap the other again (hold Up, tap Left for top-left). The width steps 1/2, 1/3, 1/4, 2/3, like scrolling; the height stays half.
 - **Fill the gap:** hold Shift as well while picking, and the window fills the largest free space in that direction, between the other windows (with no direction, the largest free space anywhere). Windows behind the one you're moving (that it lies completely on top of) don't block, and letting go of Shift just before the trigger still fills. With no free space there, the outline disappears and the ring dims. Shift can be changed on the Shortcuts page; Caps Lock + Shift is the recommended way.
 - When KWin is updated while you're logged in, Sirkel says so right away: a notification that it keeps working until you log out but needs a rebuild before then. The General page of its settings shows it too.
 
@@ -12,6 +13,8 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 - Clicking the rebuild notification opens the About page of Sirkel's settings, with the details and the Rebuild button. The notification's own button, **Rebuild now**, starts the rebuild directly.
 
 ### Fixed
+- After choosing "A key combination" on the Shortcuts page without recording one, Reset and Defaults put Caps Lock back as the trigger but the page still showed the combination option.
+- A held direction key's automatic repeats could re-pick its direction after the mouse had picked another one.
 - A trigger that includes a direction key (for example Meta+A with WASD as direction keys) picked that direction while held, and letting go of the key didn't end the session.
 - Scrolling on high-resolution mouse wheels and touchpads stepped through several sizes at once. Sizes now change once per wheel notch, or per short stretch of touchpad scrolling; normal wheels work as before.
 - The login check no longer logs a warning about the application path.

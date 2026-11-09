@@ -153,7 +153,7 @@ void OverlayController::showIndicator()
     }
 }
 
-void OverlayController::showPlacement(SnapDirection direction, const QRectF &target, const QRectF &windowFrame)
+const Placement *OverlayController::showPick(SnapDirection direction)
 {
     const Placement *p = placementFor(direction);
     if (m_indicator) {
@@ -161,6 +161,12 @@ void OverlayController::showPlacement(SnapDirection direction, const QRectF &tar
         m_indicator->setProperty("ringIndex", p ? p->ringIndex : -1);
         m_indicator->setProperty("direction", placementName(direction));
     }
+    return p;
+}
+
+void OverlayController::showPlacement(SnapDirection direction, const QRectF &target, const QRectF &windowFrame)
+{
+    const Placement *p = showPick(direction);
     if (!m_outline || !p || !SirkelConfig::showOutline()) {
         return;
     }
@@ -206,11 +212,7 @@ void OverlayController::setDimmed(bool dimmed)
 
 void OverlayController::hidePlacement(SnapDirection direction)
 {
-    const Placement *p = placementFor(direction);
-    if (m_indicator) {
-        m_indicator->setProperty("ringIndex", p ? p->ringIndex : -1);
-        m_indicator->setProperty("direction", placementName(direction));
-    }
+    showPick(direction);
     if (m_outline && m_outlineShown) {
         // The next placement grows out of the window again.
         QMetaObject::invokeMethod(m_outline, "reset");

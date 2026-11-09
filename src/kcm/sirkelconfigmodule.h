@@ -161,6 +161,8 @@ Q_SIGNALS:
     void effectStatusChanged();
     void wallpaperUrlChanged();
     void shortcutsChanged();
+    // Reset or Defaults replaced every edited shortcut.
+    void shortcutsReset();
     void requestedPageChanged();
     void animationFactorChanged();
 

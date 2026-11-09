@@ -115,7 +115,7 @@ While you hold the trigger, you can also press:
 | Backspace | Minimize |
 | R | Put the window back where it was before Sirkel placed it |
 | Esc | Cancel |
-| The same direction key again | Change the size: 1/2, 1/3, 1/4, 2/3 and round again (left, right, top and bottom) |
+| The same direction key again | Change the size: 1/2, 1/3, 1/4, 2/3 and round again. For a corner, keep one of its keys held and tap the other (hold Up, tap Left for top-left); the width changes |
 | Scroll wheel | Change the size (if turned on) |
 | Click | Snap now, without waiting for you to let go. Right-click cancels |
 | Shift (held) | Fill the gap: see below |

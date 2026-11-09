@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "sirkeleffect.h"
+#include "gapfinder.h"
 #include "globalshortcuts.h"
 #include "hyperkeytrigger.h"
 #include "overlaycontroller.h"
@@ -25,6 +26,36 @@
 
 #include <algorithm>
 #include <cstdlib>
+
+namespace
+{
+// A window someone sees and works in: a normal window or dialog, shown on
+// the current desktop and activity. Not panels, the desktop, popups or
+// tooltips, and not minimized or closing.
+bool isVisibleRegular(KWin::EffectWindow *w)
+{
+    return !w->isDeleted() && !w->isMinimized() && !w->isHidden() && w->isOnCurrentDesktop() && w->isOnCurrentActivity()
+        && (w->isNormalWindow() || w->isDialog());
+}
+
+// Where `window` goes for `target`: the target itself, or for a window that
+// can't take that size (fixed size, or a minimum or maximum size), its own
+// size centered on the target and kept inside `bounds`, rather than starting
+// at the target's corner and hanging off the screen. In whole pixels.
+QRectF fitted(KWin::EffectWindow *window, const QRectF &target, const QRectF &bounds)
+{
+    KWin::Window *w = window ? window->window() : nullptr;
+    if (!w) {
+        return target;
+    }
+    // The size the window will take, as KWin itself will limit it.
+    const QSizeF size = w->isResizable() ? w->constrainFrameSize(target.size()) : QSizeF(w->frameGeometry().size());
+    if (qAbs(size.width() - target.width()) < 1 && qAbs(size.height() - target.height()) < 1) {
+        return target;
+    }
+    return alignedToPixels(centeredFixedSize(target, size, bounds));
+}
+}
 
 SirkelEffect::SirkelEffect()
 {
@@ -194,7 +225,6 @@ void SirkelEffect::arm()
     m_scrollSteps.reset();
     m_filling = false;
     m_freeSpaces.reset();
-    m_fillReleaseTimer->stop();
     m_input.reset();
     m_input.setDeadzone(SirkelConfig::deadzone());
     m_input.setAngleMode(SirkelConfig::pickingMode() == QStringLiteral("angle") ? SirkelConfig::centerRadius() : 0);
@@ -226,8 +256,18 @@ void SirkelEffect::readHoldKeys()
         return;
     }
     m_holdKeys.clear();
+    m_fillKeys.clear();
     for (const HoldKeyAction &def : holdKeyActions()) {
-        m_holdKeys.append({storedShortcuts(QString::fromLatin1(def.id), def.defaults), def.action});
+        const QList<QKeySequence> keys = storedShortcuts(QString::fromLatin1(def.id), def.defaults);
+        if (def.action.kind != WindowAction::Kind::FillGap) {
+            m_holdKeys.append({keys, def.action});
+            continue;
+        }
+        for (const QKeySequence &key : keys) {
+            if (const int held = heldKeyOf(key)) {
+                m_fillKeys.append(held);
+            }
+        }
     }
 }
 
@@ -290,14 +330,10 @@ KWin::EffectWindow *SirkelEffect::windowUnderCursor() const
 {
     const QPointF cursor = KWin::effects->cursorPos();
     const QList<KWin::EffectWindow *> stack = KWin::effects->stackingOrder();
-    // Topmost first; only regular windows count (no panels, desktop,
-    // popups or tooltips).
+    // Topmost first.
     for (auto it = stack.crbegin(); it != stack.crend(); ++it) {
         KWin::EffectWindow *w = *it;
-        if (w->isDeleted() || w->isMinimized() || w->isHidden() || !w->isOnCurrentDesktop() || !w->isOnCurrentActivity()) {
-            continue;
-        }
-        if ((!w->isNormalWindow() && !w->isDialog()) || !QRectF(w->frameGeometry()).contains(cursor)) {
+        if (!isVisibleRegular(w) || !QRectF(w->frameGeometry()).contains(cursor)) {
             continue;
         }
         // Excluded apps are looked through, like panels: some are normal
@@ -345,14 +381,15 @@ void SirkelEffect::finish(bool apply, bool beforeRelease)
     }
     m_active = false;
 
-    if (apply && m_targetWindow && m_direction != SnapDirection::None && m_filling) {
+    const bool picked = apply && m_targetWindow && m_direction != SnapDirection::None;
+    if (picked && m_filling) {
         if (const std::optional<QRectF> fill = fillGeometry()) {
             qCDebug(SIRKEL) << "filling the gap" << placementName(m_direction) << "with" << *fill;
             placeAt(m_targetWindow, *fill);
         } else {
             qCDebug(SIRKEL) << "no free space" << placementName(m_direction) << "- nothing to do";
         }
-    } else if (apply && m_targetWindow && m_direction != SnapDirection::None) {
+    } else if (picked) {
         qCDebug(SIRKEL) << "snapping to" << placementName(m_direction) << "step" << m_sizeStep;
         perform(m_targetWindow, m_area, {WindowAction::Kind::Place, m_direction}, m_sizeStep);
     } else {
@@ -360,11 +397,10 @@ void SirkelEffect::finish(bool apply, bool beforeRelease)
     }
     m_overlay->end();
 
+    // Nothing may refer to the window or screen after the session; the
+    // rest is set up again by arm().
     m_targetWindow = nullptr;
     m_targetScreen = nullptr;
-    m_direction = SnapDirection::None;
-    m_engaged = false;
-    m_filling = false;
     m_freeSpaces.reset();
     m_fillReleaseTimer->stop();
 }
@@ -384,21 +420,7 @@ void SirkelEffect::pick(SnapDirection direction)
 
 QRectF SirkelEffect::geometryFor(KWin::EffectWindow *window, const QRectF &area, SnapDirection direction, int step)
 {
-    const QRectF target = alignedToPixels(placementGeometry(direction, area, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), step));
-    KWin::Window *w = window ? window->window() : nullptr;
-    if (!w) {
-        return target;
-    }
-    // The size the window will actually take: its own size if it can't be
-    // resized, otherwise the target limited to its minimum and maximum
-    // size (as KWin itself will limit it). If that differs from the target,
-    // it goes centered on the target and pulled back inside the area, rather
-    // than starting at the target's corner and hanging off the screen.
-    const QSizeF size = w->isResizable() ? w->constrainFrameSize(target.size()) : QSizeF(w->frameGeometry().size());
-    if (qAbs(size.width() - target.width()) < 1 && qAbs(size.height() - target.height()) < 1) {
-        return target;
-    }
-    return alignedToPixels(centeredFixedSize(target, size, area));
+    return fitted(window, alignedToPixels(placementGeometry(direction, area, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical(), step)), area);
 }
 
 void SirkelEffect::refreshPreview()
@@ -460,7 +482,8 @@ void SirkelEffect::setFilling(bool filling)
     if (filling) {
         if (!m_freeSpaces) {
             m_freeSpaces = freeSpaces(m_area, fillObstacles());
-            qCDebug(SIRKEL) << "fill the gap:" << m_freeSpaces->size() << "free spaces";
+            qCDebug(SIRKEL) << "fill the gap:" << m_freeSpaces->size() << "free spaces for" << m_targetWindow->windowClass()
+                            << QRectF(m_targetWindow->frameGeometry()) << "in" << m_area;
         }
         // Held with nothing picked yet: the largest free space anywhere.
         engage();
@@ -479,10 +502,7 @@ QList<QRectF> SirkelEffect::fillObstacles() const
     const QRectF target = m_targetWindow ? QRectF(m_targetWindow->frameGeometry()).adjusted(2, 2, -2, -2) : QRectF();
     const QList<KWin::EffectWindow *> stack = KWin::effects->stackingOrder();
     for (KWin::EffectWindow *w : stack) {
-        if (w == m_targetWindow || w->isDeleted() || w->isMinimized() || w->isHidden() || !w->isOnCurrentDesktop() || !w->isOnCurrentActivity()) {
-            continue;
-        }
-        if ((!w->isNormalWindow() && !w->isDialog()) || isExcluded(w)) {
+        if (w == m_targetWindow || !isVisibleRegular(w) || isExcluded(w)) {
             continue;
         }
         const QRectF frame = w->frameGeometry();
@@ -491,8 +511,6 @@ QList<QRectF> SirkelEffect::fillObstacles() const
             qCDebug(SIRKEL) << "fill the gap: blocked by" << w->windowClass() << w->caption() << frame;
         }
     }
-    qCDebug(SIRKEL) << "fill the gap: moving" << (m_targetWindow ? m_targetWindow->windowClass() : QString())
-                    << (m_targetWindow ? QRectF(m_targetWindow->frameGeometry()) : QRectF()) << "in" << m_area;
     return obstacles;
 }
 
@@ -508,20 +526,13 @@ std::optional<QRectF> SirkelEffect::fillGeometry() const
         return std::nullopt;
     }
     const QRectF rect = alignedToPixels(paddedFreeSpace(*space, m_area, SirkelConfig::paddingHorizontal(), SirkelConfig::paddingVertical()));
-    KWin::Window *w = m_targetWindow->window();
-    if (!w) {
-        return rect;
-    }
     // A window that can't take that size goes centered in the space, as for
-    // placements, unless it doesn't fit at all.
-    const QSizeF size = w->isResizable() ? w->constrainFrameSize(rect.size()) : QSizeF(w->frameGeometry().size());
-    if (size.width() > rect.width() + 1 || size.height() > rect.height() + 1) {
+    // placements, unless it can't get as small as the space.
+    const QRectF fit = fitted(m_targetWindow, rect, rect);
+    if (fit.width() > rect.width() + 1 || fit.height() > rect.height() + 1) {
         return std::nullopt;
     }
-    if (qAbs(size.width() - rect.width()) < 1 && qAbs(size.height() - rect.height()) < 1) {
-        return rect;
-    }
-    return alignedToPixels(centeredFixedSize(rect, size, rect));
+    return fit;
 }
 
 void SirkelEffect::restore(KWin::EffectWindow *window, const QRectF &area)
@@ -650,12 +661,6 @@ void SirkelEffect::runShortcutAction(const ShortcutAction &shortcut)
     }
 }
 
-void SirkelEffect::runKeyAction(const WindowAction &action)
-{
-    perform(m_targetWindow, m_area, action, -1);
-    finish(false, true);
-}
-
 void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
 {
     if (m_awaitingRelease) {
@@ -675,9 +680,9 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
     const bool press = event->type() == QEvent::KeyPress;
     const bool release = event->type() == QEvent::KeyRelease;
 
-    // The trigger first: its key may also be a direction key (Meta+Up with
-    // the arrows, Meta+A with WASD). Letting go of it ends the session, and
-    // its presses (the held key's repeats) pick nothing.
+    // The trigger first: its key may also be a direction key (Meta+A with
+    // WASD). Letting go of it ends the session, and its presses (the held
+    // key's repeats) pick nothing.
     if (m_trigger->isRelease(event)) {
         finish(true);
         return;
@@ -687,43 +692,35 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
     }
     // The Fill the gap key (Shift): held like a modifier while picking. Not
     // when it's part of the trigger itself, which is held all along.
-    if ((press || release) && !m_trigger->isPartOfTrigger(event->key())) {
-        for (const auto &[keys, action] : std::as_const(m_holdKeys)) {
-            if (action.kind != WindowAction::Kind::FillGap) {
-                continue;
-            }
-            for (const QKeySequence &binding : keys) {
-                if (heldKeyOf(binding) == event->key()) {
-                    if (event->isAutoRepeat()) {
-                        return;
-                    }
-                    if (press) {
-                        m_fillReleaseTimer->stop();
-                        setFilling(true);
-                    } else if (m_filling) {
-                        m_fillReleaseTimer->start();
-                    }
-                    return;
-                }
+    if ((press || release) && m_fillKeys.contains(event->key()) && !m_trigger->isPartOfTrigger(event->key())) {
+        if (!event->isAutoRepeat()) {
+            if (press) {
+                m_fillReleaseTimer->stop();
+                setFilling(true);
+            } else if (m_filling) {
+                m_fillReleaseTimer->start();
             }
         }
+        return;
     }
 
     const KeyAxis axis = axisForKey(event->key(), SirkelConfig::keybindScheme());
     if (axis != KeyAxis::None && (press || release)) {
         engage();
+        // A held key's automatic repeats change nothing: its press already
+        // picked, and repeating it would undo a pick the mouse made since.
+        if (event->isAutoRepeat()) {
+            return;
+        }
         if (const auto direction = m_input.keyEvent(axis, press, m_edgeOverflow.current())) {
             // Pressing the direction that's already picked again steps its
             // size, like scrolling down: 1/2, 1/3, 1/4, 2/3 and round again.
-            // Only for the four edges for now (a corner takes two keys), and
-            // never for a held key's automatic repeats.
-            const bool edge = *direction == SnapDirection::Left || *direction == SnapDirection::Right || *direction == SnapDirection::Top
-                || *direction == SnapDirection::Bottom;
-            if (press && edge && *direction == m_direction && !m_filling) {
-                if (!event->isAutoRepeat()) {
-                    qCDebug(SIRKEL) << "same direction again: next size";
-                    stepSize(-1);
-                }
+            // For a corner, one of its keys stays held and the other is
+            // tapped again (Up held, Left tapped: top-left); the width steps
+            // and the height stays half, as with scrolling.
+            if (press && *direction == m_direction && !m_filling) {
+                qCDebug(SIRKEL) << "same direction again: next size";
+                stepSize(-1);
             } else {
                 pick(*direction);
             }
@@ -739,7 +736,7 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
         }
         for (const auto &[keys, action] : std::as_const(m_holdKeys)) {
             for (const QKeySequence &binding : keys) {
-                if (action.kind == WindowAction::Kind::FillGap || !matchesKey(binding, event->key(), event->modifiers())) {
+                if (!matchesKey(binding, event->key(), event->modifiers())) {
                     continue;
                 }
                 if (action.kind == WindowAction::Kind::Place) {
@@ -750,7 +747,10 @@ void SirkelEffect::grabbedKeyboardEvent(QKeyEvent *event)
                     m_input.keyPicked(m_edgeOverflow.current());
                     pick(action.direction);
                 } else {
-                    runKeyAction(action);
+                    // Acts at once (Backspace: minimize, R: restore) and
+                    // ends the session.
+                    perform(m_targetWindow, m_area, action, -1);
+                    finish(false, true);
                 }
                 return;
             }
@@ -802,13 +802,9 @@ void SirkelEffect::pointerAxis(KWin::PointerAxisEvent *event)
     if (!m_active || !m_engaged || event->orientation != Qt::Vertical || m_direction == SnapDirection::None) {
         return;
     }
-    // Free space has the size it has: scrolling does nothing while filling.
-    if (m_filling) {
-        restartIdleTimer();
-        return;
-    }
     restartIdleTimer();
-    if (!SirkelConfig::scrollResizeEnabled()) {
+    // Free space has the size it has: scrolling does nothing while filling.
+    if (m_filling || !SirkelConfig::scrollResizeEnabled()) {
         return;
     }
     const bool touchpad = event->source == KWin::PointerAxisSource::Finger || event->source == KWin::PointerAxisSource::Continuous;
