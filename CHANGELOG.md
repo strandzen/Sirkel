@@ -4,6 +4,8 @@ All notable changes to Sirkel. The format follows [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-09
+
 ### Added
 - Corners change size with the keyboard too: keep one of the corner's keys held and tap the other again (hold Up, tap Left for top-left). The width steps 1/2, 1/3, 1/4, 2/3, like scrolling; the height stays half.
 - **Fill the gap:** hold Shift as well while picking, and the window fills the largest free space in that direction, between the other windows (with no direction, the largest free space anywhere). Windows behind the one you're moving (that it lies completely on top of) don't block, and letting go of Shift just before the trigger still fills. With no free space there, the outline disappears and the ring dims. Shift can be changed on the Shortcuts page; Caps Lock + Shift is the recommended way.
@@ -204,6 +206,7 @@ First versioned release.
 - Desktop, panels and other special windows are ignored.
 - GPL-2.0-or-later license.
 
+[0.6.0]: https://github.com/strandzen/Sirkel/compare/v0.5.4...v0.6.0
 [0.5.4]: https://github.com/strandzen/Sirkel/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/strandzen/Sirkel/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/strandzen/Sirkel/compare/v0.5.1...v0.5.2
